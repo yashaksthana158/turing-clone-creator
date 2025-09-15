@@ -7,27 +7,6 @@
 
 /* CSS Variables for consistent theming */
 :root {
-  --background: 0 0% 2%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 260 85% 65%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 220 90% 60%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 260 85% 65%;
-  --radius: 0.5rem;
-  
   --cosmic-dark: 0 0% 2%;
   --cosmic-light: 0 0% 98%;
   --cosmic-purple: 260 85% 65%;
