@@ -61,6 +61,8 @@ const Events = () => {
       if (data && data.length > 0) {
         const now = new Date().toISOString();
         const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
+        const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
+
         const counts = await Promise.all(
           upcoming.map(async (evt: any) => {
             const { count } = await supabase
@@ -72,6 +74,10 @@ const Events = () => {
           })
         );
         unified = counts;
+
+        setPastDbEvents(past.map((evt: any) => ({
+          ...evt, registration_count: 0, external_url: null,
+        })));
       }
 
       // Fetch overload events from published editions
