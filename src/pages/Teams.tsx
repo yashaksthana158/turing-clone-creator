@@ -125,7 +125,7 @@ const Teams = () => {
         <div className="teams-hero-overlay" />
         <div className="teams-hero-content">
           <h1>
-            Meet Our <span className="text-gradient">Team</span>
+            Meet Our <span className="text-gradient">Amazing Team</span>
           </h1>
           <p>The passionate minds driving innovation at Turing Society ANDC</p>
         </div>
