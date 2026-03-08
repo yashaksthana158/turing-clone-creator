@@ -51,7 +51,6 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       let unified: UnifiedEvent[] = [];
-      let pastOverload: UnifiedEvent[] = [];
 
       // Fetch regular published events
       const { data } = await supabase
@@ -76,9 +75,9 @@ const Events = () => {
         );
         unified = counts;
 
-        setPastDbEvents(prev => [...prev, ...past.map((evt: any) => ({
+        setPastDbEvents(past.map((evt: any) => ({
           ...evt, registration_count: 0, external_url: null,
-        }))]);
+        })));
       }
 
       // Fetch overload events from published editions
@@ -88,7 +87,6 @@ const Events = () => {
         .eq("is_published", true);
 
       if (editions && editions.length > 0) {
-        const now = new Date();
         for (const edition of editions) {
           const { data: oEvents } = await supabase
             .from("overload_events")
@@ -97,11 +95,8 @@ const Events = () => {
             .order("sort_order", { ascending: true });
 
           if (oEvents) {
-            const editionDate = edition.date_label ? new Date(edition.date_label) : null;
-            const isPast = editionDate && !isNaN(editionDate.getTime()) && editionDate < now;
-
             for (const oe of oEvents) {
-              const item: UnifiedEvent = {
+              unified.push({
                 id: `overload-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
@@ -113,12 +108,7 @@ const Events = () => {
                 registration_count: 0,
                 is_featured: false,
                 external_url: oe.link_url || edition.register_url || null,
-              };
-              if (isPast) {
-                pastOverload.push(item);
-              } else {
-                unified.push(item);
-              }
+              });
             }
           }
         }
@@ -133,7 +123,6 @@ const Events = () => {
       });
 
       setAllEvents(unified);
-      setPastDbEvents(prev => [...prev, ...pastOverload]);
       setLoading(false);
     };
     fetchEvents();
