@@ -61,6 +61,17 @@ interface SubEvent {
   image_url: string | null;
   link_url: string | null;
   sort_order: number;
+  description: string | null;
+  event_date: string | null;
+  event_time: string | null;
+  venue: string | null;
+  prizes: string | null;
+  rules: string | null;
+  event_format: string | null;
+  winning_criteria: string | null;
+  coordinators: string | null;
+  hero_image_url: string | null;
+  register_url: string | null;
 }
 
 interface ScheduleItem {
