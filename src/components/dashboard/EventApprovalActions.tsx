@@ -17,6 +17,7 @@ interface EventApprovalActionsProps {
   eventCreatedBy: string;
   approval: Approval | null;
   onUpdated: () => void;
+  onMarkAttendance?: () => void;
 }
 
 export default function EventApprovalActions({
