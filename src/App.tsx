@@ -50,12 +50,12 @@ const App = () => (
             <Route path="/setup" element={<Setup />} />
             <Route path="/profile" element={<ProfilePage />} />
 
-            {/* Dashboard Routes (protected) */}
-            <Route path="/dashboard" element={<ProtectedRoute minRoleLevel={2}><DashboardOverview /></ProtectedRoute>} />
+            {/* Dashboard Routes (protected - all authenticated users get dashboard) */}
+            <Route path="/dashboard" element={<ProtectedRoute minRoleLevel={1}><DashboardOverview /></ProtectedRoute>} />
+            <Route path="/dashboard/events" element={<ProtectedRoute minRoleLevel={1}><DashboardEvents /></ProtectedRoute>} />
+            <Route path="/dashboard/tasks" element={<ProtectedRoute minRoleLevel={2}><DashboardTasks /></ProtectedRoute>} />
             <Route path="/dashboard/teams" element={<ProtectedRoute minRoleLevel={3}><ManageTeams /></ProtectedRoute>} />
             <Route path="/dashboard/users" element={<ProtectedRoute minRoleLevel={5}><ManageUsers /></ProtectedRoute>} />
-            <Route path="/dashboard/events" element={<ProtectedRoute minRoleLevel={2}><DashboardEvents /></ProtectedRoute>} />
-            <Route path="/dashboard/tasks" element={<ProtectedRoute minRoleLevel={2}><DashboardTasks /></ProtectedRoute>} />
             <Route path="/dashboard/roles" element={<ProtectedRoute minRoleLevel={5}><DashboardRoles /></ProtectedRoute>} />
           </Routes>
         </AuthProvider>
