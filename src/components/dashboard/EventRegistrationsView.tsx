@@ -133,7 +133,7 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
     setActionLoading(prev => ({ ...prev, [registrationId]: true }));
 
     const { error } = await supabase
-      .from('event_registrations')
+      .from(regTable as any)
       .update({ status: newStatus })
       .eq('id', registrationId);
 
