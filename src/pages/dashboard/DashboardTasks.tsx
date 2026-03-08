@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CreateTaskModal from '@/components/dashboard/CreateTaskModal';
+import EditTaskModal from '@/components/dashboard/EditTaskModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
