@@ -105,41 +105,17 @@ const OverloadEventDetail = () => {
     setRegistrationStatus((data as any)?.status || null);
   };
 
-  const handleIdCardChange = (file: File | null, preview: string | null) => {
-    setIdCardFile(file);
-    setIdCardPreview(preview);
-  };
-
   const handleRegister = async () => {
     if (!user) {
       navigate(`/register?redirect=/overloadpp${year ? `/${year}` : ""}/event/${eventId}`);
       return;
     }
-    if (!idCardFile) {
-      toast.error("Please upload your ID card to verify your details");
-      return;
-    }
     setRegistering(true);
-
-    const fileExt = idCardFile.name.split(".").pop();
-    const filePath = `${user.id}/overload-${eventId}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from("id-cards")
-      .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
-
-    if (uploadError) {
-      toast.error("Failed to upload ID card: " + uploadError.message);
-      setRegistering(false);
-      return;
-    }
-
-    // Store the storage path (not a public/signed URL)
-    const storagePath = filePath;
 
     if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
       const { error } = await supabase
         .from("overload_event_registrations" as any)
-        .update({ status: "REGISTERED", id_card_url: storagePath })
+        .update({ status: "REGISTERED" })
         .eq("overload_event_id", eventId!)
         .eq("user_id", user.id);
       if (error) {
@@ -148,8 +124,6 @@ const OverloadEventDetail = () => {
         toast.success("Successfully re-registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     } else {
       const { error } = await supabase
@@ -157,7 +131,6 @@ const OverloadEventDetail = () => {
         .insert({
           overload_event_id: eventId!,
           user_id: user.id,
-          id_card_url: storagePath,
         });
       if (error) {
         if (error.code === "23505") {
@@ -169,8 +142,6 @@ const OverloadEventDetail = () => {
         toast.success("Successfully registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     }
     setRegistering(false);
