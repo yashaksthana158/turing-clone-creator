@@ -227,6 +227,39 @@ export default function EventApprovalActions({
           Publish
         </button>
       )}
+
+      {/* Team leads+ can close PUBLISHED events and mark attendance */}
+      {eventStatus === 'PUBLISHED' && isTeamLead() && (
+        <>
+          {onMarkAttendance && (
+            <button
+              onClick={onMarkAttendance}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
+            >
+              <ClipboardCheck size={13} />
+              Mark Attendance
+            </button>
+          )}
+          <button
+            onClick={handleCloseEvent}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-500/20 text-gray-300 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+          >
+            <Lock size={13} />
+            Close Event
+          </button>
+        </>
+      )}
+
+      {/* Can still mark attendance on closed events */}
+      {eventStatus === 'CLOSED' && isTeamLead() && onMarkAttendance && (
+        <button
+          onClick={onMarkAttendance}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
+        >
+          <ClipboardCheck size={13} />
+          Mark Attendance
+        </button>
+      )}
     </div>
   );
 }
