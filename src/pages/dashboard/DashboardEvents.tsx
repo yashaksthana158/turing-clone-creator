@@ -56,6 +56,8 @@ export default function DashboardEvents() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
