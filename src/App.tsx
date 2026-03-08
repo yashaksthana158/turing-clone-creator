@@ -10,6 +10,7 @@ import EventDetail from "./pages/EventDetail";
 import About from "./pages/About";
 import Teams from "./pages/Teams";
 import OverloadPP from "./pages/OverloadPP";
+import DashboardOverload from "./pages/dashboard/DashboardOverload";
 import Gallery from "./pages/Gallery";
 import ComingSoon from "./pages/ComingSoon";
 import Login from "./pages/auth/Login";
