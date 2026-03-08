@@ -114,23 +114,41 @@ export default function EventDetail() {
 
     const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
 
-    const { error } = await supabase.from("event_registrations").insert({
-      event_id: id!,
-      user_id: user.id,
-      id_card_url: urlData.publicUrl,
-    } as any);
-    if (error) {
-      if (error.code === "23505") {
-        toast.error("You are already registered for this event");
+    // If re-registering after cancellation or rejection, update existing row
+    if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
+      const { error } = await supabase
+        .from("event_registrations")
+        .update({ status: "REGISTERED" as any, id_card_url: urlData.publicUrl })
+        .eq("event_id", id!)
+        .eq("user_id", user.id);
+      if (error) {
+        toast.error("Re-registration failed: " + error.message);
       } else {
-        toast.error("Registration failed: " + error.message);
+        toast.success("Successfully re-registered!");
+        setRegistrationStatus("REGISTERED");
+        setRegCount((c) => c + 1);
+        setIdCardFile(null);
+        setIdCardPreview(null);
       }
     } else {
-      toast.success("Successfully registered!");
-      setRegistrationStatus("REGISTERED");
-      setRegCount((c) => c + 1);
-      setIdCardFile(null);
-      setIdCardPreview(null);
+      const { error } = await supabase.from("event_registrations").insert({
+        event_id: id!,
+        user_id: user.id,
+        id_card_url: urlData.publicUrl,
+      } as any);
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("You are already registered for this event");
+        } else {
+          toast.error("Registration failed: " + error.message);
+        }
+      } else {
+        toast.success("Successfully registered!");
+        setRegistrationStatus("REGISTERED");
+        setRegCount((c) => c + 1);
+        setIdCardFile(null);
+        setIdCardPreview(null);
+      }
     }
     setRegistering(false);
   };
