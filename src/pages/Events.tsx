@@ -13,6 +13,7 @@ interface DbEvent {
   venue: string | null;
   status: string;
   max_participants: number | null;
+  poster_url: string | null;
 }
 
 const hardcodedEvents = [
@@ -118,7 +119,7 @@ const Events = () => {
     const fetchEvents = async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, description, event_date, venue, status, max_participants")
+        .select("id, title, description, event_date, venue, status, max_participants, poster_url")
         .eq("status", "PUBLISHED")
         .order("event_date", { ascending: true });
       if (data) setDbEvents(data);
@@ -170,18 +171,22 @@ const Events = () => {
                 style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
               >
                 <div className="event-card-image">
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 80% 30%) 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Calendar size={48} style={{ color: "white", opacity: 0.5 }} />
-                  </div>
+                  {event.poster_url ? (
+                    <img src={event.poster_url} alt={event.title} />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 80% 30%) 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Calendar size={48} style={{ color: "white", opacity: 0.5 }} />
+                    </div>
+                  )}
                   <span className="event-badge" style={{ backgroundColor: "#9113ff" }}>
                     Open
                   </span>

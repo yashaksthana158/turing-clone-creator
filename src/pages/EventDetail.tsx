@@ -23,6 +23,7 @@ interface EventData {
   venue: string | null;
   status: string;
   max_participants: number | null;
+  poster_url: string | null;
 }
 
 export default function EventDetail() {
@@ -47,7 +48,7 @@ export default function EventDetail() {
     setLoading(true);
     const { data, error } = await supabase
       .from("events")
-      .select("id, title, description, event_date, venue, status, max_participants")
+      .select("id, title, description, event_date, venue, status, max_participants, poster_url")
       .eq("id", id!)
       .single();
 
@@ -178,6 +179,29 @@ export default function EventDetail() {
           <ArrowLeft size={16} />
           Back to Events
         </Link>
+
+        {/* Event Poster */}
+        {event.poster_url && (
+          <div
+            style={{
+              borderRadius: "16px",
+              overflow: "hidden",
+              marginBottom: "24px",
+              maxHeight: "400px",
+            }}
+          >
+            <img
+              src={event.poster_url}
+              alt={event.title}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          </div>
+        )}
 
         {/* Event Header */}
         <div
