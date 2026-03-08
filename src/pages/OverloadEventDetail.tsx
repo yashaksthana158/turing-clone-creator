@@ -380,7 +380,7 @@ const OverloadEventDetail = () => {
                     Registration Rejected
                   </h3>
                   <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                    Your registration was rejected. You can try again.
                   </p>
                 </>
               ) : (
