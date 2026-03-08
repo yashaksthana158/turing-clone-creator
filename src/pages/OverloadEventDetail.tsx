@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
   CheckCircle, XCircle, Upload, X, FileImage, Loader2,
@@ -125,7 +126,10 @@ const OverloadEventDetail = () => {
       navigate(`/register?redirect=/overloadpp${year ? `/${year}` : ""}/event/${eventId}`);
       return;
     }
-    if (!idCardFile) return;
+    if (!idCardFile) {
+      toast.error("Please upload your ID card to verify your details");
+      return;
+    }
     setRegistering(true);
 
     const fileExt = idCardFile.name.split(".").pop();
@@ -135,19 +139,24 @@ const OverloadEventDetail = () => {
       .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
 
     if (uploadError) {
+      toast.error("Failed to upload ID card: " + uploadError.message);
       setRegistering(false);
       return;
     }
 
-    const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
+    // Store the storage path (not a public/signed URL)
+    const storagePath = filePath;
 
     if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
       const { error } = await supabase
         .from("overload_event_registrations" as any)
-        .update({ status: "REGISTERED", id_card_url: urlData.publicUrl })
+        .update({ status: "REGISTERED", id_card_url: storagePath })
         .eq("overload_event_id", eventId!)
         .eq("user_id", user.id);
-      if (!error) {
+      if (error) {
+        toast.error("Re-registration failed: " + error.message);
+      } else {
+        toast.success("Successfully re-registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
         setIdCardFile(null);
@@ -159,9 +168,16 @@ const OverloadEventDetail = () => {
         .insert({
           overload_event_id: eventId!,
           user_id: user.id,
-          id_card_url: urlData.publicUrl,
+          id_card_url: storagePath,
         });
-      if (!error) {
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("You are already registered for this event");
+        } else {
+          toast.error("Registration failed: " + error.message);
+        }
+      } else {
+        toast.success("Successfully registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
         setIdCardFile(null);

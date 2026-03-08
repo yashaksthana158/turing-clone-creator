@@ -116,12 +116,16 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
     setLoading(false);
   };
 
-  const getSignedUrl = async (url: string) => {
-    const match = url.match(/id-cards\/(.+)$/);
-    if (!match) return url;
-    const filePath = match[1];
+  const getSignedUrl = async (storedPath: string) => {
+    // storedPath could be a plain storage path like "userId/eventId.jpg"
+    // or a legacy full URL containing "id-cards/"
+    let filePath = storedPath;
+    const match = storedPath.match(/id-cards\/(.+)$/);
+    if (match) {
+      filePath = match[1];
+    }
     const { data } = await supabase.storage.from('id-cards').createSignedUrl(filePath, 300);
-    return data?.signedUrl || url;
+    return data?.signedUrl || storedPath;
   };
 
   const handleViewIdCard = async (url: string) => {
