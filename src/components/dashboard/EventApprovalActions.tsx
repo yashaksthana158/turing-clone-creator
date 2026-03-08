@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Send, Loader2, Globe, Lock, ClipboardCheck } from 'lucide-react';
+import { CheckCircle, XCircle, Send, Loader2, Globe, Lock, ClipboardCheck, Unlock } from 'lucide-react';
 
 interface Approval {
   id: string;
