@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CreateTaskModal from '@/components/dashboard/CreateTaskModal';
+import EditTaskModal from '@/components/dashboard/EditTaskModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +19,7 @@ import {
   User,
   Users,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 
 type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
@@ -54,6 +56,7 @@ export default function DashboardTasks() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<TaskStatus | 'ALL'>('ALL');
   const [showCreate, setShowCreate] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -283,6 +286,14 @@ export default function DashboardTasks() {
                       </>
                     )}
 
+                    {canCreate && (
+                      <button
+                        onClick={() => setEditTask(task)}
+                        className="p-1.5 text-gray-500 hover:text-[#9113ff] transition-colors rounded-lg hover:bg-[#9113ff]/10"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         onClick={() => setDeleteId(task.id)}
@@ -300,6 +311,7 @@ export default function DashboardTasks() {
       </div>
 
       <CreateTaskModal open={showCreate} onClose={() => setShowCreate(false)} onCreated={fetchTasks} />
+      <EditTaskModal open={!!editTask} task={editTask} onClose={() => setEditTask(null)} onUpdated={fetchTasks} />
 
       <ConfirmDialog
         open={!!deleteId}
