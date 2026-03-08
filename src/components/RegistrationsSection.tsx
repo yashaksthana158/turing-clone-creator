@@ -36,8 +36,10 @@ export const RegistrationsSection = () => {
       let allEvents: UnifiedEvent[] = [];
 
       if (regularData && regularData.length > 0) {
+        const now = new Date().toISOString();
+        const upcoming = regularData.filter((evt: any) => !evt.event_date || evt.event_date >= now);
         const counts = await Promise.all(
-          regularData.map(async (evt: any) => {
+          upcoming.map(async (evt: any) => {
             const { count } = await supabase
               .from("event_registrations")
               .select("id", { count: "exact", head: true })
