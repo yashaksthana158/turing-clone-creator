@@ -78,7 +78,7 @@ export default function DashboardEvents() {
     if (hasMinRoleLevel(2)) {
       const { data: evts } = await supabase
         .from('events')
-        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url, category')
+        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url, category, is_featured')
         .order('created_at', { ascending: false });
       setEvents((evts as Event[]) || []);
 
