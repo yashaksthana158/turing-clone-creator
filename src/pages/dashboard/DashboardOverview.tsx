@@ -12,6 +12,7 @@ interface Stats {
   tasks: number;
   users: number;
   myRegistrations: number;
+  certificates: number;
 }
 
 export default function DashboardOverview() {
