@@ -148,7 +148,7 @@ export default function DashboardOverload() {
   }
 
   async function updateRow(table: string, id: string, data: Record<string, unknown>) {
-    const { error } = await supabase.from(table).update(data).eq("id", id);
+    const { error } = await (supabase.from as any)(table).update(data).eq("id", id);
     if (error) { toast.error(error.message); return; }
     if (selectedId) fetchSubData(selectedId);
   }
