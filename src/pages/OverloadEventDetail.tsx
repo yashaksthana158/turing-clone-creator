@@ -406,14 +406,12 @@ const OverloadEventDetail = () => {
                 Ready to join?
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                {user ? "Upload your ID card and register." : "Create an account to register for this event."}
+                {user ? "Click below to register for this event." : "Create an account to register for this event."}
               </p>
-              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
-                disabled={registering || (user ? !idCardFile : false)}
+                disabled={registering}
                 className="overload-register-btn"
-                style={{ opacity: registering || (user && !idCardFile) ? 0.5 : 1 }}
               >
                 {registering ? (
                   <><Loader2 size={16} className="animate-spin" style={{ display: "inline", marginRight: 8 }} />Registering...</>
