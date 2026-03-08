@@ -500,33 +500,42 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admission_year: number | null
           avatar_url: string | null
           college: string | null
           course: string | null
           created_at: string
           full_name: string | null
           id: string
+          id_card_url: string | null
           phone: string | null
+          roll_no: string | null
           updated_at: string
         }
         Insert: {
+          admission_year?: number | null
           avatar_url?: string | null
           college?: string | null
           course?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          id_card_url?: string | null
           phone?: string | null
+          roll_no?: string | null
           updated_at?: string
         }
         Update: {
+          admission_year?: number | null
           avatar_url?: string | null
           college?: string | null
           course?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          id_card_url?: string | null
           phone?: string | null
+          roll_no?: string | null
           updated_at?: string
         }
         Relationships: []
