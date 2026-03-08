@@ -186,16 +186,20 @@ const OverloadPP = () => {
           <div className="overload-about-text">
             <h2>About {edition.title}</h2>
             {edition.description && <p>{edition.description}</p>}
-            {edition.register_url && (
-              <a
-                href={edition.register_url}
-                target="_blank"
-                rel="noreferrer"
-                className="overload-register-btn"
-              >
-                Register Now
-              </a>
-            )}
+            <button
+              onClick={() => {
+                if (!user) {
+                  navigate(`/register?redirect=/overloadpp${year ? `/${year}` : ""}`);
+                } else if (edition.register_enabled && edition.register_url) {
+                  window.open(edition.register_url, "_blank");
+                } else {
+                  document.getElementById("overload-schedule")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="overload-register-btn"
+            >
+              Register Now
+            </button>
           </div>
         </div>
       </section>
