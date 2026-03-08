@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
   CheckCircle, XCircle, Upload, X, FileImage, Loader2,
