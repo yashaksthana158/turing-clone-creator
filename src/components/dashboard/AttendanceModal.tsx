@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Loader2, Users, Search } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Users, Search, Download, FileText } from "lucide-react";
+import jsPDF from "jspdf";
 
 interface Registration {
   id: string;
@@ -95,6 +96,72 @@ export default function AttendanceModal({ open, eventId, eventTitle, onClose, on
 
   const attendedCount = registrations.filter(r => r.status === "ATTENDED").length;
 
+  const exportCSV = () => {
+    const header = "S.No,Name,College,Course,Status\n";
+    const rows = registrations.map((r, i) =>
+      `${i + 1},"${r.profiles?.full_name || "Unknown"}","${r.profiles?.college || ""}","${r.profiles?.course || ""}",${r.status}`
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${eventTitle.replace(/\s+/g, "_")}_attendance.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV downloaded");
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(eventTitle, pageWidth / 2, 20, { align: "center" });
+
+    // Summary
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Attendance Report — ${attendedCount}/${registrations.length} attended`, pageWidth / 2, 28, { align: "center" });
+    doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, pageWidth / 2, 34, { align: "center" });
+
+    // Table header
+    let y = 46;
+    doc.setFillColor(40, 40, 40);
+    doc.rect(14, y - 5, pageWidth - 28, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("S.No", 16, y);
+    doc.text("Name", 30, y);
+    doc.text("College", 90, y);
+    doc.text("Course", 140, y);
+    doc.text("Status", 180, y);
+
+    // Rows
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    registrations.forEach((r, i) => {
+      y += 8;
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(9);
+      doc.text(`${i + 1}`, 16, y);
+      doc.text(r.profiles?.full_name || "Unknown", 30, y);
+      doc.text((r.profiles?.college || "").substring(0, 30), 90, y);
+      doc.text((r.profiles?.course || "").substring(0, 22), 140, y);
+      doc.setTextColor(r.status === "ATTENDED" ? 34 : 150, r.status === "ATTENDED" ? 197 : 150, r.status === "ATTENDED" ? 94 : 150);
+      doc.text(r.status, 180, y);
+      doc.setTextColor(0, 0, 0);
+    });
+
+    doc.save(`${eventTitle.replace(/\s+/g, "_")}_attendance.pdf`);
+    toast.success("PDF downloaded");
+  };
+
   if (!open) return null;
 
   return (
@@ -185,7 +252,25 @@ export default function AttendanceModal({ open, eventId, eventTitle, onClose, on
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-3">
+        <div className="p-4 border-t border-gray-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportCSV}
+              disabled={registrations.length === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <Download size={13} />
+              CSV
+            </button>
+            <button
+              onClick={exportPDF}
+              disabled={registrations.length === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <FileText size={13} />
+              PDF
+            </button>
+          </div>
           <button
             onClick={() => { onUpdated(); onClose(); }}
             className="px-4 py-2 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-semibold transition-colors"
