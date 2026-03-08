@@ -92,11 +92,32 @@ export default function EventDetail() {
       navigate(`/register?redirect=/events/${id}`);
       return;
     }
+    if (!idCardFile) {
+      toast.error("Please upload your ID card to verify your details");
+      return;
+    }
     setRegistering(true);
+
+    // Upload ID card
+    const fileExt = idCardFile.name.split(".").pop();
+    const filePath = `${user.id}/${id}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from("id-cards")
+      .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
+
+    if (uploadError) {
+      toast.error("Failed to upload ID card: " + uploadError.message);
+      setRegistering(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
+
     const { error } = await supabase.from("event_registrations").insert({
       event_id: id!,
       user_id: user.id,
-    });
+      id_card_url: urlData.publicUrl,
+    } as any);
     if (error) {
       if (error.code === "23505") {
         toast.error("You are already registered for this event");
@@ -107,8 +128,31 @@ export default function EventDetail() {
       toast.success("Successfully registered!");
       setRegistrationStatus("REGISTERED");
       setRegCount((c) => c + 1);
+      setIdCardFile(null);
+      setIdCardPreview(null);
     }
     setRegistering(false);
+  };
+
+  const handleIdCardSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      toast.error("Please upload an image or PDF file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File must be less than 5MB");
+      return;
+    }
+    setIdCardFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setIdCardPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setIdCardPreview(null);
+    }
   };
 
   const handleCancel = async () => {
