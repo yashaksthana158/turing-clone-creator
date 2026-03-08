@@ -190,39 +190,21 @@ export default function DashboardCertificates() {
     setDeleting(false);
   };
 
-  const handleDownload = (cert: Certificate) => {
-    // Generate a simple certificate as downloadable HTML
-    const html = `
-<!DOCTYPE html>
-<html>
-<head><title>Certificate</title>
-<style>
-  body { font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f8f8f8; }
-  .cert { background: white; border: 3px double #9113ff; padding: 60px 80px; max-width: 800px; text-align: center; box-shadow: 0 4px 30px rgba(0,0,0,0.1); }
-  h1 { color: #9113ff; font-size: 2.5em; margin-bottom: 0.2em; }
-  .subtitle { color: #666; font-size: 1.2em; margin-bottom: 2em; }
-  .name { font-size: 2em; color: #222; font-weight: bold; border-bottom: 2px solid #9113ff; display: inline-block; padding-bottom: 4px; margin: 0.5em 0; }
-  .desc { color: #555; font-size: 1.1em; margin: 1.5em 0; }
-  .meta { color: #999; font-size: 0.9em; margin-top: 2em; }
-</style></head>
-<body>
-<div class="cert">
-  <h1>Certificate of Achievement</h1>
-  <p class="subtitle">${cert.title}</p>
-  <p>This is awarded to</p>
-  <p class="name">${cert.profiles?.full_name || 'Participant'}</p>
-  ${cert.description ? `<p class="desc">${cert.description}</p>` : ''}
-  ${cert.events?.title ? `<p class="desc">For participation in: ${cert.events.title}</p>` : ''}
-  <p class="meta">Certificate #${cert.certificate_number} | Issued: ${new Date(cert.issued_at).toLocaleDateString()}</p>
-</div>
-</body></html>`;
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `certificate-${cert.certificate_number}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleDownload = async (cert: Certificate) => {
+    try {
+      await generateCertificatePdf({
+        title: cert.title,
+        recipientName: cert.profiles?.full_name || 'Participant',
+        description: cert.description,
+        eventTitle: cert.events?.title || null,
+        certificateNumber: cert.certificate_number,
+        issuedAt: cert.issued_at,
+      });
+      toast.success('Certificate PDF downloaded');
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const filteredUsers = users.filter(
