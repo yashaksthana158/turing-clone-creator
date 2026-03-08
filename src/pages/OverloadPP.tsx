@@ -238,7 +238,7 @@ const OverloadPP = () => {
 
       {/* Schedule Timeline */}
       {schedule.length > 0 && (
-        <section className="overload-schedule-section">
+        <section id="overload-schedule" className="overload-schedule-section">
           <h2 className="overload-section-title">Event Schedule</h2>
           <div className="overload-timeline">
             <div className="overload-timeline-line" />
