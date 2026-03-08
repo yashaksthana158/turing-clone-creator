@@ -43,7 +43,9 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/overloadpp" element={<OverloadPP />} />
+            <Route path="/overloadpp/:year" element={<ComingSoon section="Overload++" />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/gallery/:year" element={<ComingSoon section="Gallery" />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
