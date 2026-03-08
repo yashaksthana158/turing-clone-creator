@@ -43,6 +43,7 @@ const CATEGORIES = ["all", "coding", "gaming", "debate", "puzzle", "fun", "works
 
 const Events = () => {
   const [allEvents, setAllEvents] = useState<UnifiedEvent[]>([]);
+  const [pastDbEvents, setPastDbEvents] = useState<UnifiedEvent[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
