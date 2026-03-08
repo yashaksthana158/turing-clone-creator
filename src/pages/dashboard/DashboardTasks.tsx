@@ -247,6 +247,7 @@ export default function DashboardTasks() {
               )}
             </button>
           ))}
+          </div>
         </div>
 
         {/* Task list */}
