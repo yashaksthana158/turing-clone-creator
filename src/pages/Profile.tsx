@@ -36,7 +36,7 @@ export default function Profile() {
   const fetchProfile = async () => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, phone, avatar_url')
+      .select('full_name, phone, avatar_url, college, course, roll_no, admission_year')
       .eq('id', user!.id)
       .single();
 
@@ -45,6 +45,10 @@ export default function Profile() {
         full_name: data.full_name || '',
         phone: data.phone || '',
         avatar_url: data.avatar_url || '',
+        college: data.college || '',
+        course: data.course || '',
+        roll_no: data.roll_no || '',
+        admission_year: data.admission_year || null,
       });
     }
     setLoading(false);
