@@ -14,6 +14,9 @@ import {
   Loader2,
   Clock,
   Trophy,
+  Upload,
+  X,
+  FileImage,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
 
