@@ -75,7 +75,7 @@ export const RegistrationsSection = () => {
             
             for (const oe of oEvents) {
               allEvents.push({
-                id: `overload-${oe.id}`,
+                id: `overload-${edition.id}-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
                 event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,
