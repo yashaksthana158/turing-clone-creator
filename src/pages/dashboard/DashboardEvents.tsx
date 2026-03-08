@@ -117,6 +117,69 @@ export default function DashboardEvents() {
     ? events
     : events.filter(e => e.status === statusFilter);
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredEvents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredEvents.map(e => e.id)));
+    }
+  };
+
+  const selectedEvents = filteredEvents.filter(e => selectedIds.has(e.id));
+
+  const bulkClose = async () => {
+    const ids = selectedEvents.filter(e => e.status === 'PUBLISHED').map(e => e.id);
+    if (ids.length === 0) { toast.error('No published events selected'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'CLOSED' }).in('id', ids);
+    if (error) toast.error('Failed to close events');
+    else { toast.success(`${ids.length} event(s) closed`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkUnpublish = async () => {
+    const ids = selectedEvents.filter(e => e.status === 'PUBLISHED').map(e => e.id);
+    if (ids.length === 0) { toast.error('No published events selected'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'APPROVED' }).in('id', ids);
+    if (error) toast.error('Failed to unpublish events');
+    else { toast.success(`${ids.length} event(s) unpublished`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkDelete = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    await Promise.all([
+      supabase.from('event_registrations').delete().in('event_id', ids),
+      supabase.from('approvals').delete().in('item_id', ids),
+    ]);
+    const { error } = await supabase.from('events').delete().in('id', ids);
+    if (error) toast.error('Failed to delete events');
+    else { toast.success(`${ids.length} event(s) deleted`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkClosePast = async () => {
+    const now = new Date().toISOString();
+    const pastPublished = events.filter(e => e.status === 'PUBLISHED' && e.event_date && e.event_date < now);
+    if (pastPublished.length === 0) { toast.error('No past published events found'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'CLOSED' }).in('id', pastPublished.map(e => e.id));
+    if (error) toast.error('Failed to close past events');
+    else { toast.success(`${pastPublished.length} past event(s) closed`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
       REGISTERED: 'bg-green-500/20 text-green-400 border-green-500/30',
