@@ -142,6 +142,22 @@ export default function EventApprovalActions({
     setLoading(false);
   };
 
+  const handleCloseEvent = async () => {
+    setLoading(true);
+    const { error } = await supabase
+      .from('events')
+      .update({ status: 'CLOSED' })
+      .eq('id', eventId);
+
+    if (error) {
+      toast.error('Failed to close event');
+    } else {
+      toast.success('Event closed successfully');
+      onUpdated();
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return <Loader2 size={16} className="animate-spin text-gray-400" />;
   }
