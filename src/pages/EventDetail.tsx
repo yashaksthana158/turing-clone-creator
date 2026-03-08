@@ -16,7 +16,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
-import { IdCardUpload } from "@/components/IdCardUpload";
 
 interface EventData {
   id: string;
