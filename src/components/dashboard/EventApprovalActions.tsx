@@ -287,8 +287,6 @@ export default function EventApprovalActions({
           </button>
         </>
       )}
-        </button>
-      )}
     </div>
   );
 }
