@@ -158,6 +158,22 @@ export default function EventApprovalActions({
     setLoading(false);
   };
 
+  const handleReopenEvent = async () => {
+    setLoading(true);
+    const { error } = await supabase
+      .from('events')
+      .update({ status: 'PUBLISHED' })
+      .eq('id', eventId);
+
+    if (error) {
+      toast.error('Failed to reopen event');
+    } else {
+      toast.success('Event reopened for registrations');
+      onUpdated();
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return <Loader2 size={16} className="animate-spin text-gray-400" />;
   }
