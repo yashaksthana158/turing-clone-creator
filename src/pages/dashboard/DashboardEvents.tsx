@@ -208,6 +208,7 @@ export default function DashboardEvents() {
   const views = [
     { id: 'my' as const, label: 'My Events', icon: Ticket },
     ...(hasMinRoleLevel(2) ? [{ id: 'manage' as const, label: 'Manage Events', icon: Calendar }] : []),
+    ...(hasMinRoleLevel(3) ? [{ id: 'registrations' as const, label: 'Registrations', icon: ClipboardList }] : []),
   ];
 
   return (
