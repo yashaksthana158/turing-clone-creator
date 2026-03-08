@@ -12,13 +12,14 @@ interface Stats {
   tasks: number;
   users: number;
   myRegistrations: number;
+  certificates: number;
 }
 
 export default function DashboardOverview() {
   const { user, loading } = useAuth();
   const { getHighestRole, hasMinRoleLevel } = useRole();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0, myRegistrations: 0 });
+  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0, myRegistrations: 0, certificates: 0 });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -52,6 +53,7 @@ export default function DashboardOverview() {
     setStats({
       events: eventsRes.count || 0,
       myRegistrations: myRegsRes.count || 0,
+      certificates: 0,
       teams,
       tasks,
       users,
@@ -71,7 +73,8 @@ export default function DashboardOverview() {
   // All roles see these
   const statCards = [
     { title: 'My Registrations', value: stats.myRegistrations, icon: Ticket, color: 'text-cyan-400 bg-cyan-500/20', minLevel: 1 },
-    { title: 'Published Events', value: stats.events, icon: Calendar, color: 'text-green-400 bg-green-500/20', minLevel: 1 },
+    { title: 'Certificates', value: stats.certificates, icon: Award, color: 'text-emerald-400 bg-emerald-500/20', minLevel: 1 },
+    { title: 'Published Events', value: stats.events, icon: Calendar, color: 'text-green-400 bg-green-500/20', minLevel: 2 },
     { title: 'Teams', value: stats.teams, icon: Users, color: 'text-blue-400 bg-blue-500/20', minLevel: 3 },
     { title: 'Tasks', value: stats.tasks, icon: ClipboardList, color: 'text-amber-400 bg-amber-500/20', minLevel: 2 },
     { title: 'Users', value: stats.users, icon: Shield, color: 'text-purple-400 bg-purple-500/20', minLevel: 4 },
