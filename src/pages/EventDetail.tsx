@@ -152,25 +152,9 @@ export default function EventDetail() {
     setRegistering(false);
   };
 
-  const handleIdCardSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-      toast.error("Please upload an image or PDF file");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File must be less than 5MB");
-      return;
-    }
+  const handleIdCardChange = (file: File | null, preview: string | null) => {
     setIdCardFile(file);
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setIdCardPreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setIdCardPreview(null);
-    }
+    setIdCardPreview(preview);
   };
 
   const handleCancel = async () => {
