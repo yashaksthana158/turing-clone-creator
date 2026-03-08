@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
