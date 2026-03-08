@@ -71,7 +71,7 @@ const Events = () => {
       // Fetch overload events from published editions
       const { data: editions } = await supabase
         .from("overload_editions")
-        .select("id, date_label, venue, register_url, title")
+        .select("id, date_label, venue, register_url, title, year")
         .eq("is_published", true);
 
       if (editions && editions.length > 0) {
@@ -99,7 +99,7 @@ const Events = () => {
                 max_participants: null,
                 registration_count: 0,
                 is_featured: false,
-                external_url: oe.link_url || edition.register_url || null,
+                external_url: `/overloadpp/${edition.year}/event/${oe.id}`,
               };
 
               if (isPastEdition) {
