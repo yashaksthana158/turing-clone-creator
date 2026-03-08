@@ -479,6 +479,11 @@ export default function DashboardOverload() {
                 </div>
               </div>
             )}
+
+            {/* Registrations tab */}
+            {activeTab === "registrations" && (
+              <EventRegistrationsView source="overload" />
+            )}
           </>
         )}
       </div>
