@@ -71,6 +71,9 @@ export function LiveEventCard({
         ) : (
           <span className="event-card-live-status open">Open</span>
         )}
+        {is_featured && (
+          <span className="event-card-live-featured-badge">⭐ Featured</span>
+        )}
       </div>
 
       {/* Content */}

@@ -446,15 +446,34 @@ export default function DashboardEvents() {
                                 )}
                               </div>
                             </div>
-                            {evt.status === 'DRAFT' && evt.created_by === user?.id && (
-                              <button
-                                onClick={() => setEditingEvent(evt)}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
-                              >
-                                <Pencil size={13} />
-                                Edit
-                              </button>
-                            )}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {hasMinRoleLevel(3) && (
+                                <button
+                                  onClick={async () => {
+                                    const { error } = await supabase.from('events').update({ is_featured: !evt.is_featured }).eq('id', evt.id);
+                                    if (error) toast.error('Failed to update');
+                                    else { toast.success(evt.is_featured ? 'Unfeatured' : 'Featured!'); fetchData(); }
+                                  }}
+                                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                    evt.is_featured
+                                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30'
+                                      : 'text-gray-400 border-gray-700 hover:bg-white/5'
+                                  }`}
+                                >
+                                  <Star size={13} className={evt.is_featured ? 'fill-current' : ''} />
+                                  {evt.is_featured ? 'Unfeature' : 'Feature'}
+                                </button>
+                              )}
+                              {evt.status === 'DRAFT' && evt.created_by === user?.id && (
+                                <button
+                                  onClick={() => setEditingEvent(evt)}
+                                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                                >
+                                  <Pencil size={13} />
+                                  Edit
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Approval Actions */}
