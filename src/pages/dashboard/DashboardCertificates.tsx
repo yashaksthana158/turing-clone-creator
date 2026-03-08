@@ -56,7 +56,6 @@ export default function DashboardCertificates() {
   // Bulk attendees
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchCertificates();
