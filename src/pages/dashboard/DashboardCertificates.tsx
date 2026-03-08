@@ -175,6 +175,7 @@ export default function DashboardCertificates() {
     setLoadingAttendees(false);
   };
 
+  const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
     const { error } = await supabase.from('certificates').delete().eq('id', deleteId);
