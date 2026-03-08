@@ -8,7 +8,7 @@ import CreateEventModal from '@/components/dashboard/CreateEventModal';
 import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
 import AttendanceModal from '@/components/dashboard/AttendanceModal';
-import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil } from 'lucide-react';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -56,6 +56,8 @@ export default function DashboardEvents() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -114,6 +116,69 @@ export default function DashboardEvents() {
   const filteredEvents = statusFilter === 'ALL'
     ? events
     : events.filter(e => e.status === statusFilter);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredEvents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredEvents.map(e => e.id)));
+    }
+  };
+
+  const selectedEvents = filteredEvents.filter(e => selectedIds.has(e.id));
+
+  const bulkClose = async () => {
+    const ids = selectedEvents.filter(e => e.status === 'PUBLISHED').map(e => e.id);
+    if (ids.length === 0) { toast.error('No published events selected'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'CLOSED' }).in('id', ids);
+    if (error) toast.error('Failed to close events');
+    else { toast.success(`${ids.length} event(s) closed`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkUnpublish = async () => {
+    const ids = selectedEvents.filter(e => e.status === 'PUBLISHED').map(e => e.id);
+    if (ids.length === 0) { toast.error('No published events selected'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'APPROVED' }).in('id', ids);
+    if (error) toast.error('Failed to unpublish events');
+    else { toast.success(`${ids.length} event(s) unpublished`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkDelete = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    await Promise.all([
+      supabase.from('event_registrations').delete().in('event_id', ids),
+      supabase.from('approvals').delete().in('item_id', ids),
+    ]);
+    const { error } = await supabase.from('events').delete().in('id', ids);
+    if (error) toast.error('Failed to delete events');
+    else { toast.success(`${ids.length} event(s) deleted`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
+
+  const bulkClosePast = async () => {
+    const now = new Date().toISOString();
+    const pastPublished = events.filter(e => e.status === 'PUBLISHED' && e.event_date && e.event_date < now);
+    if (pastPublished.length === 0) { toast.error('No past published events found'); return; }
+    setBulkLoading(true);
+    const { error } = await supabase.from('events').update({ status: 'CLOSED' }).in('id', pastPublished.map(e => e.id));
+    if (error) toast.error('Failed to close past events');
+    else { toast.success(`${pastPublished.length} past event(s) closed`); setSelectedIds(new Set()); fetchData(); }
+    setBulkLoading(false);
+  };
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
@@ -263,6 +328,62 @@ export default function DashboardEvents() {
                   ))}
                 </div>
 
+                {/* Bulk action bar */}
+                {hasMinRoleLevel(3) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={toggleSelectAll}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      {selectedIds.size === filteredEvents.length && filteredEvents.length > 0 ? <CheckSquare size={13} /> : <Square size={13} />}
+                      {selectedIds.size === filteredEvents.length && filteredEvents.length > 0 ? 'Deselect All' : 'Select All'}
+                    </button>
+
+                    {selectedIds.size > 0 && (
+                      <>
+                        <span className="text-xs text-gray-500">{selectedIds.size} selected</span>
+                        <button
+                          onClick={bulkClose}
+                          disabled={bulkLoading}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-500/20 text-gray-300 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors disabled:opacity-50"
+                        >
+                          <Lock size={13} />
+                          Close Selected
+                        </button>
+                        {hasMinRoleLevel(4) && (
+                          <>
+                            <button
+                              onClick={bulkUnpublish}
+                              disabled={bulkLoading}
+                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-lg hover:bg-orange-500/30 transition-colors disabled:opacity-50"
+                            >
+                              <EyeOff size={13} />
+                              Unpublish Selected
+                            </button>
+                            <button
+                              onClick={bulkDelete}
+                              disabled={bulkLoading}
+                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 size={13} />
+                              Delete Selected
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+
+                    <button
+                      onClick={bulkClosePast}
+                      disabled={bulkLoading}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-500/30 transition-colors disabled:opacity-50 ml-auto"
+                    >
+                      <Clock size={13} />
+                      Close All Past Events
+                    </button>
+                  </div>
+                )}
+
                 {filteredEvents.length === 0 ? (
                   <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-12 text-center">
                     <Calendar size={48} className="text-gray-600 mx-auto mb-4" />
@@ -271,64 +392,76 @@ export default function DashboardEvents() {
                   </div>
                 ) : (
                   filteredEvents.map(evt => (
-                    <div key={evt.id} className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-white font-semibold">{evt.title}</h3>
-                            <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
-                              {evt.status.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                          {evt.description && (
-                            <p className="text-gray-400 text-sm mt-1 line-clamp-2">{evt.description}</p>
-                          )}
-                          {evt.poster_url && (
-                            <img src={evt.poster_url} alt="Event poster" className="mt-2 w-32 h-20 object-cover rounded-md border border-gray-700" />
-                          )}
-                          <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
-                            {evt.event_date && (
-                              <span className="flex items-center gap-1.5">
-                                <Clock size={14} />
-                                {formatDate(evt.event_date)}
-                              </span>
-                            )}
-                            {evt.venue && (
-                              <span className="flex items-center gap-1.5">
-                                <MapPin size={14} />
-                                {evt.venue}
-                              </span>
-                            )}
-                            {evt.max_participants && (
-                              <span className="flex items-center gap-1.5">
-                                <Users size={14} />
-                                Max {evt.max_participants}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {/* Edit button for draft events owned by user */}
-                        {evt.status === 'DRAFT' && evt.created_by === user?.id && (
+                    <div key={evt.id} className={`bg-[#1c1c1c] border rounded-lg p-5 transition-colors ${selectedIds.has(evt.id) ? 'border-[#9113ff]/50' : 'border-gray-800'}`}>
+                      <div className="flex items-start gap-3">
+                        {/* Checkbox */}
+                        {hasMinRoleLevel(3) && (
                           <button
-                            onClick={() => setEditingEvent(evt)}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                            onClick={() => toggleSelect(evt.id)}
+                            className="mt-1 text-gray-500 hover:text-white transition-colors flex-shrink-0"
                           >
-                            <Pencil size={13} />
-                            Edit
+                            {selectedIds.has(evt.id) ? <CheckSquare size={18} className="text-[#9113ff]" /> : <Square size={18} />}
                           </button>
                         )}
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 className="text-white font-semibold">{evt.title}</h3>
+                                <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
+                                  {evt.status.replace(/_/g, ' ')}
+                                </span>
+                              </div>
+                              {evt.description && (
+                                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{evt.description}</p>
+                              )}
+                              {evt.poster_url && (
+                                <img src={evt.poster_url} alt="Event poster" className="mt-2 w-32 h-20 object-cover rounded-md border border-gray-700" />
+                              )}
+                              <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
+                                {evt.event_date && (
+                                  <span className="flex items-center gap-1.5">
+                                    <Clock size={14} />
+                                    {formatDate(evt.event_date)}
+                                  </span>
+                                )}
+                                {evt.venue && (
+                                  <span className="flex items-center gap-1.5">
+                                    <MapPin size={14} />
+                                    {evt.venue}
+                                  </span>
+                                )}
+                                {evt.max_participants && (
+                                  <span className="flex items-center gap-1.5">
+                                    <Users size={14} />
+                                    Max {evt.max_participants}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {evt.status === 'DRAFT' && evt.created_by === user?.id && (
+                              <button
+                                onClick={() => setEditingEvent(evt)}
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                              >
+                                <Pencil size={13} />
+                                Edit
+                              </button>
+                            )}
+                          </div>
 
-                      {/* Approval Actions */}
-                      <div className="mt-3 pt-3 border-t border-gray-800">
-                        <EventApprovalActions
-                          eventId={evt.id}
-                          eventStatus={evt.status}
-                          eventCreatedBy={evt.created_by}
-                          approval={getApprovalForEvent(evt.id)}
-                          onUpdated={fetchData}
-                          onMarkAttendance={() => setAttendanceEvent(evt)}
-                        />
+                          {/* Approval Actions */}
+                          <div className="mt-3 pt-3 border-t border-gray-800">
+                            <EventApprovalActions
+                              eventId={evt.id}
+                              eventStatus={evt.status}
+                              eventCreatedBy={evt.created_by}
+                              approval={getApprovalForEvent(evt.id)}
+                              onUpdated={fetchData}
+                              onMarkAttendance={() => setAttendanceEvent(evt)}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))
