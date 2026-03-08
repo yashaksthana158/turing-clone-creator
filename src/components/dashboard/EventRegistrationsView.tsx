@@ -271,7 +271,7 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
             <option value="">Choose an event...</option>
             {events.map(evt => (
               <option key={evt.id} value={evt.id}>
-                {evt.title} ({evt.status.replace(/_/g, ' ')})
+                {evt.title}{evt.status ? ` (${evt.status.replace(/_/g, ' ')})` : ''}
               </option>
             ))}
           </select>
