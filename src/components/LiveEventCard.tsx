@@ -24,6 +24,7 @@ interface LiveEventCardProps {
   max_participants: number | null;
   registration_count?: number;
   showCountdown?: boolean;
+  is_featured?: boolean;
 }
 
 export function LiveEventCard({
