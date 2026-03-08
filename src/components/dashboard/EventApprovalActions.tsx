@@ -26,6 +26,7 @@ export default function EventApprovalActions({
   eventCreatedBy,
   approval,
   onUpdated,
+  onMarkAttendance,
 }: EventApprovalActionsProps) {
   const { user } = useAuth();
   const { hasMinRoleLevel, isTeamLead, isPresident } = useRole();
