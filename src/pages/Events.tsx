@@ -13,6 +13,7 @@ interface DbEvent {
   venue: string | null;
   status: string;
   max_participants: number | null;
+  poster_url: string | null;
 }
 
 const hardcodedEvents = [
