@@ -16,7 +16,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
-import { IdCardUpload } from "@/components/IdCardUpload";
 
 interface EventData {
   id: string;
@@ -39,9 +38,6 @@ export default function EventDetail() {
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [regCount, setRegCount] = useState(0);
-  const [idCardFile, setIdCardFile] = useState<File | null>(null);
-  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
-  // uploadingCard state removed - was unused
 
   useEffect(() => {
     if (id) fetchEvent();
@@ -91,33 +87,12 @@ export default function EventDetail() {
       navigate(`/register?redirect=/events/${id}`);
       return;
     }
-    if (!idCardFile) {
-      toast.error("Please upload your ID card to verify your details");
-      return;
-    }
     setRegistering(true);
 
-    // Upload ID card
-    const fileExt = idCardFile.name.split(".").pop();
-    const filePath = `${user.id}/${id}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from("id-cards")
-      .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
-
-    if (uploadError) {
-      toast.error("Failed to upload ID card: " + uploadError.message);
-      setRegistering(false);
-      return;
-    }
-
-    // Store the storage path (not a public/signed URL)
-    const storagePath = filePath;
-
-    // If re-registering after cancellation or rejection, update existing row
     if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
       const { error } = await supabase
         .from("event_registrations")
-        .update({ status: "REGISTERED" as any, id_card_url: storagePath })
+        .update({ status: "REGISTERED" as any })
         .eq("event_id", id!)
         .eq("user_id", user.id);
       if (error) {
@@ -126,14 +101,11 @@ export default function EventDetail() {
         toast.success("Successfully re-registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     } else {
       const { error } = await supabase.from("event_registrations").insert({
         event_id: id!,
         user_id: user.id,
-        id_card_url: storagePath,
       } as any);
       if (error) {
         if (error.code === "23505") {
@@ -145,16 +117,9 @@ export default function EventDetail() {
         toast.success("Successfully registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     }
     setRegistering(false);
-  };
-
-  const handleIdCardChange = (file: File | null, preview: string | null) => {
-    setIdCardFile(file);
-    setIdCardPreview(preview);
   };
 
   const handleCancel = async () => {
@@ -322,7 +287,7 @@ export default function EventDetail() {
                 Registration Approved!
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "8px" }}>
-                Your ID card has been verified. A confirmation email has been sent.
+                Your registration has been approved. A confirmation email has been sent.
               </p>
               <p style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600 }}>
                 We'll see you at the event! 🎉
@@ -337,7 +302,7 @@ export default function EventDetail() {
                 Registration Pending Review
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                Your ID card is being verified. You'll receive a confirmation once approved.
+                Your registration is being reviewed. You'll receive a confirmation once approved.
               </p>
               <button
                 onClick={handleCancel}
@@ -369,7 +334,7 @@ export default function EventDetail() {
                     Registration Rejected
                   </h3>
                   <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                    Your registration was rejected. You can try again.
                   </p>
                 </>
               ) : (
@@ -377,11 +342,6 @@ export default function EventDetail() {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-
-              {user && (
-                <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />
-              )}
-
               <button
                 onClick={handleRegister}
                 disabled={registering || isFull}
@@ -398,13 +358,8 @@ export default function EventDetail() {
                 Ready to join?
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                {user ? "Upload your ID card and register." : "Create an account to register for this event."}
+                {user ? "Click below to register for this event." : "Create an account to register for this event."}
               </p>
-
-              {user && (
-                <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />
-              )}
-
               <button
                 onClick={handleRegister}
                 disabled={registering}

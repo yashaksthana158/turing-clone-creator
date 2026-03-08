@@ -9,7 +9,7 @@ import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
   CheckCircle, XCircle, Loader2,
 } from "lucide-react";
-import { IdCardUpload } from "@/components/IdCardUpload";
+
 
 interface OverloadEventData {
   id: string;
@@ -45,11 +45,8 @@ const OverloadEventDetail = () => {
   const [edition, setEdition] = useState<Edition | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Registration state
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
-  const [idCardFile, setIdCardFile] = useState<File | null>(null);
-  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
   const [regCount, setRegCount] = useState(0);
 
   useEffect(() => {
@@ -105,41 +102,17 @@ const OverloadEventDetail = () => {
     setRegistrationStatus((data as any)?.status || null);
   };
 
-  const handleIdCardChange = (file: File | null, preview: string | null) => {
-    setIdCardFile(file);
-    setIdCardPreview(preview);
-  };
-
   const handleRegister = async () => {
     if (!user) {
       navigate(`/register?redirect=/overloadpp${year ? `/${year}` : ""}/event/${eventId}`);
       return;
     }
-    if (!idCardFile) {
-      toast.error("Please upload your ID card to verify your details");
-      return;
-    }
     setRegistering(true);
-
-    const fileExt = idCardFile.name.split(".").pop();
-    const filePath = `${user.id}/overload-${eventId}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from("id-cards")
-      .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
-
-    if (uploadError) {
-      toast.error("Failed to upload ID card: " + uploadError.message);
-      setRegistering(false);
-      return;
-    }
-
-    // Store the storage path (not a public/signed URL)
-    const storagePath = filePath;
 
     if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
       const { error } = await supabase
         .from("overload_event_registrations" as any)
-        .update({ status: "REGISTERED", id_card_url: storagePath })
+        .update({ status: "REGISTERED" })
         .eq("overload_event_id", eventId!)
         .eq("user_id", user.id);
       if (error) {
@@ -148,8 +121,6 @@ const OverloadEventDetail = () => {
         toast.success("Successfully re-registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     } else {
       const { error } = await supabase
@@ -157,7 +128,6 @@ const OverloadEventDetail = () => {
         .insert({
           overload_event_id: eventId!,
           user_id: user.id,
-          id_card_url: storagePath,
         });
       if (error) {
         if (error.code === "23505") {
@@ -169,8 +139,6 @@ const OverloadEventDetail = () => {
         toast.success("Successfully registered!");
         setRegistrationStatus("REGISTERED");
         setRegCount((c) => c + 1);
-        setIdCardFile(null);
-        setIdCardPreview(null);
       }
     }
     setRegistering(false);
@@ -223,8 +191,6 @@ const OverloadEventDetail = () => {
 
   const rulesList = event.rules?.split("\n").filter(Boolean) || [];
   const coordinatorsList = event.coordinators?.split("\n").filter(Boolean) || [];
-
-  // IdCardUpload is now imported from shared component
 
   return (
     <div>
@@ -412,7 +378,7 @@ const OverloadEventDetail = () => {
                     Registration Rejected
                   </h3>
                   <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                    Your registration was rejected. You can try again.
                   </p>
                 </>
               ) : (
@@ -420,12 +386,10 @@ const OverloadEventDetail = () => {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
-                disabled={registering || !idCardFile}
+                disabled={registering}
                 className="overload-register-btn"
-                style={{ opacity: registering || !idCardFile ? 0.5 : 1 }}
               >
                 {registering ? "Registering..." : "Register Again"}
               </button>
@@ -438,14 +402,12 @@ const OverloadEventDetail = () => {
                 Ready to join?
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                {user ? "Upload your ID card and register." : "Create an account to register for this event."}
+                {user ? "Click below to register for this event." : "Create an account to register for this event."}
               </p>
-              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
-                disabled={registering || (user ? !idCardFile : false)}
+                disabled={registering}
                 className="overload-register-btn"
-                style={{ opacity: registering || (user && !idCardFile) ? 0.5 : 1 }}
               >
                 {registering ? (
                   <><Loader2 size={16} className="animate-spin" style={{ display: "inline", marginRight: 8 }} />Registering...</>

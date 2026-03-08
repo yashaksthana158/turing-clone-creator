@@ -9,6 +9,10 @@ interface Profile {
   full_name: string;
   phone: string;
   avatar_url: string;
+  college: string;
+  course: string;
+  roll_no: string;
+  admission_year: number | null;
 }
 
 export default function Profile() {
@@ -16,7 +20,7 @@ export default function Profile() {
   const { roles, getHighestRole } = useRole();
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState<Profile>({ full_name: '', phone: '', avatar_url: '' });
+  const [profile, setProfile] = useState<Profile>({ full_name: '', phone: '', avatar_url: '', college: '', course: '', roll_no: '', admission_year: null });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -32,7 +36,7 @@ export default function Profile() {
   const fetchProfile = async () => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, phone, avatar_url')
+      .select('full_name, phone, avatar_url, college, course, roll_no, admission_year')
       .eq('id', user!.id)
       .single();
 
@@ -41,6 +45,10 @@ export default function Profile() {
         full_name: data.full_name || '',
         phone: data.phone || '',
         avatar_url: data.avatar_url || '',
+        college: data.college || '',
+        course: data.course || '',
+        roll_no: data.roll_no || '',
+        admission_year: data.admission_year || null,
       });
     }
     setLoading(false);
@@ -210,6 +218,22 @@ export default function Profile() {
                 <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Phone</p>
                   <p className="text-white">{profile.phone || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">College</p>
+                  <p className="text-white">{profile.college || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Course</p>
+                  <p className="text-white">{profile.course || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Roll Number</p>
+                  <p className="text-white">{profile.roll_no || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Year of Admission</p>
+                  <p className="text-white">{profile.admission_year || '—'}</p>
                 </div>
                 <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Role</p>
