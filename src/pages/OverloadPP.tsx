@@ -15,6 +15,7 @@ interface Edition {
   hero_image_url: string | null;
   banner_image_url: string | null;
   register_url: string | null;
+  register_enabled: boolean;
 }
 
 interface OverloadEvent {
