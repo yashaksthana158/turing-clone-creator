@@ -131,6 +131,7 @@ const Events = () => {
         return dateA - dateB;
       });
 
+      setPastDbEvents(prev => [...prev, ...pastOverloadEvents]);
       setAllEvents(unified);
       setLoading(false);
     };
