@@ -53,6 +53,10 @@ export default function DashboardCertificates() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Bulk attendees
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [attendeeCount, setAttendeeCount] = useState<number | null>(null);
+
   useEffect(() => {
     fetchCertificates();
     if (isAdmin) {
@@ -133,6 +137,42 @@ export default function DashboardCertificates() {
       fetchCertificates();
     }
     setIssuing(false);
+  };
+
+  const handleLoadEventAttendees = async () => {
+    if (!selectedEvent) return;
+    setLoadingAttendees(true);
+    setAttendeeCount(null);
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('user_id')
+      .eq('event_id', selectedEvent)
+      .eq('status', 'ATTENDED');
+    if (error) {
+      toast.error('Failed to load attendees');
+    } else if (data && data.length > 0) {
+      const attendeeIds = data.map((r) => r.user_id);
+      setSelectedUsers(attendeeIds);
+      setAttendeeCount(attendeeIds.length);
+      toast.success(`Selected ${attendeeIds.length} attendee(s)`);
+    } else {
+      // Fallback: try REGISTERED status if no ATTENDED
+      const { data: regData } = await supabase
+        .from('event_registrations')
+        .select('user_id')
+        .eq('event_id', selectedEvent)
+        .eq('status', 'REGISTERED');
+      if (regData && regData.length > 0) {
+        const regIds = regData.map((r) => r.user_id);
+        setSelectedUsers(regIds);
+        setAttendeeCount(regIds.length);
+        toast.success(`Selected ${regIds.length} registered user(s) (no attended records found)`);
+      } else {
+        setAttendeeCount(0);
+        toast.info('No attendees or registrations found for this event');
+      }
+    }
+    setLoadingAttendees(false);
   };
 
   const handleDelete = async () => {
@@ -259,7 +299,10 @@ export default function DashboardCertificates() {
                 <label className="block text-sm text-gray-400 mb-1.5">Event (optional)</label>
                 <select
                   value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedEvent(e.target.value);
+                    // Clear auto-populated users when event changes
+                  }}
                   className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#9113ff] focus:outline-none"
                 >
                   <option value="">No event</option>
@@ -269,6 +312,25 @@ export default function DashboardCertificates() {
                 </select>
               </div>
             </div>
+
+            {/* Bulk issue from event attendees */}
+            {selectedEvent && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleLoadEventAttendees}
+                  disabled={loadingAttendees}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-1.5"
+                >
+                  <Users size={15} />
+                  {loadingAttendees ? 'Loading...' : 'Auto-select all event attendees'}
+                </button>
+                {attendeeCount !== null && (
+                  <span className="text-xs text-gray-400">
+                    {attendeeCount} attendee{attendeeCount !== 1 ? 's' : ''} found
+                  </span>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">Description (optional)</label>
               <textarea
@@ -394,3 +456,4 @@ export default function DashboardCertificates() {
     </DashboardLayout>
   );
 }
+
