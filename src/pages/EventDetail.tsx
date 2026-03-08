@@ -81,7 +81,7 @@ export default function EventDetail() {
 
   const handleRegister = async () => {
     if (!user) {
-      navigate(`/login?redirect=/events/${id}`);
+      navigate(`/register?redirect=/events/${id}`);
       return;
     }
 
@@ -329,7 +329,7 @@ export default function EventDetail() {
                 Ready to join?
               </h3>
               <p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
-                {user ? "Click below to secure your spot." : "Login to register for this event."}
+                {user ? "Click below to secure your spot." : "Create an account to register for this event."}
               </p>
               <button
                 onClick={handleRegister}
@@ -346,7 +346,7 @@ export default function EventDetail() {
                   opacity: registering ? 0.5 : 1,
                 }}
               >
-                {registering ? "Registering..." : user ? "Register Now" : "Login to Register"}
+                {registering ? "Registering..." : user ? "Register Now" : "Sign Up to Register"}
               </button>
             </div>
           )}
