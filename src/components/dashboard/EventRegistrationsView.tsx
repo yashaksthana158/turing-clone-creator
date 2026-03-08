@@ -22,11 +22,15 @@ interface RegistrationRow {
 interface EventOption {
   id: string;
   title: string;
-  status: string;
+  status?: string;
   event_date: string | null;
 }
 
-export default function EventRegistrationsView() {
+interface EventRegistrationsViewProps {
+  source?: 'events' | 'overload';
+}
+
+export default function EventRegistrationsView({ source = 'events' }: EventRegistrationsViewProps) {
   const [events, setEvents] = useState<EventOption[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventOption | null>(null);
@@ -41,6 +45,10 @@ export default function EventRegistrationsView() {
   const [bulkApproving, setBulkApproving] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const isOverload = source === 'overload';
+  const regTable = isOverload ? 'overload_event_registrations' : 'event_registrations';
+  const eventIdCol = isOverload ? 'overload_event_id' : 'event_id';
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -54,11 +62,19 @@ export default function EventRegistrationsView() {
 
   const fetchEvents = async () => {
     setEventsLoading(true);
-    const { data } = await supabase
-      .from('events')
-      .select('id, title, status, event_date')
-      .order('created_at', { ascending: false });
-    setEvents((data as EventOption[]) || []);
+    if (isOverload) {
+      const { data } = await supabase
+        .from('overload_events')
+        .select('id, name, edition_id')
+        .order('sort_order', { ascending: true });
+      setEvents((data || []).map((e: any) => ({ id: e.id, title: e.name, event_date: null })));
+    } else {
+      const { data } = await supabase
+        .from('events')
+        .select('id, title, status, event_date')
+        .order('created_at', { ascending: false });
+      setEvents((data as EventOption[]) || []);
+    }
     setEventsLoading(false);
   };
 
