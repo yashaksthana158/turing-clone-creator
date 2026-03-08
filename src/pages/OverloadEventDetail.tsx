@@ -420,7 +420,7 @@ const OverloadEventDetail = () => {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-              {user && <IdCardUpload />}
+              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
                 disabled={registering || !idCardFile}
