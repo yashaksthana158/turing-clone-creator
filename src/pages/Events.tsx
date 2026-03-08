@@ -249,25 +249,6 @@ const Events = () => {
               </div>
             </div>
           ))}
-          {hardcodedEvents.map((event, index) => (
-            <div className="event-card-pro" key={`hc-${index}`}>
-              <div className="event-card-image">
-                <img src={event.image} alt={event.title} />
-                <span className="event-badge" style={{ backgroundColor: getCategoryColor(event.category) }}>
-                  {event.category}
-                </span>
-                <span className="event-status past">Past</span>
-              </div>
-              <div className="event-card-content">
-                <h3>{event.title}</h3>
-                <div className="event-meta">
-                  <Calendar size={14} />
-                  <span>{event.date}</span>
-                </div>
-                <p>{event.description}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
