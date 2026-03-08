@@ -13,13 +13,10 @@ import {
   CheckCircle,
   Loader2,
   Clock,
-  Trophy,
-  Upload,
-  X,
   XCircle,
-  FileImage,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
+import { IdCardUpload } from "@/components/IdCardUpload";
 
 interface EventData {
   id: string;
