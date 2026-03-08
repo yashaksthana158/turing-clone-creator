@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import EventRegistrationsView from "@/components/dashboard/EventRegistrationsView";
 import { useRef } from "react";
 
 /** Bulk upload button for gallery images */
