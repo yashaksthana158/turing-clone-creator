@@ -20,7 +20,7 @@ export default function Profile() {
   const { roles, getHighestRole } = useRole();
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState<Profile>({ full_name: '', phone: '', avatar_url: '' });
+  const [profile, setProfile] = useState<Profile>({ full_name: '', phone: '', avatar_url: '', college: '', course: '', roll_no: '', admission_year: null });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
