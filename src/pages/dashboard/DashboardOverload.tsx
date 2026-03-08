@@ -142,7 +142,7 @@ export default function DashboardOverload() {
   // Generic CRUD helpers for sub-tables
   async function addRow(table: string, defaults: Record<string, unknown>) {
     if (!selectedId) return;
-    const { error } = await supabase.from(table).insert({ edition_id: selectedId, ...defaults });
+    const { error } = await (supabase.from as any)(table).insert({ edition_id: selectedId, ...defaults });
     if (error) { toast.error(error.message); return; }
     fetchSubData(selectedId);
   }
