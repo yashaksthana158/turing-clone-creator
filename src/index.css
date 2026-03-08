@@ -992,7 +992,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url(/Assets/GroupCore.webp) no-repeat center center;
+  background: url("/Assets/GroupCore.webp") no-repeat center center;
   background-size: cover;
   padding-top: 80px;
 }
