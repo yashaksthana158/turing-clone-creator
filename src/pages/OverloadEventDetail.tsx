@@ -388,13 +388,13 @@ const OverloadEventDetail = () => {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
-                disabled={registering || !idCardFile}
+                disabled={registering}
                 className="overload-register-btn"
-                style={{ opacity: registering || !idCardFile ? 0.5 : 1 }}
               >
+                {registering ? "Registering..." : "Register Again"}
+              </button>
                 {registering ? "Registering..." : "Register Again"}
               </button>
             </div>
