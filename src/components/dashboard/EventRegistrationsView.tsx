@@ -160,7 +160,7 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
 
     const ids = Array.from(selectedIds);
     const { error } = await supabase
-      .from('event_registrations')
+      .from(regTable as any)
       .update({ status: 'APPROVED' as any })
       .in('id', ids);
 
