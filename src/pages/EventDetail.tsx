@@ -41,6 +41,9 @@ export default function EventDetail() {
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [regCount, setRegCount] = useState(0);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
+  const [uploadingCard, setUploadingCard] = useState(false);
 
   useEffect(() => {
     if (id) fetchEvent();
