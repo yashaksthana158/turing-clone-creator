@@ -47,6 +47,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/setup" element={<Setup />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             {/* Dashboard Routes (protected) */}
