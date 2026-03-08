@@ -1,8 +1,21 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { Calendar, MapPin, Users, Mic, Trophy } from "lucide-react";
+import { Calendar, MapPin, Users, Mic, Trophy, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const eventsData = [
+interface DbEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  venue: string | null;
+  status: string;
+  max_participants: number | null;
+}
+
+const hardcodedEvents = [
   {
     title: "Overload++ 2025",
     category: "flagship",
@@ -89,7 +102,30 @@ const getCategoryColor = (category: string) => {
   return colors[category] || "#9113ff";
 };
 
+const formatDate = (date: string | null) => {
+  if (!date) return "TBD";
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const Events = () => {
+  const [dbEvents, setDbEvents] = useState<DbEvent[]>([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, venue, status, max_participants")
+        .eq("status", "PUBLISHED")
+        .order("event_date", { ascending: true });
+      if (data) setDbEvents(data);
+    };
+    fetchEvents();
+  }, []);
+
   return (
     <div className="events-page">
       <Navigation />
@@ -116,7 +152,73 @@ const Events = () => {
         </div>
       </section>
 
-      {/* Events Grid */}
+      {/* DB Events - Live Registration */}
+      {dbEvents.length > 0 && (
+        <section className="events-grid-section">
+          <div className="section-header-pro">
+            <h2>
+              Live <span className="text-gradient">Registrations</span>
+            </h2>
+            <p>Register now for upcoming events</p>
+          </div>
+          <div className="events-grid-pro">
+            {dbEvents.map((event) => (
+              <Link
+                to={`/events/${event.id}`}
+                key={event.id}
+                className="event-card-pro"
+                style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              >
+                <div className="event-card-image">
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 80% 30%) 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Calendar size={48} style={{ color: "white", opacity: 0.5 }} />
+                  </div>
+                  <span className="event-badge" style={{ backgroundColor: "#9113ff" }}>
+                    Open
+                  </span>
+                  <span className="event-status upcoming">Register</span>
+                </div>
+                <div className="event-card-content">
+                  <h3>{event.title}</h3>
+                  <div className="event-meta">
+                    <Calendar size={14} />
+                    <span>{formatDate(event.event_date)}</span>
+                  </div>
+                  {event.venue && (
+                    <div className="event-meta" style={{ marginTop: "4px" }}>
+                      <MapPin size={14} />
+                      <span>{event.venue}</span>
+                    </div>
+                  )}
+                  <p>{event.description || "Click to view details and register"}</p>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    marginTop: "8px",
+                    color: "#9113ff",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                  }}>
+                    View Details & Register <ArrowRight size={14} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Hardcoded Events Grid */}
       <section className="events-grid-section">
         <div className="section-header-pro">
           <h2>
@@ -125,7 +227,7 @@ const Events = () => {
           <p>Explore our lineup of exciting tech events and competitions</p>
         </div>
         <div className="events-grid-pro">
-          {eventsData.map((event, index) => (
+          {hardcodedEvents.map((event, index) => (
             <div className="event-card-pro" key={index}>
               <div className="event-card-image">
                 <img src={event.image} alt={event.title} />
