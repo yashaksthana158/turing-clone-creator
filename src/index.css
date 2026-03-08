@@ -65,24 +65,33 @@ body {
 
 .nav-links-desktop nav ul {
   display: flex;
+  align-items: center;
   list-style: none;
-  gap: 10px;
+  gap: 2px;
   margin: 0;
   padding: 0;
 }
 
-.nav-links-desktop nav ul li a {
+.nav-links-desktop nav ul li {
+  display: flex;
+  align-items: center;
+}
+
+.nav-link-item {
   color: #E8E8E8;
   text-decoration: none;
   font-family: "Oxanium", sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   text-transform: uppercase;
-  padding: 10px 15px;
+  padding: 28px 14px;
   transition: color 0.3s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
-.nav-links-desktop nav ul li a:hover {
+.nav-link-item:hover {
   color: #9113ff;
 }
 
