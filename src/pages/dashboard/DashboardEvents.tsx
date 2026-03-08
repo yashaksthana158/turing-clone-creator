@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Calendar, Ticket, MapPin, Clock, Users, CheckCircle, XCircle } from 'lucide-react';
+import CreateEventModal from '@/components/dashboard/CreateEventModal';
+import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -14,6 +16,14 @@ interface Event {
   venue: string | null;
   status: string;
   max_participants: number | null;
+  created_by: string;
+}
+
+interface Approval {
+  id: string;
+  item_id: string;
+  level: number;
+  status: string;
 }
 
 interface Registration {
@@ -29,26 +39,28 @@ interface Registration {
   } | null;
 }
 
+const STATUS_FILTERS = ['ALL', 'DRAFT', 'PENDING_LEAD', 'PENDING_PRESIDENT', 'APPROVED', 'PUBLISHED', 'CLOSED'];
+
 export default function DashboardEvents() {
   const { user } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'my' | 'manage'>('my');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
-  useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
 
     // All users: fetch their registrations
     const { data: regs } = await supabase
       .from('event_registrations')
       .select('id, status, registered_at, event_id, events(title, event_date, venue, status)')
-      .eq('user_id', user!.id)
+      .eq('user_id', user.id)
       .order('registered_at', { ascending: false });
 
     setRegistrations((regs as unknown as Registration[]) || []);
@@ -57,13 +69,29 @@ export default function DashboardEvents() {
     if (hasMinRoleLevel(2)) {
       const { data: evts } = await supabase
         .from('events')
-        .select('id, title, description, event_date, venue, status, max_participants')
+        .select('id, title, description, event_date, venue, status, max_participants, created_by')
         .order('created_at', { ascending: false });
       setEvents((evts as Event[]) || []);
+
+      // Fetch pending approvals for these events
+      const eventIds = (evts as Event[])?.map(e => e.id) || [];
+      if (eventIds.length > 0) {
+        const { data: aprs } = await supabase
+          .from('approvals')
+          .select('id, item_id, level, status')
+          .eq('item_type', 'EVENT')
+          .eq('status', 'PENDING')
+          .in('item_id', eventIds);
+        setApprovals((aprs as Approval[]) || []);
+      }
     }
 
     setLoading(false);
-  };
+  }, [user, hasMinRoleLevel]);
+
+  useEffect(() => {
+    if (user) fetchData();
+  }, [user, fetchData]);
 
   const handleCancelRegistration = async (regId: string) => {
     const { error } = await supabase
@@ -73,6 +101,14 @@ export default function DashboardEvents() {
     if (error) toast.error('Failed to cancel');
     else { toast.success('Registration cancelled'); fetchData(); }
   };
+
+  const getApprovalForEvent = (eventId: string): Approval | null => {
+    return approvals.find(a => a.item_id === eventId) || null;
+  };
+
+  const filteredEvents = statusFilter === 'ALL'
+    ? events
+    : events.filter(e => e.status === statusFilter);
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
@@ -98,17 +134,28 @@ export default function DashboardEvents() {
 
   const views = [
     { id: 'my' as const, label: 'My Events', icon: Ticket },
-    ...(hasMinRoleLevel(2) ? [{ id: 'manage' as const, label: 'All Events', icon: Calendar }] : []),
+    ...(hasMinRoleLevel(2) ? [{ id: 'manage' as const, label: 'Manage Events', icon: Calendar }] : []),
   ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white font-['Oxanium']">Events</h1>
-          <p className="text-gray-400 mt-1">
-            {hasMinRoleLevel(2) ? 'View your registrations and manage events' : 'View events you\'ve registered for'}
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white font-['Oxanium']">Events</h1>
+            <p className="text-gray-400 mt-1">
+              {hasMinRoleLevel(2) ? 'Create, manage, and track event approvals' : 'View events you\'ve registered for'}
+            </p>
+          </div>
+          {hasMinRoleLevel(2) && (
+            <button
+              onClick={() => { setActiveView('manage'); setShowCreateModal(true); }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg transition-colors text-sm font-semibold"
+            >
+              <Plus size={16} />
+              Create Event
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -190,20 +237,44 @@ export default function DashboardEvents() {
               </div>
             )}
 
-            {/* All Events Management Tab */}
+            {/* Manage Events Tab */}
             {activeView === 'manage' && hasMinRoleLevel(2) && (
-              <div className="space-y-3">
-                {events.length === 0 ? (
+              <div className="space-y-4">
+                {/* Status filter */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Filter size={14} className="text-gray-500" />
+                  {STATUS_FILTERS.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setStatusFilter(s)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                        statusFilter === s
+                          ? 'bg-[#9113ff]/20 text-[#9113ff] border-[#9113ff]/40'
+                          : 'text-gray-400 border-gray-700 hover:border-gray-500'
+                      }`}
+                    >
+                      {s === 'ALL' ? 'All' : s.replace(/_/g, ' ')}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredEvents.length === 0 ? (
                   <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-12 text-center">
                     <Calendar size={48} className="text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">No events yet</p>
+                    <p className="text-gray-400 text-lg">No events found</p>
+                    <p className="text-gray-500 text-sm mt-1">Create your first event to get started</p>
                   </div>
                 ) : (
-                  events.map(evt => (
+                  filteredEvents.map(evt => (
                     <div key={evt.id} className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold">{evt.title}</h3>
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="text-white font-semibold">{evt.title}</h3>
+                            <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
+                              {evt.status.replace(/_/g, ' ')}
+                            </span>
+                          </div>
                           {evt.description && (
                             <p className="text-gray-400 text-sm mt-1 line-clamp-2">{evt.description}</p>
                           )}
@@ -228,9 +299,17 @@ export default function DashboardEvents() {
                             )}
                           </div>
                         </div>
-                        <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
-                          {evt.status.replace(/_/g, ' ')}
-                        </span>
+                      </div>
+
+                      {/* Approval Actions */}
+                      <div className="mt-3 pt-3 border-t border-gray-800">
+                        <EventApprovalActions
+                          eventId={evt.id}
+                          eventStatus={evt.status}
+                          eventCreatedBy={evt.created_by}
+                          approval={getApprovalForEvent(evt.id)}
+                          onUpdated={fetchData}
+                        />
                       </div>
                     </div>
                   ))
@@ -240,6 +319,12 @@ export default function DashboardEvents() {
           </>
         )}
       </div>
+
+      <CreateEventModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={fetchData}
+      />
     </DashboardLayout>
   );
 }
