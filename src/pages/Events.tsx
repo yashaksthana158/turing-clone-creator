@@ -51,15 +51,14 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       let unified: UnifiedEvent[] = [];
-
-      // Fetch regular published events
+      let pastOverloadEvents: UnifiedEvent[] = [];
+      const now = new Date().toISOString();
       const { data } = await supabase
         .from("events")
         .select("id, title, description, event_date, venue, max_participants, poster_url, category, is_featured")
         .eq("status", "PUBLISHED");
 
       if (data && data.length > 0) {
-        const now = new Date().toISOString();
         const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
         const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
 
@@ -95,12 +94,16 @@ const Events = () => {
             .order("sort_order", { ascending: true });
 
           if (oEvents) {
+            // Try to parse the date_label to determine if the edition is past
+            const editionDate = edition.date_label ? new Date(edition.date_label) : null;
+            const isPastEdition = editionDate && !isNaN(editionDate.getTime()) && editionDate.toISOString() < now;
+
             for (const oe of oEvents) {
-              unified.push({
+              const mappedEvent: UnifiedEvent = {
                 id: `overload-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
-                event_date: edition.date_label || null,
+                event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,
                 venue: edition.venue || null,
                 poster_url: oe.image_url || null,
                 category: oe.type || "flagship",
@@ -108,7 +111,13 @@ const Events = () => {
                 registration_count: 0,
                 is_featured: false,
                 external_url: oe.link_url || edition.register_url || null,
-              });
+              };
+
+              if (isPastEdition) {
+                pastOverloadEvents.push(mappedEvent);
+              } else {
+                unified.push(mappedEvent);
+              }
             }
           }
         }
@@ -122,6 +131,7 @@ const Events = () => {
         return dateA - dateB;
       });
 
+      setPastDbEvents(prev => [...prev, ...pastOverloadEvents]);
       setAllEvents(unified);
       setLoading(false);
     };
