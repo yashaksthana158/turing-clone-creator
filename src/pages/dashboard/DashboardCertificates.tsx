@@ -64,7 +64,7 @@ export default function DashboardCertificates() {
     setLoading(true);
     let query = supabase
       .from('certificates')
-      .select('*, profiles:user_id(full_name), events:event_id(title)')
+      .select('*, events:event_id(title)')
       .order('issued_at', { ascending: false });
 
     if (!isAdmin) {
