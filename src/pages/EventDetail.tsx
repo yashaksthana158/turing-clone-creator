@@ -113,13 +113,14 @@ export default function EventDetail() {
       return;
     }
 
-    const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
+    // Store the storage path (not a public/signed URL)
+    const storagePath = filePath;
 
     // If re-registering after cancellation or rejection, update existing row
     if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
       const { error } = await supabase
         .from("event_registrations")
-        .update({ status: "REGISTERED" as any, id_card_url: urlData.publicUrl })
+        .update({ status: "REGISTERED" as any, id_card_url: storagePath })
         .eq("event_id", id!)
         .eq("user_id", user.id);
       if (error) {
@@ -135,7 +136,7 @@ export default function EventDetail() {
       const { error } = await supabase.from("event_registrations").insert({
         event_id: id!,
         user_id: user.id,
-        id_card_url: urlData.publicUrl,
+        id_card_url: storagePath,
       } as any);
       if (error) {
         if (error.code === "23505") {
