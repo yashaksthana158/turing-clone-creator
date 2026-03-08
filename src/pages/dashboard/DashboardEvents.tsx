@@ -21,6 +21,7 @@ interface Event {
   created_by: string;
   poster_url: string | null;
   category: string | null;
+  is_featured: boolean;
 }
 
 interface Approval {
