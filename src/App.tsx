@@ -10,6 +10,7 @@ import EventDetail from "./pages/EventDetail";
 import About from "./pages/About";
 import Teams from "./pages/Teams";
 import OverloadPP from "./pages/OverloadPP";
+import DashboardOverload from "./pages/dashboard/DashboardOverload";
 import Gallery from "./pages/Gallery";
 import ComingSoon from "./pages/ComingSoon";
 import Login from "./pages/auth/Login";
@@ -43,7 +44,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/overloadpp" element={<OverloadPP />} />
-            <Route path="/overloadpp/:year" element={<ComingSoon section="Overload++" />} />
+            <Route path="/overloadpp/:year" element={<OverloadPP />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/gallery/:year" element={<ComingSoon section="Gallery" />} />
             
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/dashboard/teams" element={<ProtectedRoute minRoleLevel={3}><ManageTeams /></ProtectedRoute>} />
             <Route path="/dashboard/users" element={<ProtectedRoute minRoleLevel={5}><ManageUsers /></ProtectedRoute>} />
             <Route path="/dashboard/roles" element={<ProtectedRoute minRoleLevel={5}><DashboardRoles /></ProtectedRoute>} />
+            <Route path="/dashboard/overload" element={<ProtectedRoute minRoleLevel={3}><DashboardOverload /></ProtectedRoute>} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

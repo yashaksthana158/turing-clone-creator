@@ -212,6 +212,191 @@ export type Database = {
           },
         ]
       }
+      overload_editions: {
+        Row: {
+          banner_image_url: string | null
+          created_at: string
+          date_label: string | null
+          description: string | null
+          hero_image_url: string | null
+          id: string
+          is_published: boolean
+          register_url: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+          year: number
+        }
+        Insert: {
+          banner_image_url?: string | null
+          created_at?: string
+          date_label?: string | null
+          description?: string | null
+          hero_image_url?: string | null
+          id?: string
+          is_published?: boolean
+          register_url?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+          year: number
+        }
+        Update: {
+          banner_image_url?: string | null
+          created_at?: string
+          date_label?: string | null
+          description?: string | null
+          hero_image_url?: string | null
+          id?: string
+          is_published?: boolean
+          register_url?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      overload_events: {
+        Row: {
+          edition_id: string
+          id: string
+          image_url: string | null
+          link_url: string | null
+          name: string
+          sort_order: number
+          type: string | null
+        }
+        Insert: {
+          edition_id: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          name: string
+          sort_order?: number
+          type?: string | null
+        }
+        Update: {
+          edition_id?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          name?: string
+          sort_order?: number
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overload_events_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "overload_editions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      overload_gallery: {
+        Row: {
+          edition_id: string
+          id: string
+          image_url: string
+          sort_order: number
+        }
+        Insert: {
+          edition_id: string
+          id?: string
+          image_url: string
+          sort_order?: number
+        }
+        Update: {
+          edition_id?: string
+          id?: string
+          image_url?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overload_gallery_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "overload_editions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      overload_schedule: {
+        Row: {
+          edition_id: string
+          event_name: string
+          id: string
+          image_url: string | null
+          sort_order: number
+          time_label: string
+          venue: string | null
+        }
+        Insert: {
+          edition_id: string
+          event_name: string
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          time_label: string
+          venue?: string | null
+        }
+        Update: {
+          edition_id?: string
+          event_name?: string
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          time_label?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overload_schedule_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "overload_editions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      overload_sponsors: {
+        Row: {
+          edition_id: string
+          id: string
+          logo_url: string | null
+          name: string
+          sort_order: number
+          website_url: string | null
+        }
+        Insert: {
+          edition_id: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          sort_order?: number
+          website_url?: string | null
+        }
+        Update: {
+          edition_id?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          sort_order?: number
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overload_sponsors_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "overload_editions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
