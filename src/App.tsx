@@ -23,6 +23,7 @@ import ManageUsers from "./pages/dashboard/ManageUsers";
 import DashboardEvents from "./pages/dashboard/DashboardEvents";
 import DashboardTasks from "./pages/dashboard/DashboardTasks";
 import DashboardRoles from "./pages/dashboard/DashboardRoles";
+import DashboardCertificates from "./pages/dashboard/DashboardCertificates";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
             {/* Dashboard Routes (protected - all authenticated users get dashboard) */}
             <Route path="/dashboard" element={<ProtectedRoute minRoleLevel={1}><DashboardOverview /></ProtectedRoute>} />
             <Route path="/dashboard/events" element={<ProtectedRoute minRoleLevel={1}><DashboardEvents /></ProtectedRoute>} />
+            <Route path="/dashboard/certificates" element={<ProtectedRoute minRoleLevel={1}><DashboardCertificates /></ProtectedRoute>} />
             <Route path="/dashboard/tasks" element={<ProtectedRoute minRoleLevel={2}><DashboardTasks /></ProtectedRoute>} />
             <Route path="/dashboard/teams" element={<ProtectedRoute minRoleLevel={3}><ManageTeams /></ProtectedRoute>} />
             <Route path="/dashboard/users" element={<ProtectedRoute minRoleLevel={5}><ManageUsers /></ProtectedRoute>} />

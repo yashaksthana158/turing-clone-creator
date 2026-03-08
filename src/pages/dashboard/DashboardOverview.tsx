@@ -30,9 +30,10 @@ export default function DashboardOverview() {
   }, [user, loading]);
 
   const fetchStats = async () => {
-    const [eventsRes, myRegsRes] = await Promise.all([
+    const [eventsRes, myRegsRes, certsRes] = await Promise.all([
       supabase.from('events').select('id', { count: 'exact', head: true }).eq('status', 'PUBLISHED'),
       supabase.from('event_registrations').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+      supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
     ]);
 
     let teams = 0, tasks = 0, users = 0;
@@ -53,7 +54,7 @@ export default function DashboardOverview() {
     setStats({
       events: eventsRes.count || 0,
       myRegistrations: myRegsRes.count || 0,
-      certificates: 0,
+      certificates: certsRes.count || 0,
       teams,
       tasks,
       users,

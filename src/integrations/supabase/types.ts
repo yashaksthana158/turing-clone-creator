@@ -83,6 +83,50 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          certificate_number: string
+          created_at: string
+          description: string | null
+          event_id: string | null
+          id: string
+          issued_at: string
+          issued_by: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          certificate_number?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          issued_at?: string
+          issued_by: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          certificate_number?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           event_id: string
