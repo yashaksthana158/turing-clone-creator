@@ -16,7 +16,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: AppRole[];
-  signUp: (email: string, password: string, fullName?: string, college?: string, course?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string, college?: string, course?: string, rollNo?: string, admissionYear?: number, idCardUrl?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
