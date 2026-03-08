@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type AppRole = 'SUPER_ADMIN' | 'PRESIDENT' | 'TEAM_LEAD' | 'TEAM_MEMBER' | 'PARTICIPANT';
 
@@ -68,6 +69,21 @@ export default function DashboardRoles() {
   const [creatingPerm, setCreatingPerm] = useState(false);
   const [showAddPerm, setShowAddPerm] = useState(false);
   const [deletingPerm, setDeletingPerm] = useState<string | null>(null);
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    variant: 'danger' | 'warning';
+    onConfirm: () => void;
+  }>({ title: '', description: '', confirmLabel: 'Confirm', variant: 'danger', onConfirm: () => {} });
+
+  const openConfirm = (config: typeof confirmConfig) => {
+    setConfirmConfig(config);
+    setConfirmOpen(true);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -135,13 +151,22 @@ export default function DashboardRoles() {
     setToggling(null);
   };
 
-  const handleTransferAdmin = async (targetUserId: string) => {
+  const handleTransferAdmin = (targetUserId: string) => {
     if (!user || !isSuperAdmin()) return;
     const targetUser = users.find(u => u.id === targetUserId);
-    if (!confirm(`Transfer Super Admin to ${targetUser?.full_name || 'this user'}? You will lose your Super Admin role.`)) return;
+    openConfirm({
+      title: 'Transfer Super Admin',
+      description: `Transfer Super Admin to ${targetUser?.full_name || 'this user'}? You will lose your Super Admin role. This cannot be undone.`,
+      confirmLabel: 'Transfer',
+      variant: 'danger',
+      onConfirm: () => executeTransferAdmin(targetUserId),
+    });
+  };
 
+  const executeTransferAdmin = async (targetUserId: string) => {
     setTransferring(true);
     setTransferTarget(targetUserId);
+    setConfirmOpen(false);
 
     try {
       const adminRole = roleDefs.find(r => r.name === 'SUPER_ADMIN');
@@ -149,14 +174,14 @@ export default function DashboardRoles() {
 
       const { error: assignError } = await supabase
         .from('user_roles')
-        .insert({ user_id: targetUserId, role_id: adminRole.id, assigned_by: user.id });
+        .insert({ user_id: targetUserId, role_id: adminRole.id, assigned_by: user!.id });
 
       if (assignError && assignError.code !== '23505') throw assignError;
 
       const { error: removeError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', user!.id)
         .eq('role_id', adminRole.id);
 
       if (removeError) throw removeError;
@@ -191,10 +216,20 @@ export default function DashboardRoles() {
     setCreatingPerm(false);
   };
 
-  const handleDeletePermission = async (permId: string) => {
+  const handleDeletePermission = (permId: string) => {
     if (!isSuperAdmin()) return;
     const perm = permissions.find(p => p.id === permId);
-    if (!confirm(`Delete permission "${perm?.name}"? This will also remove it from all roles.`)) return;
+    openConfirm({
+      title: 'Delete Permission',
+      description: `Delete "${perm?.name}"? This will also remove it from all roles.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: () => executeDeletePermission(permId),
+    });
+  };
+
+  const executeDeletePermission = async (permId: string) => {
+    setConfirmOpen(false);
     setDeletingPerm(permId);
     const { error } = await supabase.from('permissions').delete().eq('id', permId);
     if (error) {
@@ -519,6 +554,16 @@ export default function DashboardRoles() {
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant={confirmConfig.variant}
+        onConfirm={confirmConfig.onConfirm}
+      />
     </DashboardLayout>
   );
 }

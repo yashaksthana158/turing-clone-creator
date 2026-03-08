@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Shield, Search } from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type AppRole = 'SUPER_ADMIN' | 'PRESIDENT' | 'TEAM_LEAD' | 'TEAM_MEMBER' | 'PARTICIPANT';
 
@@ -32,6 +33,10 @@ export default function ManageUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ userId: string; roleName: AppRole } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate('/login'); return; }
@@ -95,11 +100,19 @@ export default function ManageUsers() {
     setUpdating(null);
   };
 
-  const handleRemoveRole = async (userId: string, roleName: AppRole) => {
+  const handleRemoveRole = (userId: string, roleName: AppRole) => {
+    setConfirmAction({ userId, roleName });
+    setConfirmOpen(true);
+  };
+
+  const executeRemoveRole = async () => {
+    if (!confirmAction) return;
+    const { userId, roleName } = confirmAction;
+    setConfirmOpen(false);
+    setConfirmAction(null);
+
     const roleDef = roleDefs.find((r) => r.name === roleName);
     if (!roleDef) return;
-
-    if (!confirm(`Remove ${roleName.replace('_', ' ')} role from this user?`)) return;
 
     setUpdating(userId);
     const { error } = await supabase
@@ -235,6 +248,16 @@ export default function ManageUsers() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove Role"
+        description={`Remove ${confirmAction?.roleName.replace(/_/g, ' ')} role from this user?`}
+        confirmLabel="Remove"
+        variant="danger"
+        onConfirm={executeRemoveRole}
+      />
     </DashboardLayout>
   );
 }
