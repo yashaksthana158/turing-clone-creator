@@ -281,6 +281,9 @@ export default function DashboardEvents() {
                           {evt.description && (
                             <p className="text-gray-400 text-sm mt-1 line-clamp-2">{evt.description}</p>
                           )}
+                          {evt.poster_url && (
+                            <img src={evt.poster_url} alt="Event poster" className="mt-2 w-32 h-20 object-cover rounded-md border border-gray-700" />
+                          )}
                           <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
                             {evt.event_date && (
                               <span className="flex items-center gap-1.5">
@@ -302,6 +305,16 @@ export default function DashboardEvents() {
                             )}
                           </div>
                         </div>
+                        {/* Edit button for draft events owned by user */}
+                        {evt.status === 'DRAFT' && evt.created_by === user?.id && (
+                          <button
+                            onClick={() => setEditingEvent(evt)}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                          >
+                            <Pencil size={13} />
+                            Edit
+                          </button>
+                        )}
                       </div>
 
                       {/* Approval Actions */}
