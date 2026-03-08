@@ -332,14 +332,29 @@ export default function EventDetail() {
 
         {/* Registration Section */}
         <div className="overload-detail-register">
-          {isRegistered && (
+          {isApproved && (
             <div style={{ textAlign: "center" }}>
               <CheckCircle size={48} style={{ color: "#10b981", margin: "0 auto 16px" }} />
               <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
-                You're Registered!
+                Registration Approved!
+              </h3>
+              <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "8px" }}>
+                Your ID card has been verified. A confirmation email has been sent.
+              </p>
+              <p style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600 }}>
+                We'll see you at the event! 🎉
+              </p>
+            </div>
+          )}
+
+          {isRegistered && (
+            <div style={{ textAlign: "center" }}>
+              <Clock size={48} style={{ color: "#f59e0b", margin: "0 auto 16px" }} />
+              <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
+                Registration Pending Review
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                We'll see you at the event.
+                Your ID card is being verified. You'll receive a confirmation once approved.
               </p>
               <button
                 onClick={handleCancel}
