@@ -16,6 +16,8 @@ interface RegistrationRow {
     college: string | null;
     course: string | null;
     phone: string | null;
+    roll_no: string | null;
+    admission_year: number | null;
   };
 }
 
