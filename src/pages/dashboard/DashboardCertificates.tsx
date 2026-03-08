@@ -139,7 +139,42 @@ export default function DashboardCertificates() {
     setIssuing(false);
   };
 
-  const handleDelete = async () => {
+  const handleLoadEventAttendees = async () => {
+    if (!selectedEvent) return;
+    setLoadingAttendees(true);
+    setAttendeeCount(null);
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('user_id')
+      .eq('event_id', selectedEvent)
+      .eq('status', 'ATTENDED');
+    if (error) {
+      toast.error('Failed to load attendees');
+    } else if (data && data.length > 0) {
+      const attendeeIds = data.map((r) => r.user_id);
+      setSelectedUsers(attendeeIds);
+      setAttendeeCount(attendeeIds.length);
+      toast.success(`Selected ${attendeeIds.length} attendee(s)`);
+    } else {
+      // Fallback: try REGISTERED status if no ATTENDED
+      const { data: regData } = await supabase
+        .from('event_registrations')
+        .select('user_id')
+        .eq('event_id', selectedEvent)
+        .eq('status', 'REGISTERED');
+      if (regData && regData.length > 0) {
+        const regIds = regData.map((r) => r.user_id);
+        setSelectedUsers(regIds);
+        setAttendeeCount(regIds.length);
+        toast.success(`Selected ${regIds.length} registered user(s) (no attended records found)`);
+      } else {
+        setAttendeeCount(0);
+        toast.info('No attendees or registrations found for this event');
+      }
+    }
+    setLoadingAttendees(false);
+  };
+
     if (!deleteId) return;
     setDeleting(true);
     const { error } = await supabase.from('certificates').delete().eq('id', deleteId);
