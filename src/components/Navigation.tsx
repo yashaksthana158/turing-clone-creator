@@ -87,16 +87,40 @@ export const Navigation = () => {
                   <nav>
                     <ul className="flex items-center gap-1">
                       {navItems.map((item) => (
-                        <li key={item.name}>
+                        <li
+                          key={item.name}
+                          className="nav-dropdown-wrapper"
+                          onMouseEnter={() => item.children && handleMouseEnter(item.name)}
+                          onMouseLeave={() => item.children && handleMouseLeave()}
+                        >
                           <Link
                             to={item.href}
                             className="nav-link-item"
                             style={{
-                              color: location.pathname === item.href ? "#9113ff" : undefined,
+                              color: location.pathname === item.href || location.pathname.startsWith(item.href + "/") ? "#9113ff" : undefined,
                             }}
                           >
                             {item.name}
+                            {item.children && <ChevronDown size={12} className="ml-1" />}
                           </Link>
+                          {item.children && openDropdown === item.name && (
+                            <div className="nav-dropdown-menu">
+                              {item.children.map((child) => (
+                                <Link
+                                  key={child.href}
+                                  to={child.comingSoon ? "#" : child.href}
+                                  className={`nav-dropdown-item ${child.comingSoon ? "nav-dropdown-disabled" : ""}`}
+                                  onClick={(e) => {
+                                    if (child.comingSoon) e.preventDefault();
+                                    else setOpenDropdown(null);
+                                  }}
+                                >
+                                  {child.name}
+                                  {child.comingSoon && <span className="nav-coming-soon">Coming Soon</span>}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
                         </li>
                       ))}
                       {user ? (
