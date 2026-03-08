@@ -23,6 +23,7 @@ interface EventData {
   venue: string | null;
   status: string;
   max_participants: number | null;
+  poster_url: string | null;
 }
 
 export default function EventDetail() {
