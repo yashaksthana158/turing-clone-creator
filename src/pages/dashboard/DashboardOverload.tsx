@@ -337,15 +337,18 @@ export default function DashboardOverload() {
             {/* Gallery tab */}
             {activeTab === "gallery" && (
               <div className="space-y-3">
-                <button onClick={() => addRow("overload_gallery", { image_url: "/img/gallery/1.webp", sort_order: galleryList.length + 1 })} className="flex items-center gap-2 px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">
-                  <Plus size={14} /> Add Image
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => addRow("overload_gallery", { image_url: "/img/gallery/1.webp", sort_order: galleryList.length + 1 })} className="flex items-center gap-2 px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">
+                    <Plus size={14} /> Add by URL
+                  </button>
+                  <GalleryUploadButton folder={`gallery/${selected.year}`} editionId={selectedId!} nextOrder={galleryList.length + 1} onUploaded={() => selectedId && fetchSubData(selectedId)} />
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {galleryList.map((img) => (
                     <div key={img.id} className="relative group bg-zinc-900 rounded border border-zinc-800 overflow-hidden">
                       <img src={img.image_url} alt="" className="w-full h-32 object-cover" />
                       <div className="p-2 space-y-1">
-                        <input value={img.image_url} onChange={(e) => updateRow("overload_gallery", img.id, { image_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-xs" placeholder="URL" />
+                        <ImageUpload value={img.image_url} onChange={(url) => updateRow("overload_gallery", img.id, { image_url: url })} folder={`gallery/${selected.year}`} placeholder="URL" />
                         <div className="flex items-center gap-1">
                           <input type="number" value={img.sort_order} onChange={(e) => updateRow("overload_gallery", img.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-14 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-xs" />
                           <button onClick={() => deleteRow("overload_gallery", img.id)} className="text-red-400 hover:text-red-300 ml-auto"><Trash2 size={12} /></button>
