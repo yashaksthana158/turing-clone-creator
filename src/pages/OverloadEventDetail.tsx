@@ -105,21 +105,9 @@ const OverloadEventDetail = () => {
     setRegistrationStatus((data as any)?.status || null);
   };
 
-  const handleIdCardSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) return;
+  const handleIdCardChange = (file: File | null, preview: string | null) => {
     setIdCardFile(file);
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setIdCardPreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setIdCardPreview(null);
-    }
+    setIdCardPreview(preview);
   };
 
   const handleRegister = async () => {
