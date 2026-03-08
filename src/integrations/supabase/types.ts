@@ -404,7 +404,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_role_level: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: number
+      }
+      get_user_role_level: { Args: { _user_id: string }; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_team_lead: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
