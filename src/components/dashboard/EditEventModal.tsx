@@ -16,6 +16,7 @@ interface EditEventModalProps {
     event_date: string | null;
     max_participants: number | null;
     poster_url: string | null;
+    category?: string | null;
   } | null;
 }
 
@@ -26,6 +27,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
   const [venue, setVenue] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('');
+  const [category, setCategory] = useState('');
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -38,6 +40,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
       setVenue(event.venue || '');
       setEventDate(event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : '');
       setMaxParticipants(event.max_participants?.toString() || '');
+      setCategory(event.category || '');
       setPosterPreview(event.poster_url || null);
       setPosterFile(null);
     }
@@ -98,6 +101,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         poster_url: posterUrl,
+        category: category || null,
       })
       .eq('id', event.id);
 
@@ -133,6 +137,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         poster_url: posterUrl,
+        category: category || null,
         status: 'PENDING_LEAD',
       })
       .eq('id', event.id);
@@ -249,14 +254,34 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Venue</label>
-            <input
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              className={inputClass}
-              placeholder="e.g. Seminar Hall, ANDC"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Venue</label>
+              <input
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Seminar Hall, ANDC"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Select category</option>
+                <option value="coding">Coding</option>
+                <option value="gaming">Gaming</option>
+                <option value="debate">Debate</option>
+                <option value="puzzle">Puzzle</option>
+                <option value="fun">Fun</option>
+                <option value="workshop">Workshop</option>
+                <option value="hackathon">Hackathon</option>
+                <option value="seminar">Seminar</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">

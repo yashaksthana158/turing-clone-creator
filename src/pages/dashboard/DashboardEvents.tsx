@@ -20,6 +20,7 @@ interface Event {
   max_participants: number | null;
   created_by: string;
   poster_url: string | null;
+  category: string | null;
 }
 
 interface Approval {
@@ -76,7 +77,7 @@ export default function DashboardEvents() {
     if (hasMinRoleLevel(2)) {
       const { data: evts } = await supabase
         .from('events')
-        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url')
+        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url, category')
         .order('created_at', { ascending: false });
       setEvents((evts as Event[]) || []);
 

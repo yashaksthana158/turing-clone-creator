@@ -17,6 +17,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
   const [venue, setVenue] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('');
+  const [category, setCategory] = useState('');
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -76,6 +77,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
         venue: venue.trim() || null,
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
+        category: category || null,
         created_by: user!.id,
         team_id: membership?.team_id || null,
         status: 'DRAFT',
@@ -112,6 +114,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
     setVenue('');
     setEventDate('');
     setMaxParticipants('');
+    setCategory('');
     setPosterFile(null);
     setPosterPreview(null);
     onCreated();
@@ -210,14 +213,34 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Venue</label>
-            <input
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              className={inputClass}
-              placeholder="e.g. Seminar Hall, ANDC"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Venue</label>
+              <input
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Seminar Hall, ANDC"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Select category</option>
+                <option value="coding">Coding</option>
+                <option value="gaming">Gaming</option>
+                <option value="debate">Debate</option>
+                <option value="puzzle">Puzzle</option>
+                <option value="fun">Fun</option>
+                <option value="workshop">Workshop</option>
+                <option value="hackathon">Hackathon</option>
+                <option value="seminar">Seminar</option>
+              </select>
+            </div>
           </div>
 
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
