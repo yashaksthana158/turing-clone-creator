@@ -15,6 +15,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
+import Setup from "./pages/Setup";
 import ProfilePage from "./pages/Profile";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import ManageTeams from "./pages/dashboard/ManageTeams";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/setup" element={<Setup />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             {/* Dashboard Routes (protected) */}
