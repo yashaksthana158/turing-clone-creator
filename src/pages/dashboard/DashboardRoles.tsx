@@ -170,6 +170,43 @@ export default function DashboardRoles() {
     setTransferTarget(null);
   };
 
+  const handleCreatePermission = async () => {
+    if (!isSuperAdmin() || !newPermName.trim()) return;
+    setCreatingPerm(true);
+    const slug = newPermName.trim().toLowerCase().replace(/\s+/g, '_');
+    const { data, error } = await supabase
+      .from('permissions')
+      .insert({ name: slug, description: newPermDesc.trim() || null })
+      .select('id, name, description')
+      .single();
+    if (error) {
+      toast.error(error.code === '23505' ? 'Permission already exists' : 'Failed to create permission');
+    } else if (data) {
+      setPermissions(prev => [...prev, data as PermissionDef].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewPermName('');
+      setNewPermDesc('');
+      setShowAddPerm(false);
+      toast.success('Permission created');
+    }
+    setCreatingPerm(false);
+  };
+
+  const handleDeletePermission = async (permId: string) => {
+    if (!isSuperAdmin()) return;
+    const perm = permissions.find(p => p.id === permId);
+    if (!confirm(`Delete permission "${perm?.name}"? This will also remove it from all roles.`)) return;
+    setDeletingPerm(permId);
+    const { error } = await supabase.from('permissions').delete().eq('id', permId);
+    if (error) {
+      toast.error('Failed to delete permission');
+    } else {
+      setPermissions(prev => prev.filter(p => p.id !== permId));
+      setRolePermissions(prev => prev.filter(rp => rp.permission_id !== permId));
+      toast.success('Permission deleted');
+    }
+    setDeletingPerm(null);
+  };
+
   const filteredUsers = users.filter(u =>
     (u.full_name || u.id).toLowerCase().includes(search.toLowerCase())
   );
