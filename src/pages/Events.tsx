@@ -83,9 +83,9 @@ const Events = () => {
             .order("sort_order", { ascending: true });
 
           if (oEvents) {
-            // Try to parse the date_label to determine if the edition is past
-            const editionDate = edition.date_label ? new Date(edition.date_label) : null;
-            const isPastEdition = editionDate && !isNaN(editionDate.getTime()) && editionDate.toISOString() < now;
+            // Parse date_label like "20 March, 2025" reliably
+            const editionDate = edition.date_label ? new Date(Date.parse(edition.date_label.replace(/(\d+)\s+(\w+),?\s+(\d+)/, '$2 $1, $3'))) : null;
+            const isPastEdition = editionDate && !isNaN(editionDate.getTime()) && editionDate.getTime() < Date.now();
 
             for (const oe of oEvents) {
               const mappedEvent: UnifiedEvent = {

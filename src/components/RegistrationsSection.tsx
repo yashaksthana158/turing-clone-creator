@@ -66,12 +66,19 @@ export const RegistrationsSection = () => {
             .order("sort_order", { ascending: true });
 
           if (oEvents) {
+            // Parse date_label like "20 March, 2025" reliably
+            const editionDate = edition.date_label ? new Date(Date.parse(edition.date_label.replace(/(\d+)\s+(\w+),?\s+(\d+)/, '$2 $1, $3'))) : null;
+            const isPastEdition = editionDate && !isNaN(editionDate.getTime()) && editionDate.getTime() < Date.now();
+            
+            // Only show upcoming overload events on the home page
+            if (isPastEdition) continue;
+            
             for (const oe of oEvents) {
               allEvents.push({
                 id: `overload-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
-                event_date: edition.date_label || null,
+                event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,
                 venue: edition.venue || null,
                 poster_url: oe.image_url || null,
                 category: oe.type || "flagship",
