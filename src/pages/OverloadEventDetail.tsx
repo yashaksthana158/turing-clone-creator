@@ -395,8 +395,6 @@ const OverloadEventDetail = () => {
               >
                 {registering ? "Registering..." : "Register Again"}
               </button>
-                {registering ? "Registering..." : "Register Again"}
-              </button>
             </div>
           )}
 
