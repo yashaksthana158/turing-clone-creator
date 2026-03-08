@@ -17,6 +17,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
   const [venue, setVenue] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('');
+  const [category, setCategory] = useState('');
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
