@@ -7,6 +7,8 @@ export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, hasMinRoleLevel } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
