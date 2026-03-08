@@ -100,7 +100,7 @@ interface GalleryImg {
   sort_order: number;
 }
 
-type Tab = "details" | "events" | "schedule" | "sponsors" | "gallery";
+type Tab = "details" | "events" | "schedule" | "sponsors" | "gallery" | "registrations";
 
 export default function DashboardOverload() {
   const [editions, setEditions] = useState<Edition[]>([]);
