@@ -327,6 +327,7 @@ export default function DashboardEvents() {
                           eventCreatedBy={evt.created_by}
                           approval={getApprovalForEvent(evt.id)}
                           onUpdated={fetchData}
+                          onMarkAttendance={() => setAttendanceEvent(evt)}
                         />
                       </div>
                     </div>
