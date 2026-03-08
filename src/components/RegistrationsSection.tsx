@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LiveEventCard } from "@/components/LiveEventCard";
 import { ArrowRight } from "lucide-react";
 
-interface DbEvent {
+interface UnifiedEvent {
   id: string;
   title: string;
   description: string | null;
@@ -13,36 +13,85 @@ interface DbEvent {
   poster_url: string | null;
   category: string | null;
   max_participants: number | null;
+  registration_count: number;
+  is_featured: boolean;
+  external_url?: string | null;
 }
 
 export const RegistrationsSection = () => {
-  const [events, setEvents] = useState<(DbEvent & { registration_count: number })[]>([]);
+  const [events, setEvents] = useState<UnifiedEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const { data } = await supabase
+      // Fetch regular events
+      const { data: regularData } = await supabase
         .from("events")
         .select("id, title, description, event_date, venue, poster_url, category, max_participants, is_featured")
         .eq("status", "PUBLISHED")
         .order("is_featured", { ascending: false })
         .order("event_date", { ascending: true })
-        .limit(3);
+        .limit(6);
 
-      if (data && data.length > 0) {
-        // Fetch registration counts
+      let allEvents: UnifiedEvent[] = [];
+
+      if (regularData && regularData.length > 0) {
         const counts = await Promise.all(
-          data.map(async (evt: any) => {
+          regularData.map(async (evt: any) => {
             const { count } = await supabase
               .from("event_registrations")
               .select("id", { count: "exact", head: true })
               .eq("event_id", evt.id)
               .eq("status", "REGISTERED");
-            return { ...evt, registration_count: count || 0 };
+            return { ...evt, registration_count: count || 0, external_url: null };
           })
         );
-        setEvents(counts);
+        allEvents = counts;
       }
+
+      // Fetch overload events from published editions
+      const { data: editions } = await supabase
+        .from("overload_editions")
+        .select("id, date_label, venue, register_url, title")
+        .eq("is_published", true);
+
+      if (editions && editions.length > 0) {
+        for (const edition of editions) {
+          const { data: oEvents } = await supabase
+            .from("overload_events")
+            .select("id, name, type, image_url, link_url")
+            .eq("edition_id", edition.id)
+            .order("sort_order", { ascending: true });
+
+          if (oEvents) {
+            for (const oe of oEvents) {
+              allEvents.push({
+                id: `overload-${oe.id}`,
+                title: oe.name,
+                description: `Part of ${edition.title}`,
+                event_date: edition.date_label || null,
+                venue: edition.venue || null,
+                poster_url: oe.image_url || null,
+                category: oe.type || "flagship",
+                max_participants: null,
+                registration_count: 0,
+                is_featured: false,
+                external_url: oe.link_url || edition.register_url || null,
+              });
+            }
+          }
+        }
+      }
+
+      // Sort: featured first, then by date ascending
+      allEvents.sort((a, b) => {
+        if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+        const dateA = a.event_date ? new Date(a.event_date).getTime() : Infinity;
+        const dateB = b.event_date ? new Date(b.event_date).getTime() : Infinity;
+        return dateA - dateB;
+      });
+
+      setEvents(allEvents.slice(0, 3));
       setLoading(false);
     };
     fetchEvents();
