@@ -51,8 +51,8 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       let unified: UnifiedEvent[] = [];
-
-      // Fetch regular published events
+      let pastOverloadEvents: UnifiedEvent[] = [];
+      const now = new Date().toISOString();
       const { data } = await supabase
         .from("events")
         .select("id, title, description, event_date, venue, max_participants, poster_url, category, is_featured")
