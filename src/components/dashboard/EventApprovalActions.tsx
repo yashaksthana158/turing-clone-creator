@@ -284,7 +284,7 @@ export default function EventApprovalActions({
         </button>
       )}
 
-      {/* Team leads+ can close PUBLISHED events and mark attendance */}
+      {/* Team leads+ can close PUBLISHED events, unpublish, and mark attendance */}
       {eventStatus === 'PUBLISHED' && isTeamLead() && (
         <>
           {onMarkAttendance && (
@@ -303,6 +303,15 @@ export default function EventApprovalActions({
             <Lock size={13} />
             Close Event
           </button>
+          {isPresident() && (
+            <button
+              onClick={handleUnpublish}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-lg hover:bg-orange-500/30 transition-colors"
+            >
+              <EyeOff size={13} />
+              Unpublish
+            </button>
+          )}
         </>
       )}
 
@@ -325,6 +334,37 @@ export default function EventApprovalActions({
             <Unlock size={13} />
             Reopen Event
           </button>
+        </>
+      )}
+
+      {/* Presidents+ can delete any event */}
+      {isPresident() && (
+        <>
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors"
+            >
+              <Trash2 size={13} />
+              Delete
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-red-400">Confirm?</span>
+              <button
+                onClick={handleDelete}
+                className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+              >
+                Yes, Delete
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-xs px-3 py-1.5 text-gray-400 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
