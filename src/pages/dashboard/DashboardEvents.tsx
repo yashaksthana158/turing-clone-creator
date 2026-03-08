@@ -8,7 +8,8 @@ import CreateEventModal from '@/components/dashboard/CreateEventModal';
 import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
 import AttendanceModal from '@/components/dashboard/AttendanceModal';
-import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff, Star } from 'lucide-react';
+import EventRegistrationsView from '@/components/dashboard/EventRegistrationsView';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff, Star, ClipboardList } from 'lucide-react';
 
 interface Event {
   id: string;
