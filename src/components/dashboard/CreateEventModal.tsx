@@ -77,6 +77,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
         venue: venue.trim() || null,
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
+        category: category || null,
         created_by: user!.id,
         team_id: membership?.team_id || null,
         status: 'DRAFT',
