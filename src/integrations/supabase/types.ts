@@ -268,31 +268,64 @@ export type Database = {
       }
       overload_events: {
         Row: {
+          coordinators: string | null
+          description: string | null
           edition_id: string
+          event_date: string | null
+          event_format: string | null
+          event_time: string | null
+          hero_image_url: string | null
           id: string
           image_url: string | null
           link_url: string | null
           name: string
+          prizes: string | null
+          register_url: string | null
+          rules: string | null
           sort_order: number
           type: string | null
+          venue: string | null
+          winning_criteria: string | null
         }
         Insert: {
+          coordinators?: string | null
+          description?: string | null
           edition_id: string
+          event_date?: string | null
+          event_format?: string | null
+          event_time?: string | null
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           link_url?: string | null
           name: string
+          prizes?: string | null
+          register_url?: string | null
+          rules?: string | null
           sort_order?: number
           type?: string | null
+          venue?: string | null
+          winning_criteria?: string | null
         }
         Update: {
+          coordinators?: string | null
+          description?: string | null
           edition_id?: string
+          event_date?: string | null
+          event_format?: string | null
+          event_time?: string | null
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           link_url?: string | null
           name?: string
+          prizes?: string | null
+          register_url?: string | null
+          rules?: string | null
           sort_order?: number
           type?: string | null
+          venue?: string | null
+          winning_criteria?: string | null
         }
         Relationships: [
           {
