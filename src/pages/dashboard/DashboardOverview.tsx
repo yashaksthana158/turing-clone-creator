@@ -53,6 +53,7 @@ export default function DashboardOverview() {
     setStats({
       events: eventsRes.count || 0,
       myRegistrations: myRegsRes.count || 0,
+      certificates: 0,
       teams,
       tasks,
       users,
