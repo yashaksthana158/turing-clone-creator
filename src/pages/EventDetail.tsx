@@ -16,6 +16,7 @@ import {
   Trophy,
   Upload,
   X,
+  XCircle,
   FileImage,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
