@@ -252,7 +252,25 @@ export default function AttendanceModal({ open, eventId, eventTitle, onClose, on
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-3">
+        <div className="p-4 border-t border-gray-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportCSV}
+              disabled={registrations.length === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <Download size={13} />
+              CSV
+            </button>
+            <button
+              onClick={exportPDF}
+              disabled={registrations.length === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <FileText size={13} />
+              PDF
+            </button>
+          </div>
           <button
             onClick={() => { onUpdated(); onClose(); }}
             className="px-4 py-2 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-semibold transition-colors"
