@@ -44,7 +44,7 @@ export const RegistrationsSection = () => {
               .from("event_registrations")
               .select("id", { count: "exact", head: true })
               .eq("event_id", evt.id)
-              .eq("status", "REGISTERED");
+              .in("status", ["REGISTERED", "APPROVED"]);
             return { ...evt, registration_count: count || 0, external_url: null };
           })
         );
@@ -75,7 +75,7 @@ export const RegistrationsSection = () => {
             
             for (const oe of oEvents) {
               allEvents.push({
-                id: `overload-${oe.id}`,
+                id: `overload-${edition.id}-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
                 event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,

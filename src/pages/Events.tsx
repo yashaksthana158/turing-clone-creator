@@ -57,7 +57,7 @@ const Events = () => {
               .from("event_registrations")
               .select("id", { count: "exact", head: true })
               .eq("event_id", evt.id)
-              .eq("status", "REGISTERED");
+              .in("status", ["REGISTERED", "APPROVED"]);
             return { ...evt, registration_count: count || 0, external_url: null };
           })
         );
@@ -89,7 +89,7 @@ const Events = () => {
 
             for (const oe of oEvents) {
               const mappedEvent: UnifiedEvent = {
-                id: `overload-${oe.id}`,
+                id: `overload-${edition.year}-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
                 event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,
