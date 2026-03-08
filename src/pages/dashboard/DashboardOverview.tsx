@@ -19,7 +19,7 @@ export default function DashboardOverview() {
   const { user, loading } = useAuth();
   const { getHighestRole, hasMinRoleLevel } = useRole();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0, myRegistrations: 0 });
+  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0, myRegistrations: 0, certificates: 0 });
 
   useEffect(() => {
     if (!loading && !user) {
