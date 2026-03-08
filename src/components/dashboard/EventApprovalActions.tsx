@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Send, Loader2, Globe } from 'lucide-react';
+import { CheckCircle, XCircle, Send, Loader2, Globe, Lock, ClipboardCheck } from 'lucide-react';
 
 interface Approval {
   id: string;
@@ -17,6 +17,7 @@ interface EventApprovalActionsProps {
   eventCreatedBy: string;
   approval: Approval | null;
   onUpdated: () => void;
+  onMarkAttendance?: () => void;
 }
 
 export default function EventApprovalActions({
@@ -25,6 +26,7 @@ export default function EventApprovalActions({
   eventCreatedBy,
   approval,
   onUpdated,
+  onMarkAttendance,
 }: EventApprovalActionsProps) {
   const { user } = useAuth();
   const { hasMinRoleLevel, isTeamLead, isPresident } = useRole();
@@ -140,6 +142,22 @@ export default function EventApprovalActions({
     setLoading(false);
   };
 
+  const handleCloseEvent = async () => {
+    setLoading(true);
+    const { error } = await supabase
+      .from('events')
+      .update({ status: 'CLOSED' })
+      .eq('id', eventId);
+
+    if (error) {
+      toast.error('Failed to close event');
+    } else {
+      toast.success('Event closed successfully');
+      onUpdated();
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return <Loader2 size={16} className="animate-spin text-gray-400" />;
   }
@@ -207,6 +225,39 @@ export default function EventApprovalActions({
         >
           <Globe size={13} />
           Publish
+        </button>
+      )}
+
+      {/* Team leads+ can close PUBLISHED events and mark attendance */}
+      {eventStatus === 'PUBLISHED' && isTeamLead() && (
+        <>
+          {onMarkAttendance && (
+            <button
+              onClick={onMarkAttendance}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
+            >
+              <ClipboardCheck size={13} />
+              Mark Attendance
+            </button>
+          )}
+          <button
+            onClick={handleCloseEvent}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-500/20 text-gray-300 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+          >
+            <Lock size={13} />
+            Close Event
+          </button>
+        </>
+      )}
+
+      {/* Can still mark attendance on closed events */}
+      {eventStatus === 'CLOSED' && isTeamLead() && onMarkAttendance && (
+        <button
+          onClick={onMarkAttendance}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
+        >
+          <ClipboardCheck size={13} />
+          Mark Attendance
         </button>
       )}
     </div>

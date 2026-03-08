@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CreateEventModal from '@/components/dashboard/CreateEventModal';
 import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
+import AttendanceModal from '@/components/dashboard/AttendanceModal';
 import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil } from 'lucide-react';
 
 interface Event {
@@ -53,6 +54,7 @@ export default function DashboardEvents() {
   const [activeView, setActiveView] = useState<'my' | 'manage'>('my');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const fetchData = useCallback(async () => {
@@ -325,6 +327,7 @@ export default function DashboardEvents() {
                           eventCreatedBy={evt.created_by}
                           approval={getApprovalForEvent(evt.id)}
                           onUpdated={fetchData}
+                          onMarkAttendance={() => setAttendanceEvent(evt)}
                         />
                       </div>
                     </div>
@@ -348,6 +351,16 @@ export default function DashboardEvents() {
         onClose={() => setEditingEvent(null)}
         onUpdated={fetchData}
       />
+
+      {attendanceEvent && (
+        <AttendanceModal
+          open={!!attendanceEvent}
+          eventId={attendanceEvent.id}
+          eventTitle={attendanceEvent.title}
+          onClose={() => setAttendanceEvent(null)}
+          onUpdated={fetchData}
+        />
+      )}
     </DashboardLayout>
   );
 }
