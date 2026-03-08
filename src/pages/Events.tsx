@@ -43,6 +43,7 @@ const CATEGORIES = ["all", "coding", "gaming", "debate", "puzzle", "fun", "works
 
 const Events = () => {
   const [allEvents, setAllEvents] = useState<UnifiedEvent[]>([]);
+  const [pastDbEvents, setPastDbEvents] = useState<UnifiedEvent[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,8 @@ const Events = () => {
       if (data && data.length > 0) {
         const now = new Date().toISOString();
         const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
+        const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
+
         const counts = await Promise.all(
           upcoming.map(async (evt: any) => {
             const { count } = await supabase
@@ -71,6 +74,10 @@ const Events = () => {
           })
         );
         unified = counts;
+
+        setPastDbEvents(past.map((evt: any) => ({
+          ...evt, registration_count: 0, external_url: null,
+        })));
       }
 
       // Fetch overload events from published editions
@@ -214,8 +221,37 @@ const Events = () => {
           <p>A look back at our exciting past events and competitions</p>
         </div>
         <div className="events-grid-pro">
+          {pastDbEvents.map((event) => (
+            <div className="event-card-pro" key={event.id}>
+              <div className="event-card-image">
+                {event.poster_url ? (
+                  <img src={event.poster_url} alt={event.title} />
+                ) : (
+                  <div style={{ background: "#1a1a2e", height: "200px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Calendar size={48} style={{ color: "white", opacity: 0.3 }} />
+                  </div>
+                )}
+                {event.category && (
+                  <span className="event-badge" style={{ backgroundColor: getCategoryColor(event.category) }}>
+                    {event.category}
+                  </span>
+                )}
+                <span className="event-status past">Past</span>
+              </div>
+              <div className="event-card-content">
+                <h3>{event.title}</h3>
+                {event.event_date && (
+                  <div className="event-meta">
+                    <Calendar size={14} />
+                    <span>{new Date(event.event_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  </div>
+                )}
+                {event.description && <p>{event.description}</p>}
+              </div>
+            </div>
+          ))}
           {hardcodedEvents.map((event, index) => (
-            <div className="event-card-pro" key={index}>
+            <div className="event-card-pro" key={`hc-${index}`}>
               <div className="event-card-image">
                 <img src={event.image} alt={event.title} />
                 <span className="event-badge" style={{ backgroundColor: getCategoryColor(event.category) }}>
