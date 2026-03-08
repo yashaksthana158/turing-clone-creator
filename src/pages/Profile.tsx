@@ -9,6 +9,10 @@ interface Profile {
   full_name: string;
   phone: string;
   avatar_url: string;
+  college: string;
+  course: string;
+  roll_no: string;
+  admission_year: number | null;
 }
 
 export default function Profile() {
