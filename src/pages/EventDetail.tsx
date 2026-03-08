@@ -81,7 +81,7 @@ export default function EventDetail() {
 
   const handleRegister = async () => {
     if (!user) {
-      navigate(`/login?redirect=/events/${id}`);
+      navigate(`/register?redirect=/events/${id}`);
       return;
     }
 
