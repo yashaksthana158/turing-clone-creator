@@ -8,7 +8,7 @@ import CreateEventModal from '@/components/dashboard/CreateEventModal';
 import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
 import AttendanceModal from '@/components/dashboard/AttendanceModal';
-import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff } from 'lucide-react';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff, Star } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -21,6 +21,7 @@ interface Event {
   created_by: string;
   poster_url: string | null;
   category: string | null;
+  is_featured: boolean;
 }
 
 interface Approval {
@@ -77,7 +78,7 @@ export default function DashboardEvents() {
     if (hasMinRoleLevel(2)) {
       const { data: evts } = await supabase
         .from('events')
-        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url, category')
+        .select('id, title, description, event_date, venue, status, max_participants, created_by, poster_url, category, is_featured')
         .order('created_at', { ascending: false });
       setEvents((evts as Event[]) || []);
 
@@ -409,6 +410,11 @@ export default function DashboardEvents() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-1">
                                 <h3 className="text-white font-semibold">{evt.title}</h3>
+                                {evt.is_featured && (
+                                  <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                                    <Star size={11} className="fill-current" /> Featured
+                                  </span>
+                                )}
                                 <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
                                   {evt.status.replace(/_/g, ' ')}
                                 </span>
@@ -440,15 +446,34 @@ export default function DashboardEvents() {
                                 )}
                               </div>
                             </div>
-                            {evt.status === 'DRAFT' && evt.created_by === user?.id && (
-                              <button
-                                onClick={() => setEditingEvent(evt)}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
-                              >
-                                <Pencil size={13} />
-                                Edit
-                              </button>
-                            )}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {hasMinRoleLevel(3) && (
+                                <button
+                                  onClick={async () => {
+                                    const { error } = await supabase.from('events').update({ is_featured: !evt.is_featured }).eq('id', evt.id);
+                                    if (error) toast.error('Failed to update');
+                                    else { toast.success(evt.is_featured ? 'Unfeatured' : 'Featured!'); fetchData(); }
+                                  }}
+                                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                    evt.is_featured
+                                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30'
+                                      : 'text-gray-400 border-gray-700 hover:bg-white/5'
+                                  }`}
+                                >
+                                  <Star size={13} className={evt.is_featured ? 'fill-current' : ''} />
+                                  {evt.is_featured ? 'Unfeature' : 'Feature'}
+                                </button>
+                              )}
+                              {evt.status === 'DRAFT' && evt.created_by === user?.id && (
+                                <button
+                                  onClick={() => setEditingEvent(evt)}
+                                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-white/5 transition-colors"
+                                >
+                                  <Pencil size={13} />
+                                  Edit
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Approval Actions */}

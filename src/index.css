@@ -1774,6 +1774,27 @@ body {
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
+.event-card-featured {
+  border: 2px solid rgba(234, 179, 8, 0.4) !important;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.event-card-featured:hover {
+  border-color: rgba(234, 179, 8, 0.6) !important;
+  box-shadow: 0 0 30px rgba(234, 179, 8, 0.15), 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.event-card-live-featured-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  letter-spacing: 0.5px;
+}
 .event-card-live-content {
   padding: 20px;
 }

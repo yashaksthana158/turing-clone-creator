@@ -15,6 +15,7 @@ interface DbEvent {
   max_participants: number | null;
   poster_url: string | null;
   category: string | null;
+  is_featured: boolean;
 }
 
 const hardcodedEvents = [
@@ -49,8 +50,9 @@ const Events = () => {
     const fetchEvents = async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, description, event_date, venue, status, max_participants, poster_url, category")
+        .select("id, title, description, event_date, venue, status, max_participants, poster_url, category, is_featured")
         .eq("status", "PUBLISHED")
+        .order("is_featured", { ascending: false })
         .order("event_date", { ascending: true });
 
       if (data && data.length > 0) {

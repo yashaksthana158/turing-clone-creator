@@ -23,8 +23,9 @@ export const RegistrationsSection = () => {
     const fetchEvents = async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, description, event_date, venue, poster_url, category, max_participants")
+        .select("id, title, description, event_date, venue, poster_url, category, max_participants, is_featured")
         .eq("status", "PUBLISHED")
+        .order("is_featured", { ascending: false })
         .order("event_date", { ascending: true })
         .limit(3);
 

@@ -24,6 +24,7 @@ interface LiveEventCardProps {
   max_participants: number | null;
   registration_count?: number;
   showCountdown?: boolean;
+  is_featured?: boolean;
 }
 
 export function LiveEventCard({
@@ -37,6 +38,7 @@ export function LiveEventCard({
   max_participants,
   registration_count = 0,
   showCountdown = true,
+  is_featured = false,
 }: LiveEventCardProps) {
   const catColor = category ? CATEGORY_COLORS[category.toLowerCase()] || "#9113ff" : "#9113ff";
   const isFull = max_participants ? registration_count >= max_participants : false;
@@ -47,7 +49,7 @@ export function LiveEventCard({
   return (
     <Link
       to={`/events/${id}`}
-      className="event-card-live group"
+      className={`event-card-live group${is_featured ? ' event-card-featured' : ''}`}
       style={{ textDecoration: "none", color: "inherit" }}
     >
       {/* Image */}
@@ -68,6 +70,9 @@ export function LiveEventCard({
           <span className="event-card-live-status full">Full</span>
         ) : (
           <span className="event-card-live-status open">Open</span>
+        )}
+        {is_featured && (
+          <span className="event-card-live-featured-badge">⭐ Featured</span>
         )}
       </div>
 
