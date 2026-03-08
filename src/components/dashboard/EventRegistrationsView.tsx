@@ -403,6 +403,8 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500">
+                        {reg.profile?.roll_no && <span>Roll: {reg.profile.roll_no}</span>}
+                        {reg.profile?.admission_year && <span>Year: {reg.profile.admission_year}</span>}
                         {reg.profile?.college && <span>{reg.profile.college}</span>}
                         {reg.profile?.course && <span>{reg.profile.course}</span>}
                         {reg.profile?.phone && <span>{reg.profile.phone}</span>}
