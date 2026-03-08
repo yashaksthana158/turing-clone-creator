@@ -181,6 +181,38 @@ export default function DashboardTasks() {
           )}
         </div>
 
+        {/* Summary cards */}
+        {!loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {(['PENDING', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED'] as TaskStatus[]).map((s) => {
+              const count = tasks.filter((t) => t.status === s).length;
+              const icons: Record<TaskStatus, React.ReactNode> = {
+                PENDING: <ClipboardList size={16} />,
+                IN_PROGRESS: <Play size={16} />,
+                SUBMITTED: <Send size={16} />,
+                APPROVED: <CheckCircle size={16} />,
+                REJECTED: <XCircle size={16} />,
+              };
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilter(filter === s ? 'ALL' : s)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    filter === s
+                      ? 'border-[#9113ff]/50 bg-[#9113ff]/10'
+                      : 'border-gray-800 bg-[#1c1c1c] hover:border-gray-700'
+                  }`}
+                >
+                  <div className={`flex items-center gap-2 text-xs font-medium uppercase ${STATUS_COLORS[s].split(' ').find((c: string) => c.startsWith('text-'))}`}>
+                    {icons[s]} {s.replace('_', ' ')}
+                  </div>
+                  <p className="text-2xl font-bold text-white mt-1">{count}</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Status filters */}
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((s) => (
