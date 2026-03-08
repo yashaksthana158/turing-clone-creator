@@ -1,6 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
