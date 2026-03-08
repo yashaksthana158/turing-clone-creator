@@ -56,6 +56,7 @@ export default function DashboardTasks() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<TaskStatus | 'ALL'>('ALL');
   const [showCreate, setShowCreate] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
