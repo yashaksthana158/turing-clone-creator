@@ -54,7 +54,7 @@ export default function DashboardEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'my' | 'manage'>('my');
+  const [activeView, setActiveView] = useState<'my' | 'manage' | 'registrations'>('my');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
