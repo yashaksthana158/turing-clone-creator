@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -12,6 +14,11 @@ export const Navigation = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -30,20 +37,27 @@ export const Navigation = () => {
             <div className="header_bottom_border">
               <div className="nav-row">
                 <div className="nav-logo">
-                  <a href="/">
+                  <Link to="/">
                     <img
                       src="/img/turing-logo.webp"
                       alt="Turing Logo"
                       style={{ width: "117px" }}
                     />
-                  </a>
+                  </Link>
                 </div>
                 <div className="nav-links-desktop">
                   <nav>
                     <ul>
                       {navItems.map((item) => (
                         <li key={item.name}>
-                          <a href={item.href}>{item.name}</a>
+                          <Link
+                            to={item.href}
+                            style={{
+                              color: location.pathname === item.href ? "#9113ff" : undefined,
+                            }}
+                          >
+                            {item.name}
+                          </Link>
                         </li>
                       ))}
                     </ul>
@@ -73,13 +87,13 @@ export const Navigation = () => {
             <X size={28} />
           </button>
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.name}
-              href={item.href}
+              to={item.href}
               onClick={() => setMobileOpen(false)}
             >
               {item.name}
-            </a>
+            </Link>
           ))}
         </div>
       )}
