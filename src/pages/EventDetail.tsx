@@ -213,6 +213,8 @@ export default function EventDetail() {
   const canRegister = event?.status === "PUBLISHED" && !registrationStatus && !isFull;
   const isRegistered = registrationStatus === "REGISTERED";
   const isCancelled = registrationStatus === "CANCELLED";
+  const isRejected = registrationStatus === "REJECTED";
+  const isApproved = registrationStatus === "APPROVED";
 
   if (loading) {
     return (
