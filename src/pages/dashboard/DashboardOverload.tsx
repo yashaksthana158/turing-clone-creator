@@ -294,13 +294,18 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Schedule Item
                 </button>
                 {scheduleItems.map((item) => (
-                  <div key={item.id} className="flex gap-2 items-center bg-zinc-900 rounded p-3 border border-zinc-800 flex-wrap">
-                    <input value={item.time_label} onChange={(e) => updateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
-                    <input value={item.venue || ""} onChange={(e) => updateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
-                    <input value={item.event_name} onChange={(e) => updateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
-                    <input value={item.image_url || ""} onChange={(e) => updateRow("overload_schedule", item.id, { image_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Image URL" />
-                    <input type="number" value={item.sort_order} onChange={(e) => updateRow("overload_schedule", item.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                    <button onClick={() => deleteRow("overload_schedule", item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <div key={item.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input value={item.time_label} onChange={(e) => updateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
+                      <input value={item.venue || ""} onChange={(e) => updateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
+                      <input value={item.event_name} onChange={(e) => updateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
+                      <input type="number" value={item.sort_order} onChange={(e) => updateRow("overload_schedule", item.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                      <button onClick={() => deleteRow("overload_schedule", item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <ImageUpload value={item.image_url || ""} onChange={(url) => updateRow("overload_schedule", item.id, { image_url: url })} folder={`schedule/${selected.year}`} placeholder="Schedule image" className="flex-1" />
+                      {item.image_url && <img src={item.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
