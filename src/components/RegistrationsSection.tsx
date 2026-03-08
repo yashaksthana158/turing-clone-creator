@@ -44,7 +44,7 @@ export const RegistrationsSection = () => {
               .from("event_registrations")
               .select("id", { count: "exact", head: true })
               .eq("event_id", evt.id)
-              .eq("status", "REGISTERED");
+              .in("status", ["REGISTERED", "APPROVED"]);
             return { ...evt, registration_count: count || 0, external_url: null };
           })
         );
