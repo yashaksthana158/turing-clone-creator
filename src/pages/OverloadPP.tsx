@@ -1,155 +1,298 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { useParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const overloadEvents = [
-  { name: "Tekken Showdown", type: "Console Gaming", image: "/img/performer/6.webp" },
-  { name: "The Lost Artifact", type: "Treasure Hunt", image: "/img/performer/7.webp" },
-  { name: "Bug Hunt", type: "Debugging Contest", image: "/img/performer/5.webp" },
-  { name: "Campus Clash BGMI", type: "Mobile Game", image: "/img/performer/8.webp" },
-  { name: "Techquest", type: "Quiz", image: "/img/performer/1.webp" },
-  { name: "Coderush", type: "Coding Contest", image: "/img/performer/4.webp" },
-  { name: "Hackzzle", type: "Puzzle Solve", image: "/img/performer/2.webp" },
-  { name: "Sketchbytes", type: "Scribble", image: "/img/performer/9.webp" },
-  { name: "TechWar", type: "Debate", image: "/img/performer/3.webp" },
-];
+interface Edition {
+  id: string;
+  year: number;
+  title: string;
+  date_label: string | null;
+  venue: string | null;
+  description: string | null;
+  hero_image_url: string | null;
+  banner_image_url: string | null;
+  register_url: string | null;
+}
 
-const schedule = [
-  { time: "9:20am - 10:00am", venue: "Seminar Hall", event: "Opening Ceremony" },
-  { time: "10:00am - 11:30am", venue: "Room 9", event: "Techquest" },
-  { time: "10:00am - 11:30am", venue: "Room 6", event: "Hackzzle" },
-  { time: "10:00am - 11:30am", venue: "Seminar Hall", event: "TechWar" },
-  { time: "11:30am - 1:00pm", venue: "Seminar Hall", event: "Coderush" },
-  { time: "11:30am - 1:00pm", venue: "Room 9", event: "Bug Hunt" },
-  { time: "1:30pm - 2:30pm", venue: "Room 9", event: "Tekken Showdown" },
-  { time: "1:30pm - 2:30pm", venue: "Seminar Hall", event: "The Lost Artifact" },
-  { time: "2:30pm - 4:00pm", venue: "Room 9", event: "Sketchbytes" },
-  { time: "2:30pm - 4:00pm", venue: "Seminar Hall", event: "Campus Clash BGMI" },
-];
+interface OverloadEvent {
+  id: string;
+  name: string;
+  type: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  sort_order: number;
+}
+
+interface ScheduleItem {
+  id: string;
+  time_label: string;
+  venue: string | null;
+  event_name: string;
+  image_url: string | null;
+  sort_order: number;
+}
+
+interface Sponsor {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  website_url: string | null;
+  sort_order: number;
+}
+
+interface GalleryImage {
+  id: string;
+  image_url: string;
+  sort_order: number;
+}
 
 const OverloadPP = () => {
+  const { year } = useParams();
+  const [edition, setEdition] = useState<Edition | null>(null);
+  const [events, setEvents] = useState<OverloadEvent[]>([]);
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const sponsorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchEdition = async () => {
+      setLoading(true);
+      setNotFound(false);
+
+      let query = supabase.from("overload_editions").select("*");
+      if (year) {
+        query = query.eq("year", parseInt(year));
+      } else {
+        query = query.eq("is_published", true).order("year", { ascending: false }).limit(1);
+      }
+
+      const { data } = await query;
+      if (!data || data.length === 0) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      const ed = data[0] as Edition;
+      setEdition(ed);
+
+      const [evRes, schRes, spRes, galRes] = await Promise.all([
+        supabase.from("overload_events").select("*").eq("edition_id", ed.id).order("sort_order"),
+        supabase.from("overload_schedule").select("*").eq("edition_id", ed.id).order("sort_order"),
+        supabase.from("overload_sponsors").select("*").eq("edition_id", ed.id).order("sort_order"),
+        supabase.from("overload_gallery").select("*").eq("edition_id", ed.id).order("sort_order"),
+      ]);
+
+      setEvents((evRes.data as OverloadEvent[]) || []);
+      setSchedule((schRes.data as ScheduleItem[]) || []);
+      setSponsors((spRes.data as Sponsor[]) || []);
+      setGallery((galRes.data as GalleryImage[]) || []);
+      setLoading(false);
+    };
+
+    fetchEdition();
+  }, [year]);
+
+  // Auto-scroll sponsors
+  useEffect(() => {
+    const el = sponsorRef.current;
+    if (!el || sponsors.length === 0) return;
+    let frame: number;
+    let pos = 0;
+    const speed = 0.5;
+    const animate = () => {
+      pos += speed;
+      if (pos >= el.scrollWidth / 2) pos = 0;
+      el.scrollLeft = pos;
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [sponsors]);
+
+  if (loading) {
+    return (
+      <div>
+        <Navigation />
+        <div className="overload-loading">
+          <div className="overload-spinner" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (notFound || !edition) {
+    return (
+      <div>
+        <Navigation />
+        <div className="overload-not-found">
+          <h1 className="overload-not-found-title">
+            {year ? `Overload++ ${year}` : "Overload++"}
+          </h1>
+          <p className="overload-not-found-text">
+            {year === "2026"
+              ? "Coming Soon! Stay tuned for updates."
+              : "This edition is not available yet. Check back later!"}
+          </p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Navigation />
 
       {/* Hero */}
       <section
+        className="overload-hero"
         style={{
-          background: "url(/Assets/bg_overload.webp) no-repeat center center",
-          backgroundSize: "cover",
-          minHeight: "70vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          paddingTop: "80px",
+          backgroundImage: edition.hero_image_url
+            ? `url(${edition.hero_image_url})`
+            : undefined,
         }}
       >
-        <div>
-          <p style={{ color: "#ffc107", fontSize: "1.2rem", letterSpacing: "2px" }}>20 March, 2025</p>
-          <h1 style={{ fontSize: "4rem", fontWeight: "bold", color: "#fff", margin: "10px 0" }}>
-            Overload++ 2025
-          </h1>
-          <p style={{ color: "#d3d3d3", fontSize: "1.1rem" }}>
-            Seminar Hall, Acharya Narendra Dev College
-          </p>
+        <div className="overload-hero-overlay" />
+        <div className="overload-hero-content">
+          {edition.date_label && (
+            <p className="overload-hero-date">{edition.date_label}</p>
+          )}
+          <h1 className="overload-hero-title">{edition.title}</h1>
+          {edition.venue && (
+            <p className="overload-hero-venue">{edition.venue}</p>
+          )}
         </div>
       </section>
 
       {/* About */}
-      <section style={{ backgroundColor: "#000", padding: "60px 40px" }}>
-        <div className="container" style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "center" }}>
-          <div style={{ flex: "1 1 400px" }}>
-            <img
-              src="/img/about/overload++ Banner.webp"
-              alt="Overload++ Banner"
-              style={{ width: "100%", borderRadius: "10px" }}
-            />
-          </div>
-          <div style={{ flex: "1 1 400px" }}>
-            <h2 style={{ color: "#fff", fontSize: "2rem", marginBottom: "10px" }}>About Overload++</h2>
-            <p style={{ color: "#d3d3d3", lineHeight: 1.8, marginBottom: "20px" }}>
-              This annual tech extravaganza is set to be the biggest event of ANDC. We invite computer science students
-              from all colleges and streams to dive into a world of learning and fun. Overload++ 2025 promises an
-              electrifying blend of technology, creativity, and community spirit!
-            </p>
-            <a
-              href="https://linktr.ee/Turing_Society"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-custom"
-              style={{ display: "inline-block", width: "auto" }}
-            >
-              Register Now
-            </a>
+      <section className="overload-about">
+        <div className="overload-about-inner">
+          {edition.banner_image_url && (
+            <div className="overload-about-image">
+              <img src={edition.banner_image_url} alt={`${edition.title} Banner`} />
+            </div>
+          )}
+          <div className="overload-about-text">
+            <h2>About {edition.title}</h2>
+            {edition.description && <p>{edition.description}</p>}
+            {edition.register_url && (
+              <a
+                href={edition.register_url}
+                target="_blank"
+                rel="noreferrer"
+                className="overload-register-btn"
+              >
+                Register Now
+              </a>
+            )}
           </div>
         </div>
       </section>
 
       {/* Events Grid */}
-      <section style={{ backgroundColor: "#000", padding: "60px 40px" }}>
-        <div className="container">
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", textAlign: "center", marginBottom: "40px" }}>Events</h2>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "24px",
-            maxWidth: "1000px",
-            margin: "0 auto",
-          }}>
-            {overloadEvents.map((event, i) => (
-              <div
-                key={i}
-                style={{
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  border: "1px solid #333",
-                  transition: "transform 0.3s",
-                }}
-                className="upcoming-event-card"
-              >
-                <img
-                  src={event.image}
-                  alt={event.name}
-                  style={{ width: "100%", height: "220px", objectFit: "cover" }}
-                />
-                <div style={{ padding: "16px", textAlign: "center" }}>
-                  <h4 style={{ color: "#fff", fontSize: "1.1rem" }}>{event.name}</h4>
-                  <span style={{ color: "#9113ff", fontSize: "0.85rem" }}>{event.type}</span>
+      {events.length > 0 && (
+        <section className="overload-events-section">
+          <h2 className="overload-section-title">Events</h2>
+          <div className="overload-events-grid">
+            {events.map((event) => (
+              <div key={event.id} className="overload-event-card">
+                {event.link_url ? (
+                  <a href={event.link_url}>
+                    <img
+                      src={event.image_url || "/img/performer/1.webp"}
+                      alt={event.name}
+                      className="overload-event-img"
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src={event.image_url || "/img/performer/1.webp"}
+                    alt={event.name}
+                    className="overload-event-img"
+                  />
+                )}
+                <div className="overload-event-info">
+                  <h4>{event.name}</h4>
+                  {event.type && <span className="overload-event-type">{event.type}</span>}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Schedule */}
-      <section style={{ backgroundColor: "#0a0a0a", padding: "60px 40px" }}>
-        <div className="container">
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", textAlign: "center", marginBottom: "40px" }}>
-            Event Schedule
-          </h2>
-          <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+      {/* Schedule Timeline */}
+      {schedule.length > 0 && (
+        <section className="overload-schedule-section">
+          <h2 className="overload-section-title">Event Schedule</h2>
+          <div className="overload-timeline">
+            <div className="overload-timeline-line" />
             {schedule.map((item, i) => (
               <div
-                key={i}
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  padding: "16px 0",
-                  borderBottom: "1px solid #222",
-                  alignItems: "center",
-                }}
+                key={item.id}
+                className={`overload-timeline-item ${i % 2 === 0 ? "overload-timeline-left" : "overload-timeline-right"}`}
               >
-                <div style={{ minWidth: "160px" }}>
-                  <div style={{ color: "#9113ff", fontWeight: "bold", fontSize: "0.9rem" }}>{item.time}</div>
-                  <div style={{ color: "#888", fontSize: "0.8rem" }}>{item.venue}</div>
+                <div className="overload-timeline-dot" />
+                <div className="overload-timeline-card">
+                  <div className="overload-timeline-meta">
+                    <span className="overload-timeline-time">{item.time_label}</span>
+                    {item.venue && <span className="overload-timeline-venue">{item.venue}</span>}
+                  </div>
+                  {item.image_url && (
+                    <img src={item.image_url} alt={item.event_name} className="overload-timeline-img" />
+                  )}
+                  <h4 className="overload-timeline-event">{item.event_name}</h4>
                 </div>
-                <h4 style={{ color: "#fff", fontSize: "1rem", margin: 0 }}>{item.event}</h4>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Collaborations */}
+      {sponsors.length > 0 && (
+        <section className="overload-sponsors-section">
+          <h3 className="overload-sponsors-title">Our Collaborations</h3>
+          <div className="overload-sponsors-track" ref={sponsorRef}>
+            {/* Duplicate for infinite scroll */}
+            {[...sponsors, ...sponsors].map((sp, i) => (
+              <a
+                key={`${sp.id}-${i}`}
+                href={sp.website_url || "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="overload-sponsor-item"
+              >
+                <img src={sp.logo_url || ""} alt={sp.name} />
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Gallery */}
+      {gallery.length > 0 && (
+        <section className="overload-gallery-section">
+          <h2 className="overload-section-title">Glimpses</h2>
+          <p className="overload-gallery-subtitle">
+            {edition.title} in Stunning Visual Highlights
+          </p>
+          <div className="overload-gallery-grid">
+            {gallery.map((img) => (
+              <div key={img.id} className="overload-gallery-item">
+                <img src={img.image_url} alt="Gallery" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>
