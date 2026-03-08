@@ -172,15 +172,41 @@ export const Navigation = () => {
           >
             <X size={28} />
           </button>
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={() => setMobileOpen(false)}
-            >
-              {item.name}
-            </Link>
-          ))}
+          {navItems.map((item) =>
+            item.children ? (
+              <div key={item.name} className="mobile-dropdown-group">
+                <button
+                  className="mobile-dropdown-toggle"
+                  onClick={() => setMobileExpanded(mobileExpanded === item.name ? null : item.name)}
+                >
+                  {item.name}
+                  <ChevronDown size={16} className={`ml-1 transition-transform ${mobileExpanded === item.name ? "rotate-180" : ""}`} />
+                </button>
+                {mobileExpanded === item.name && (
+                  <div className="mobile-dropdown-items">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        to={child.comingSoon ? "#" : child.href}
+                        className={child.comingSoon ? "nav-dropdown-disabled" : ""}
+                        onClick={(e) => {
+                          if (child.comingSoon) { e.preventDefault(); return; }
+                          setMobileOpen(false);
+                        }}
+                      >
+                        {child.name}
+                        {child.comingSoon && <span className="nav-coming-soon">Coming Soon</span>}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link key={item.name} to={item.href} onClick={() => setMobileOpen(false)}>
+                {item.name}
+              </Link>
+            )
+          )}
           {user ? (
             <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
           ) : (
