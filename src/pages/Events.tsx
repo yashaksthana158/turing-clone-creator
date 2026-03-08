@@ -59,7 +59,7 @@ const Events = () => {
         .eq("status", "PUBLISHED");
 
       if (data && data.length > 0) {
-        const now = new Date().toISOString();
+        const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
         const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
         const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
 
