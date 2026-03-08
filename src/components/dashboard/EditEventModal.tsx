@@ -101,6 +101,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         poster_url: posterUrl,
+        category: category || null,
       })
       .eq('id', event.id);
 
