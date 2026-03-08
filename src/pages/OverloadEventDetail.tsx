@@ -440,7 +440,7 @@ const OverloadEventDetail = () => {
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
                 {user ? "Upload your ID card and register." : "Create an account to register for this event."}
               </p>
-              {user && <IdCardUpload />}
+              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
                 disabled={registering || (user ? !idCardFile : false)}
