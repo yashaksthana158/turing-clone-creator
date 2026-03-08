@@ -8,7 +8,8 @@ import CreateEventModal from '@/components/dashboard/CreateEventModal';
 import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
 import AttendanceModal from '@/components/dashboard/AttendanceModal';
-import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff, Star } from 'lucide-react';
+import EventRegistrationsView from '@/components/dashboard/EventRegistrationsView';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil, CheckSquare, Square, Lock, Trash2, EyeOff, Star, ClipboardList } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -53,7 +54,7 @@ export default function DashboardEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'my' | 'manage'>('my');
+  const [activeView, setActiveView] = useState<'my' | 'manage' | 'registrations'>('my');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
@@ -207,6 +208,7 @@ export default function DashboardEvents() {
   const views = [
     { id: 'my' as const, label: 'My Events', icon: Ticket },
     ...(hasMinRoleLevel(2) ? [{ id: 'manage' as const, label: 'Manage Events', icon: Calendar }] : []),
+    ...(hasMinRoleLevel(3) ? [{ id: 'registrations' as const, label: 'Registrations', icon: ClipboardList }] : []),
   ];
 
   return (
@@ -493,6 +495,11 @@ export default function DashboardEvents() {
                   ))
                 )}
               </div>
+            )}
+
+            {/* Registrations Tab */}
+            {activeView === 'registrations' && hasMinRoleLevel(3) && (
+              <EventRegistrationsView />
             )}
           </>
         )}
