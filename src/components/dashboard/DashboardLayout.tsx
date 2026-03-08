@@ -25,11 +25,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Overview', icon: LayoutDashboard, path: '/dashboard', minLevel: 2 },
+  { title: 'Overview', icon: LayoutDashboard, path: '/dashboard', minLevel: 1 },
+  { title: 'My Events', icon: Calendar, path: '/dashboard/events', minLevel: 1 },
   { title: 'Teams', icon: Users, path: '/dashboard/teams', minLevel: 3 },
-  { title: 'Manage Users', icon: UserCog, path: '/dashboard/users', minLevel: 5 },
-  { title: 'Events', icon: Calendar, path: '/dashboard/events', minLevel: 2 },
   { title: 'Tasks', icon: ClipboardList, path: '/dashboard/tasks', minLevel: 2 },
+  { title: 'Manage Users', icon: UserCog, path: '/dashboard/users', minLevel: 5 },
   { title: 'Roles & Permissions', icon: Shield, path: '/dashboard/roles', minLevel: 5 },
 ];
 
