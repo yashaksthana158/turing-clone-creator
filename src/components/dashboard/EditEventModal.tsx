@@ -1,16 +1,25 @@
-import { useState, useRef } from 'react';
-import { X, Loader2, Upload, Image } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Loader2, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-interface CreateEventModalProps {
+interface EditEventModalProps {
   open: boolean;
   onClose: () => void;
-  onCreated: () => void;
+  onUpdated: () => void;
+  event: {
+    id: string;
+    title: string;
+    description: string | null;
+    venue: string | null;
+    event_date: string | null;
+    max_participants: number | null;
+    poster_url: string | null;
+  } | null;
 }
 
-export default function CreateEventModal({ open, onClose, onCreated }: CreateEventModalProps) {
+export default function EditEventModal({ open, event, onClose, onUpdated }: EditEventModalProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -22,7 +31,19 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (event) {
+      setTitle(event.title);
+      setDescription(event.description || '');
+      setVenue(event.venue || '');
+      setEventDate(event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : '');
+      setMaxParticipants(event.max_participants?.toString() || '');
+      setPosterPreview(event.poster_url || null);
+      setPosterFile(null);
+    }
+  }, [event]);
+
+  if (!open || !event) return null;
 
   const handlePosterSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,14 +60,14 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
     setPosterPreview(URL.createObjectURL(file));
   };
 
-  const uploadPoster = async (eventId: string): Promise<string | null> => {
-    if (!posterFile || !user) return null;
+  const uploadPoster = async (): Promise<string | null> => {
+    if (!posterFile || !user) return event.poster_url;
     const ext = posterFile.name.split('.').pop();
-    const path = `${user.id}/${eventId}.${ext}`;
+    const path = `${user.id}/${event.id}.${ext}`;
     const { error } = await supabase.storage.from('event-posters').upload(path, posterFile, { upsert: true });
     if (error) {
       console.error('Poster upload error:', error);
-      return null;
+      return event.poster_url;
     }
     const { data } = supabase.storage.from('event-posters').getPublicUrl(path);
     return data.publicUrl;
@@ -61,43 +82,68 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
 
     setSaving(true);
 
-    const { data: membership } = await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user!.id)
-      .limit(1)
-      .maybeSingle();
+    let posterUrl = posterPreview;
+    if (posterFile) {
+      posterUrl = await uploadPoster();
+    } else if (!posterPreview) {
+      posterUrl = null;
+    }
 
-    const { data: event, error } = await supabase
+    const { error } = await supabase
       .from('events')
-      .insert({
+      .update({
         title: title.trim(),
         description: description.trim() || null,
         venue: venue.trim() || null,
         event_date: eventDate || null,
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
-        created_by: user!.id,
-        team_id: membership?.team_id || null,
-        status: 'DRAFT',
+        poster_url: posterUrl,
       })
-      .select('id')
-      .single();
+      .eq('id', event.id);
 
     if (error) {
-      toast.error('Failed to create event: ' + error.message);
+      toast.error('Failed to update event: ' + error.message);
       setSaving(false);
       return;
     }
 
-    // Upload poster if selected
+    toast.success('Event updated successfully!');
+    setSaving(false);
+    onUpdated();
+    onClose();
+  };
+
+  const handleResubmit = async () => {
+    setSaving(true);
+
+    let posterUrl = posterPreview;
     if (posterFile) {
-      const posterUrl = await uploadPoster(event.id);
-      if (posterUrl) {
-        await supabase.from('events').update({ poster_url: posterUrl }).eq('id', event.id);
-      }
+      posterUrl = await uploadPoster();
+    } else if (!posterPreview) {
+      posterUrl = null;
     }
 
-    // Create approval record for team lead
+    // Update event and set status to PENDING_LEAD
+    const { error } = await supabase
+      .from('events')
+      .update({
+        title: title.trim(),
+        description: description.trim() || null,
+        venue: venue.trim() || null,
+        event_date: eventDate || null,
+        max_participants: maxParticipants ? parseInt(maxParticipants) : null,
+        poster_url: posterUrl,
+        status: 'PENDING_LEAD',
+      })
+      .eq('id', event.id);
+
+    if (error) {
+      toast.error('Failed to resubmit: ' + error.message);
+      setSaving(false);
+      return;
+    }
+
+    // Create new approval record
     await supabase.from('approvals').insert({
       item_id: event.id,
       item_type: 'EVENT',
@@ -105,16 +151,9 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
       status: 'PENDING',
     });
 
-    toast.success('Event created! It will be reviewed by your Team Lead.');
+    toast.success('Event updated and resubmitted for review!');
     setSaving(false);
-    setTitle('');
-    setDescription('');
-    setVenue('');
-    setEventDate('');
-    setMaxParticipants('');
-    setPosterFile(null);
-    setPosterPreview(null);
-    onCreated();
+    onUpdated();
     onClose();
   };
 
@@ -125,7 +164,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-[#141414] border border-gray-800 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
-          <h2 className="text-lg font-bold text-white font-['Oxanium']">Create New Event</h2>
+          <h2 className="text-lg font-bold text-white font-['Oxanium']">Edit Event</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
@@ -150,7 +189,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               className={inputClass}
-              placeholder="Describe the event, its goals, and what participants can expect..."
+              placeholder="Describe the event..."
             />
           </div>
 
@@ -205,7 +244,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
                 value={maxParticipants}
                 onChange={(e) => setMaxParticipants(e.target.value)}
                 className={inputClass}
-                placeholder="Leave empty for unlimited"
+                placeholder="Unlimited"
               />
             </div>
           </div>
@@ -220,10 +259,6 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
             />
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
-            After creation, this event will be sent for <strong>Team Lead approval</strong>, then <strong>President approval</strong> before publishing.
-          </div>
-
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -235,9 +270,17 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 px-4 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg transition-colors text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="py-2.5 px-4 border border-gray-700 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {saving ? <><Loader2 size={16} className="animate-spin" /> Creating...</> : 'Create Event'}
+              {saving ? <Loader2 size={16} className="animate-spin" /> : 'Save Draft'}
+            </button>
+            <button
+              type="button"
+              disabled={saving || !title.trim()}
+              onClick={handleResubmit}
+              className="py-2.5 px-4 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg transition-colors text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : 'Save & Resubmit'}
             </button>
           </div>
         </form>
