@@ -52,10 +52,12 @@ export function LiveEventCard({
     ? { as: "a" as const, href: external_url, target: "_blank", rel: "noopener noreferrer" }
     : {};
 
-  const Wrapper = external_url ? "a" : Link;
-  const wrapperProps = external_url
+  const isInternalLink = external_url && external_url.startsWith("/");
+  const isExternalLink = external_url && !external_url.startsWith("/");
+  const Wrapper = isExternalLink ? "a" : Link;
+  const wrapperProps = isExternalLink
     ? { href: external_url, target: "_blank", rel: "noopener noreferrer" }
-    : { to: `/events/${id}` };
+    : { to: external_url && isInternalLink ? external_url : `/events/${id}` };
 
   return (
     <Wrapper

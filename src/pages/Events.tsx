@@ -99,7 +99,7 @@ const Events = () => {
                 max_participants: null,
                 registration_count: 0,
                 is_featured: false,
-                external_url: oe.link_url || edition.register_url || null,
+                external_url: `/overloadpp/${edition.year}/event/${oe.id}`,
               };
 
               if (isPastEdition) {

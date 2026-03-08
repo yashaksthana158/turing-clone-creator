@@ -13,7 +13,9 @@ import {
   CheckCircle,
   Loader2,
   Clock,
+  Trophy,
 } from "lucide-react";
+import { EventCountdown } from "@/components/EventCountdown";
 
 interface EventData {
   id: string;
@@ -24,6 +26,7 @@ interface EventData {
   status: string;
   max_participants: number | null;
   poster_url: string | null;
+  category: string | null;
 }
 
 export default function EventDetail() {
@@ -48,7 +51,7 @@ export default function EventDetail() {
     setLoading(true);
     const { data, error } = await supabase
       .from("events")
-      .select("id, title, description, event_date, venue, status, max_participants, poster_url")
+      .select("id, title, description, event_date, venue, status, max_participants, poster_url, category")
       .eq("id", id!)
       .single();
 
@@ -59,14 +62,12 @@ export default function EventDetail() {
     }
     setEvent(data);
 
-    // Get registration count
     const { count } = await supabase
       .from("event_registrations")
       .select("id", { count: "exact", head: true })
       .eq("event_id", id!)
       .eq("status", "REGISTERED");
     setRegCount(count || 0);
-
     setLoading(false);
   };
 
@@ -85,13 +86,11 @@ export default function EventDetail() {
       navigate(`/register?redirect=/events/${id}`);
       return;
     }
-
     setRegistering(true);
     const { error } = await supabase.from("event_registrations").insert({
       event_id: id!,
       user_id: user.id,
     });
-
     if (error) {
       if (error.code === "23505") {
         toast.error("You are already registered for this event");
@@ -113,7 +112,6 @@ export default function EventDetail() {
       .update({ status: "CANCELLED" })
       .eq("event_id", id!)
       .eq("user_id", user!.id);
-
     if (error) {
       toast.error("Failed to cancel registration");
     } else {
@@ -131,16 +129,19 @@ export default function EventDetail() {
       day: "numeric",
       month: "long",
       year: "numeric",
+    });
+  };
+
+  const formatTime = (date: string | null) => {
+    if (!date) return "";
+    return new Date(date).toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
   const isFull = event?.max_participants ? regCount >= event.max_participants : false;
-  const canRegister =
-    event?.status === "PUBLISHED" &&
-    !registrationStatus &&
-    !isFull;
+  const canRegister = event?.status === "PUBLISHED" && !registrationStatus && !isFull;
   const isRegistered = registrationStatus === "REGISTERED";
   const isCancelled = registrationStatus === "CANCELLED";
 
@@ -162,158 +163,126 @@ export default function EventDetail() {
     <div className="events-page">
       <Navigation />
 
-      <section style={{ padding: "120px 20px 60px", maxWidth: "800px", margin: "0 auto" }}>
-        <Link
-          to="/events"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            color: "#9113ff",
-            textDecoration: "none",
-            fontWeight: 600,
-            marginBottom: "24px",
-            fontSize: "14px",
-          }}
-        >
+      {/* Hero Section */}
+      <div
+        className="overload-detail-hero"
+        style={{
+          backgroundImage: event.poster_url ? `url(${event.poster_url})` : undefined,
+        }}
+      >
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(180deg, rgba(10,10,20,0.7) 0%, rgba(10,10,20,0.95) 100%)",
+          zIndex: 1,
+        }} />
+        <div className="overload-detail-hero-content">
+          {event.category && (
+            <span className="overload-detail-badge">{event.category}</span>
+          )}
+          <h1 style={{
+            color: "white",
+            fontSize: "clamp(2rem, 5vw, 3.5rem)",
+            fontWeight: 800,
+            fontFamily: "'Oxanium', sans-serif",
+            margin: "0 0 8px",
+          }}>
+            {event.title}
+          </h1>
+          <p style={{ color: "#a1a1aa", fontSize: "1rem" }}>
+            {event.status === "PUBLISHED" ? "Open for Registration" : event.status}
+          </p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="overload-detail-container">
+        <Link to="/events" className="overload-detail-back">
           <ArrowLeft size={16} />
           Back to Events
         </Link>
 
-        {/* Event Poster */}
-        {event.poster_url && (
-          <div
-            style={{
-              borderRadius: "16px",
-              overflow: "hidden",
-              marginBottom: "24px",
-              maxHeight: "400px",
-            }}
-          >
-            <img
-              src={event.poster_url}
-              alt={event.title}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
-            />
+        {/* Countdown */}
+        {event.event_date && event.status === "PUBLISHED" && (
+          <div style={{ marginBottom: "32px" }}>
+            <EventCountdown targetDate={event.event_date} />
           </div>
         )}
 
-        {/* Event Header */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, hsl(270 80% 20%) 0%, hsl(270 60% 10%) 100%)",
-            borderRadius: "16px",
-            padding: "40px",
-            marginBottom: "24px",
-            border: "1px solid hsl(270 30% 25%)",
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              background: "#9113ff",
-              color: "white",
-              padding: "4px 12px",
-              borderRadius: "20px",
-              fontSize: "12px",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              marginBottom: "16px",
-            }}
-          >
-            {event.status === "PUBLISHED" ? "Open for Registration" : event.status}
-          </span>
-          <h1
-            style={{
-              color: "white",
-              fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
-              fontWeight: 800,
-              fontFamily: "'Oxanium', sans-serif",
-              margin: "0 0 16px",
-              lineHeight: 1.2,
-            }}
-          >
-            {event.title}
-          </h1>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+        {/* About */}
+        {event.description && (
+          <div className="overload-detail-about">
+            <h2>About this Event</h2>
+            <p style={{ whiteSpace: "pre-wrap" }}>{event.description}</p>
+          </div>
+        )}
+
+        {/* Event Details Grid */}
+        <div className="overload-detail-info">
+          <h2>Event Details</h2>
+          <div className="overload-detail-grid">
             {event.event_date && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#ccc", fontSize: "15px" }}>
-                <Clock size={16} />
-                {formatDate(event.event_date)}
+              <div className="overload-detail-grid-item">
+                <Calendar size={20} />
+                <div>
+                  <span className="overload-detail-label">Date</span>
+                  <span className="overload-detail-value">{formatDate(event.event_date)}</span>
+                </div>
+              </div>
+            )}
+            {event.event_date && (
+              <div className="overload-detail-grid-item">
+                <Clock size={20} />
+                <div>
+                  <span className="overload-detail-label">Time</span>
+                  <span className="overload-detail-value">{formatTime(event.event_date)}</span>
+                </div>
               </div>
             )}
             {event.venue && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#ccc", fontSize: "15px" }}>
-                <MapPin size={16} />
-                {event.venue}
+              <div className="overload-detail-grid-item">
+                <MapPin size={20} />
+                <div>
+                  <span className="overload-detail-label">Venue</span>
+                  <span className="overload-detail-value">{event.venue}</span>
+                </div>
               </div>
             )}
             {event.max_participants && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#ccc", fontSize: "15px" }}>
-                <Users size={16} />
-                {regCount}/{event.max_participants} registered
+              <div className="overload-detail-grid-item">
+                <Users size={20} />
+                <div>
+                  <span className="overload-detail-label">Capacity</span>
+                  <span className="overload-detail-value">{regCount}/{event.max_participants} registered</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Description */}
-        {event.description && (
-          <div
-            style={{
-              background: "#1c1c1c",
-              borderRadius: "12px",
-              padding: "24px",
-              marginBottom: "24px",
-              border: "1px solid #333",
-            }}
-          >
-            <h2 style={{ color: "white", fontSize: "18px", fontWeight: 700, margin: "0 0 12px", fontFamily: "'Oxanium', sans-serif" }}>
-              About this Event
-            </h2>
-            <p style={{ color: "#aaa", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
-              {event.description}
-            </p>
-          </div>
-        )}
-
-        {/* Registration Box */}
-        <div
-          style={{
-            background: "#1c1c1c",
-            borderRadius: "12px",
-            padding: "24px",
-            border: "1px solid #333",
-            textAlign: "center",
-          }}
-        >
+        {/* Registration Section */}
+        <div className="overload-detail-register">
           {isRegistered && (
-            <div>
-              <CheckCircle size={40} style={{ color: "#10b981", margin: "0 auto 12px" }} />
-              <h3 style={{ color: "white", margin: "0 0 8px", fontFamily: "'Oxanium', sans-serif" }}>
+            <div style={{ textAlign: "center" }}>
+              <CheckCircle size={48} style={{ color: "#10b981", margin: "0 auto 16px" }} />
+              <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
                 You're Registered!
               </h3>
-              <p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
+              <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
                 We'll see you at the event.
               </p>
               <button
                 onClick={handleCancel}
                 disabled={registering}
+                className="overload-detail-cancel-btn"
                 style={{
-                  padding: "10px 24px",
+                  padding: "10px 28px",
                   background: "transparent",
                   color: "#ef4444",
-                  border: "1px solid #ef444450",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
                   borderRadius: "8px",
                   cursor: "pointer",
                   fontWeight: 600,
-                  fontSize: "14px",
+                  fontSize: "0.9rem",
                   opacity: registering ? 0.5 : 1,
                 }}
               >
@@ -323,24 +292,14 @@ export default function EventDetail() {
           )}
 
           {isCancelled && (
-            <div>
-              <p style={{ color: "#888", margin: "0 0 16px" }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ color: "#71717a", marginBottom: "16px" }}>
                 Your registration was cancelled. You can register again.
               </p>
               <button
                 onClick={handleRegister}
                 disabled={registering || isFull}
-                style={{
-                  padding: "12px 32px",
-                  background: isFull ? "#555" : "linear-gradient(135deg, #9113ff, #6b0fd4)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: isFull ? "not-allowed" : "pointer",
-                  fontWeight: 700,
-                  fontSize: "16px",
-                  opacity: registering ? 0.5 : 1,
-                }}
+                className="overload-register-btn"
               >
                 {registering ? "Registering..." : isFull ? "Event Full" : "Register Again"}
               </button>
@@ -348,27 +307,17 @@ export default function EventDetail() {
           )}
 
           {canRegister && (
-            <div>
-              <h3 style={{ color: "white", margin: "0 0 8px", fontFamily: "'Oxanium', sans-serif" }}>
+            <div style={{ textAlign: "center" }}>
+              <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
                 Ready to join?
               </h3>
-              <p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
+              <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
                 {user ? "Click below to secure your spot." : "Create an account to register for this event."}
               </p>
               <button
                 onClick={handleRegister}
                 disabled={registering}
-                style={{
-                  padding: "12px 32px",
-                  background: "linear-gradient(135deg, #9113ff, #6b0fd4)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: "16px",
-                  opacity: registering ? 0.5 : 1,
-                }}
+                className="overload-register-btn"
               >
                 {registering ? "Registering..." : user ? "Register Now" : "Sign Up to Register"}
               </button>
@@ -376,18 +325,16 @@ export default function EventDetail() {
           )}
 
           {isFull && !registrationStatus && (
-            <div>
-              <p style={{ color: "#ef4444", fontWeight: 600 }}>
-                This event is full. Registration is closed.
-              </p>
-            </div>
+            <p style={{ color: "#ef4444", fontWeight: 600, textAlign: "center" }}>
+              This event is full. Registration is closed.
+            </p>
           )}
 
           {event.status !== "PUBLISHED" && !registrationStatus && (
-            <p style={{ color: "#888" }}>Registration is not open for this event.</p>
+            <p style={{ color: "#71717a", textAlign: "center" }}>Registration is not open for this event.</p>
           )}
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>
