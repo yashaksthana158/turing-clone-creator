@@ -129,7 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (role: AppRole) => roles.includes(role);
 
   const hasMinRoleLevel = (minLevel: number) => {
-    const maxUserLevel = Math.max(...roles.map((r) => ROLE_LEVELS[r] || 0), 0);
+    // All authenticated users are at least PARTICIPANT (level 1)
+    const baseLevel = user ? 1 : 0;
+    const maxUserLevel = Math.max(...roles.map((r) => ROLE_LEVELS[r] || 0), baseLevel);
     return maxUserLevel >= minLevel;
   };
 
