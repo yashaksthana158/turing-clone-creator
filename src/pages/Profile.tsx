@@ -220,6 +220,22 @@ export default function Profile() {
                   <p className="text-white">{profile.phone || '—'}</p>
                 </div>
                 <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">College</p>
+                  <p className="text-white">{profile.college || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Course</p>
+                  <p className="text-white">{profile.course || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Roll Number</p>
+                  <p className="text-white">{profile.roll_no || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Year of Admission</p>
+                  <p className="text-white">{profile.admission_year || '—'}</p>
+                </div>
+                <div className="bg-black/50 rounded-lg p-4 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Role</p>
                   <p className="text-white">{highestRole?.replace('_', ' ') || 'None'}</p>
                 </div>
