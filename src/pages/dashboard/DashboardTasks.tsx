@@ -20,6 +20,7 @@ import {
   Users,
   Loader2,
   Pencil,
+  Search,
 } from 'lucide-react';
 
 type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
@@ -55,6 +56,7 @@ export default function DashboardTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<TaskStatus | 'ALL'>('ALL');
+  const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -150,7 +152,9 @@ export default function DashboardTasks() {
     fetchTasks();
   };
 
-  const filtered = filter === 'ALL' ? tasks : tasks.filter((t) => t.status === filter);
+  const filtered = tasks
+    .filter((t) => filter === 'ALL' || t.status === filter)
+    .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
 
   const formatDate = (d: string | null) => {
     if (!d) return '—';
@@ -213,8 +217,18 @@ export default function DashboardTasks() {
           </div>
         )}
 
-        {/* Status filters */}
-        <div className="flex flex-wrap gap-2">
+        {/* Search + Status filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks…"
+              className="w-full bg-[#1c1c1c] border border-gray-800 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#9113ff]"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
@@ -233,6 +247,7 @@ export default function DashboardTasks() {
               )}
             </button>
           ))}
+          </div>
         </div>
 
         {/* Task list */}
