@@ -91,7 +91,7 @@ export default function Login() {
 
           <p className="mt-6 text-center text-gray-400">
             Don't have an account?{' '}
-            <Link to="/register" className="text-[#9113ff] hover:text-[#a855f7] transition-colors">
+            <Link to={redirectParam ? `/register?redirect=${encodeURIComponent(redirectParam)}` : "/register"} className="text-[#9113ff] hover:text-[#a855f7] transition-colors">
               Sign up
             </Link>
           </p>
