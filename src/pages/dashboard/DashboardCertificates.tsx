@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Award, Download, Search, Plus, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { generateCertificatePdf } from '@/utils/generateCertificatePdf';
 
 interface Certificate {
   id: string;
