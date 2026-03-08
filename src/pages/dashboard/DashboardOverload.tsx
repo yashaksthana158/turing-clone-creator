@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp } from "lucide-react";
+import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { Plus, Trash2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Edition {
