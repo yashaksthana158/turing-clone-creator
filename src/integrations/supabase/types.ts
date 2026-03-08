@@ -221,6 +221,7 @@ export type Database = {
           hero_image_url: string | null
           id: string
           is_published: boolean
+          register_enabled: boolean
           register_url: string | null
           title: string
           updated_at: string
@@ -235,6 +236,7 @@ export type Database = {
           hero_image_url?: string | null
           id?: string
           is_published?: boolean
+          register_enabled?: boolean
           register_url?: string | null
           title: string
           updated_at?: string
@@ -249,6 +251,7 @@ export type Database = {
           hero_image_url?: string | null
           id?: string
           is_published?: boolean
+          register_enabled?: boolean
           register_url?: string | null
           title?: string
           updated_at?: string

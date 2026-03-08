@@ -1,0 +1,1 @@
+ALTER TABLE public.overload_editions ADD COLUMN register_enabled boolean NOT NULL DEFAULT false;
