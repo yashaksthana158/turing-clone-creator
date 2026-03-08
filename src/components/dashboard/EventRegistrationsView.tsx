@@ -83,9 +83,9 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('event_registrations')
-      .select('id, user_id, event_id, status, registered_at, id_card_url')
-      .eq('event_id', selectedEventId)
+      .from(regTable as any)
+      .select('id, user_id, status, registered_at, id_card_url')
+      .eq(eventIdCol, selectedEventId)
       .order('registered_at', { ascending: false });
 
     if (error) {
@@ -94,7 +94,8 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
       return;
     }
 
-    const userIds = (data || []).map(r => r.user_id);
+    const rows = (data || []) as any[];
+    const userIds = rows.map((r: any) => r.user_id);
     let profiles: Record<string, any> = {};
     if (userIds.length > 0) {
       const { data: profileData } = await supabase
@@ -104,8 +105,9 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
       (profileData || []).forEach((p: any) => { profiles[p.id] = p; });
     }
 
-    const enriched = (data || []).map(r => ({
+    const enriched = rows.map((r: any) => ({
       ...r,
+      event_id: isOverload ? r.overload_event_id : r.event_id,
       profile: profiles[r.user_id] || undefined,
     }));
 
