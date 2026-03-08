@@ -133,6 +133,7 @@ const Events = () => {
       });
 
       setAllEvents(unified);
+      setPastDbEvents(prev => [...prev, ...pastOverload]);
       setLoading(false);
     };
     fetchEvents();
