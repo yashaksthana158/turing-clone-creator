@@ -15,6 +15,7 @@ interface DbEvent {
   max_participants: number | null;
   poster_url: string | null;
   category: string | null;
+  is_featured: boolean;
 }
 
 const hardcodedEvents = [
