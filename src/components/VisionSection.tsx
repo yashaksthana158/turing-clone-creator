@@ -1,55 +1,49 @@
 export const VisionSection = () => {
-  const visionItems = [
+  const cards = [
     {
-      title: "Innovation Hub",
-      description: "Fostering creativity and technological advancement through collaborative projects and research initiatives.",
-      icon: "🚀"
+      number: "01",
+      title: "Collaborate",
+      description:
+        "Join our society to engage with peers and faculty members who share an interest in your field. We welcome all department students, fostering collaboration and shared growth.",
     },
     {
-      title: "Learning Excellence",
-      description: "Providing comprehensive educational resources and mentorship for students at all levels.",
-      icon: "📚"
+      number: "02",
+      title: "Advance Knowledge",
+      description:
+        "Participate in department-led workshops, academic events, and lectures. Gain insights from experts and expand your technical and theoretical understanding through practical activities.",
     },
     {
-      title: "Community Building",
-      description: "Creating a supportive network of tech enthusiasts, professionals, and future leaders.",
-      icon: "🤝"
-    }
+      number: "03",
+      title: "Thrive",
+      description:
+        "Utilize your skills in projects and research that address departmental and community challenges. Enhance your career prospects, build a strong professional network, and contribute meaningfully to your academic environment.",
+    },
   ];
 
   return (
-    <section id="vision" className="py-16 lg:py-24 relative">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 lg:mb-6">
-            <span className="cosmic-gradient-text">Our Vision</span>
-          </h2>
-          <p className="text-lg sm:text-xl text-cosmic-light/80 max-w-3xl mx-auto leading-relaxed">
-            Building the future of technology education and innovation
-          </p>
+    <div id="vision" className="py-5 text-center">
+      <div className="container">
+        <div className="section-title">Our Vision</div>
+        <div className="section-subtitle mb-5 pb-3">
+          Our Society's Vision is to Empower-Excel-Contribute.
         </div>
 
-        {/* Vision grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {visionItems.map((item, index) => (
-            <div
-              key={index}
-              className="cosmic-card group hover:scale-105 transition-all duration-300"
-            >
-              <div className="text-center p-6 lg:p-8">
-                <div className="text-4xl lg:text-5xl mb-4 lg:mb-6">{item.icon}</div>
-                <h3 className="text-xl lg:text-2xl font-bold text-cosmic-light mb-3 lg:mb-4">
-                  {item.title}
-                </h3>
-                <p className="text-cosmic-light/70 leading-relaxed text-sm lg:text-base">
-                  {item.description}
-                </p>
+        <div className="row g-4">
+          {cards.map((card) => (
+            <div className="col-md-4" key={card.number}>
+              <div className="card h-100">
+                <div className="card-body">
+                  <div className="text-primary" style={{ fontWeight: "bold" }}>
+                    {card.number}
+                  </div>
+                  <div className="card-title mt-3">{card.title}</div>
+                  <div className="mb-0 text-light">{card.description}</div>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 };
