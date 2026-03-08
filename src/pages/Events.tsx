@@ -119,7 +119,7 @@ const Events = () => {
     const fetchEvents = async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, description, event_date, venue, status, max_participants")
+        .select("id, title, description, event_date, venue, status, max_participants, poster_url")
         .eq("status", "PUBLISHED")
         .order("event_date", { ascending: true });
       if (data) setDbEvents(data);
