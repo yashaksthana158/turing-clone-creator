@@ -131,6 +131,7 @@ export type Database = {
         Row: {
           event_id: string
           id: string
+          id_card_url: string | null
           registered_at: string
           status: Database["public"]["Enums"]["registration_status"]
           user_id: string
@@ -138,6 +139,7 @@ export type Database = {
         Insert: {
           event_id: string
           id?: string
+          id_card_url?: string | null
           registered_at?: string
           status?: Database["public"]["Enums"]["registration_status"]
           user_id: string
@@ -145,6 +147,7 @@ export type Database = {
         Update: {
           event_id?: string
           id?: string
+          id_card_url?: string | null
           registered_at?: string
           status?: Database["public"]["Enums"]["registration_status"]
           user_id?: string

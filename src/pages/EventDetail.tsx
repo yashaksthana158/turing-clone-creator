@@ -14,6 +14,9 @@ import {
   Loader2,
   Clock,
   Trophy,
+  Upload,
+  X,
+  FileImage,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
 
@@ -38,6 +41,9 @@ export default function EventDetail() {
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [regCount, setRegCount] = useState(0);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
+  const [uploadingCard, setUploadingCard] = useState(false);
 
   useEffect(() => {
     if (id) fetchEvent();
@@ -86,11 +92,32 @@ export default function EventDetail() {
       navigate(`/register?redirect=/events/${id}`);
       return;
     }
+    if (!idCardFile) {
+      toast.error("Please upload your ID card to verify your details");
+      return;
+    }
     setRegistering(true);
+
+    // Upload ID card
+    const fileExt = idCardFile.name.split(".").pop();
+    const filePath = `${user.id}/${id}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from("id-cards")
+      .upload(filePath, idCardFile, { cacheControl: "3600", upsert: true });
+
+    if (uploadError) {
+      toast.error("Failed to upload ID card: " + uploadError.message);
+      setRegistering(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
+
     const { error } = await supabase.from("event_registrations").insert({
       event_id: id!,
       user_id: user.id,
-    });
+      id_card_url: urlData.publicUrl,
+    } as any);
     if (error) {
       if (error.code === "23505") {
         toast.error("You are already registered for this event");
@@ -101,8 +128,31 @@ export default function EventDetail() {
       toast.success("Successfully registered!");
       setRegistrationStatus("REGISTERED");
       setRegCount((c) => c + 1);
+      setIdCardFile(null);
+      setIdCardPreview(null);
     }
     setRegistering(false);
+  };
+
+  const handleIdCardSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      toast.error("Please upload an image or PDF file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File must be less than 5MB");
+      return;
+    }
+    setIdCardFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setIdCardPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setIdCardPreview(null);
+    }
   };
 
   const handleCancel = async () => {
@@ -312,8 +362,78 @@ export default function EventDetail() {
                 Ready to join?
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                {user ? "Click below to secure your spot." : "Create an account to register for this event."}
+                {user ? "Upload your ID card and register." : "Create an account to register for this event."}
               </p>
+
+              {user && (
+                <div style={{ marginBottom: "24px" }}>
+                  {!idCardFile ? (
+                    <label
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "32px 24px",
+                        border: "2px dashed rgba(145, 19, 255, 0.4)",
+                        borderRadius: "12px",
+                        cursor: "pointer",
+                        background: "rgba(145, 19, 255, 0.05)",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <Upload size={32} style={{ color: "#9113ff" }} />
+                      <span style={{ color: "#a1a1aa", fontSize: "0.9rem" }}>
+                        Upload your College ID Card
+                      </span>
+                      <span style={{ color: "#52525b", fontSize: "0.75rem" }}>
+                        Image or PDF, max 5MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleIdCardSelect}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        background: "rgba(145, 19, 255, 0.1)",
+                        borderRadius: "12px",
+                        border: "1px solid rgba(145, 19, 255, 0.3)",
+                      }}
+                    >
+                      {idCardPreview ? (
+                        <img
+                          src={idCardPreview}
+                          alt="ID Card"
+                          style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }}
+                        />
+                      ) : (
+                        <FileImage size={40} style={{ color: "#9113ff" }} />
+                      )}
+                      <div style={{ flex: 1, textAlign: "left" }}>
+                        <p style={{ color: "white", fontSize: "0.85rem", margin: 0 }}>{idCardFile.name}</p>
+                        <p style={{ color: "#71717a", fontSize: "0.75rem", margin: 0 }}>
+                          {(idCardFile.size / 1024).toFixed(0)} KB
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setIdCardFile(null); setIdCardPreview(null); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                      >
+                        <X size={20} style={{ color: "#ef4444" }} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handleRegister}
                 disabled={registering}
