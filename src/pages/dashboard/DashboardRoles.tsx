@@ -361,6 +361,16 @@ export default function DashboardRoles() {
                                   </span>
                                 </span>
                               )}
+                              {isSuperAdmin() && (
+                                <button
+                                  onClick={() => handleDeletePermission(perm.id)}
+                                  disabled={deletingPerm === perm.id}
+                                  className="ml-auto text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
+                                  title="Delete permission"
+                                >
+                                  {deletingPerm === perm.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                                </button>
+                              )}
                             </div>
                           </td>
                           {roleDefs.map(role => {
