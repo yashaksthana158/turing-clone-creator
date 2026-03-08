@@ -1807,37 +1807,6 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* Progress Bar */
-.event-card-live-progress {
-  margin-top: 12px;
-}
-.event-card-live-progress-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #999;
-  margin-bottom: 6px;
-}
-.event-card-live-progress-bar {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.event-card-live-progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #9113ff, #b44dff);
-  transition: width 0.6s ease;
-}
-.event-card-live-progress-fill.almost {
-  background: linear-gradient(90deg, #f59e0b, #f97316);
-}
-.event-card-live-progress-fill.full {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-}
-
 .event-card-live-cta {
   display: flex;
   align-items: center;
