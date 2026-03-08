@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CreateEventModal from '@/components/dashboard/CreateEventModal';
+import EditEventModal from '@/components/dashboard/EditEventModal';
 import EventApprovalActions from '@/components/dashboard/EventApprovalActions';
-import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter } from 'lucide-react';
+import { Calendar, Ticket, MapPin, Clock, Users, Plus, Filter, Pencil } from 'lucide-react';
 
 interface Event {
   id: string;
