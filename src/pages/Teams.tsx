@@ -16,15 +16,16 @@ const faculty: TeamMember[] = [
   { name: "Ms. Nishu Singh", role: "Co-convenor", image: "/Assets/NishuMaam.jpg" },
 ];
 
+// Use URL encoding for space in folder name: "Core team" -> "Core%20team"
 const council: TeamMember[] = [
-  { name: "Yash Asthana", role: "President", image: "/Assets/Core team/Yash.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
-  { name: "Kush Gautam", role: "Vice-President", image: "/Assets/Core team/Kush.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Sapna Yadav", role: "Secretary", image: "/Assets/Core team/Sapna.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Ishitva Joshi", role: "Treasurer", image: "/Assets/Core team/Ishitva.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Anshuman Thakur", role: "Technical Head", image: "/Assets/Core team/Anshuman.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Subham Kumar", role: "Executive Head", image: "/Assets/Core team/Shubham.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Rishik Chaudhary", role: "Executive Head", image: "/Assets/Core team/Rishik.jpg", linkedin: "#", instagram: "#", github: "#" },
-  { name: "Aditya Maurya", role: "Media Chief", image: "/Assets/Core team/Aditya maurya.jpeg", linkedin: "#", instagram: "#", github: "#" },
+  { name: "Yash Asthana", role: "President", image: "/Assets/Core%20team/Yash.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
+  { name: "Kush Gautam", role: "Vice-President", image: "/Assets/Core%20team/Kush.jpg" },
+  { name: "Sapna Yadav", role: "Secretary", image: "/Assets/Core%20team/Sapna.jpg" },
+  { name: "Ishitva Joshi", role: "Treasurer", image: "/Assets/Core%20team/Ishitva.jpg" },
+  { name: "Anshuman Thakur", role: "Technical Head", image: "/Assets/Core%20team/Anshuman.jpg" },
+  { name: "Subham Kumar", role: "Executive Head", image: "/Assets/Core%20team/Shubham.jpg" },
+  { name: "Rishik Chaudhary", role: "Executive Head", image: "/Assets/Core%20team/Rishik.jpg" },
+  { name: "Aditya Maurya", role: "Media Chief", image: "/Assets/Core%20team/Aditya%20maurya.jpeg" },
 ];
 
 const technicalTeam: TeamMember[] = [
@@ -43,7 +44,7 @@ const executiveTeam: TeamMember[] = [
   { name: "MD. Nouman Noorain", role: "Executive Member", image: "/Assets/teams/executive/Nouman.jpg" },
   { name: "Dhruv", role: "Executive Member", image: "/Assets/teams/executive/Dhruv.jpg" },
   { name: "Dhiraj", role: "Executive Member", image: "/Assets/teams/executive/Dhiraj.jpg" },
-  { name: "Gunjan Arora", role: "Executive Member", image: "/Assets/teams/executive/Gunjan Arora.jpeg" },
+  { name: "Gunjan Arora", role: "Executive Member", image: "/Assets/teams/executive/Gunjan%20Arora.jpeg" },
   { name: "Riya", role: "Executive Member", image: "/Assets/teams/executive/Riya.JPG" },
   { name: "Rupali", role: "Executive Member", image: "/Assets/teams/executive/Rupali.JPG" },
   { name: "Sangeeta", role: "Executive Member", image: "/Assets/teams/executive/Sangeeta.JPG" },

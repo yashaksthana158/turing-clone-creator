@@ -18,25 +18,65 @@ const categories: { key: Category; label: string }[] = [
   { key: "freshers", label: "Freshers 2024-25" },
 ];
 
-// Build gallery images from known assets
-const buildImages = (): GalleryImage[] => {
-  const images: GalleryImage[] = [];
-  const folders: { cat: Category; path: string; count: number; ext: string }[] = [
-    { cat: "orientation", path: "/Assets/orientation", count: 7, ext: "jpg" },
-    { cat: "bootcamp", path: "/Assets/Bootcamp", count: 7, ext: "jpg" },
-    { cat: "rtd", path: "/Assets/Real Time 3D", count: 7, ext: "webp" },
-    { cat: "farewell", path: "/Assets/farewell", count: 7, ext: "webp" },
-    { cat: "freshers", path: "/Assets/freshers", count: 7, ext: "jpg" },
-  ];
-  for (const f of folders) {
-    for (let i = 1; i <= f.count; i++) {
-      images.push({ src: `${f.path}/${i}.${f.ext}`, category: f.cat });
-    }
-  }
-  return images;
-};
-
-const allImages = buildImages();
+// Gallery images with correct paths and extensions based on actual files
+const allImages: GalleryImage[] = [
+  // Orientation (9 images, all .jpg)
+  { src: "/Assets/orientation/1.jpg", category: "orientation" },
+  { src: "/Assets/orientation/2.jpg", category: "orientation" },
+  { src: "/Assets/orientation/3.jpg", category: "orientation" },
+  { src: "/Assets/orientation/4.jpg", category: "orientation" },
+  { src: "/Assets/orientation/5.jpg", category: "orientation" },
+  { src: "/Assets/orientation/6.jpg", category: "orientation" },
+  { src: "/Assets/orientation/7.jpg", category: "orientation" },
+  { src: "/Assets/orientation/8.jpg", category: "orientation" },
+  { src: "/Assets/orientation/9.jpg", category: "orientation" },
+  
+  // Bootcamp (11 images, all .jpg)
+  { src: "/Assets/Bootcamp/1.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/2.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/3.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/4.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/5.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/6.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/7.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/8.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/9.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/10.jpg", category: "bootcamp" },
+  { src: "/Assets/Bootcamp/11.jpg", category: "bootcamp" },
+  
+  // Real Time 3D (8 images, all .webp) - URL encode space
+  { src: "/Assets/Real%20Time%203D/1.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/2.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/3.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/4.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/5.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/6.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/7.webp", category: "rtd" },
+  { src: "/Assets/Real%20Time%203D/8.webp", category: "rtd" },
+  
+  // Farewell (8 images, all .webp)
+  { src: "/Assets/farewell/1.webp", category: "farewell" },
+  { src: "/Assets/farewell/2.webp", category: "farewell" },
+  { src: "/Assets/farewell/3.webp", category: "farewell" },
+  { src: "/Assets/farewell/4.webp", category: "farewell" },
+  { src: "/Assets/farewell/5.webp", category: "farewell" },
+  { src: "/Assets/farewell/6.webp", category: "farewell" },
+  { src: "/Assets/farewell/7.webp", category: "farewell" },
+  { src: "/Assets/farewell/8.webp", category: "farewell" },
+  
+  // Freshers (11 images, mixed extensions)
+  { src: "/Assets/freshers/1.jpeg", category: "freshers" },
+  { src: "/Assets/freshers/2.jpg", category: "freshers" },
+  { src: "/Assets/freshers/3.jpeg", category: "freshers" },
+  { src: "/Assets/freshers/4.jpg", category: "freshers" },
+  { src: "/Assets/freshers/5.jpg", category: "freshers" },
+  { src: "/Assets/freshers/6.jpg", category: "freshers" },
+  { src: "/Assets/freshers/7.jpg", category: "freshers" },
+  { src: "/Assets/freshers/8.jpg", category: "freshers" },
+  { src: "/Assets/freshers/9.jpg", category: "freshers" },
+  { src: "/Assets/freshers/10.jpg", category: "freshers" },
+  { src: "/Assets/freshers/11.jpg", category: "freshers" },
+];
 
 const Gallery = () => {
   const [filter, setFilter] = useState<Category>("all");
