@@ -16,6 +16,7 @@ import {
   Trophy,
   Upload,
   X,
+  XCircle,
   FileImage,
 } from "lucide-react";
 import { EventCountdown } from "@/components/EventCountdown";
@@ -68,11 +69,12 @@ export default function EventDetail() {
     }
     setEvent(data);
 
+    // Count both REGISTERED and APPROVED for capacity
     const { count } = await supabase
       .from("event_registrations")
       .select("id", { count: "exact", head: true })
       .eq("event_id", id!)
-      .eq("status", "REGISTERED");
+      .in("status", ["REGISTERED", "APPROVED"]);
     setRegCount(count || 0);
     setLoading(false);
   };
@@ -113,23 +115,41 @@ export default function EventDetail() {
 
     const { data: urlData } = supabase.storage.from("id-cards").getPublicUrl(filePath);
 
-    const { error } = await supabase.from("event_registrations").insert({
-      event_id: id!,
-      user_id: user.id,
-      id_card_url: urlData.publicUrl,
-    } as any);
-    if (error) {
-      if (error.code === "23505") {
-        toast.error("You are already registered for this event");
+    // If re-registering after cancellation or rejection, update existing row
+    if (registrationStatus === "CANCELLED" || registrationStatus === "REJECTED") {
+      const { error } = await supabase
+        .from("event_registrations")
+        .update({ status: "REGISTERED" as any, id_card_url: urlData.publicUrl })
+        .eq("event_id", id!)
+        .eq("user_id", user.id);
+      if (error) {
+        toast.error("Re-registration failed: " + error.message);
       } else {
-        toast.error("Registration failed: " + error.message);
+        toast.success("Successfully re-registered!");
+        setRegistrationStatus("REGISTERED");
+        setRegCount((c) => c + 1);
+        setIdCardFile(null);
+        setIdCardPreview(null);
       }
     } else {
-      toast.success("Successfully registered!");
-      setRegistrationStatus("REGISTERED");
-      setRegCount((c) => c + 1);
-      setIdCardFile(null);
-      setIdCardPreview(null);
+      const { error } = await supabase.from("event_registrations").insert({
+        event_id: id!,
+        user_id: user.id,
+        id_card_url: urlData.publicUrl,
+      } as any);
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("You are already registered for this event");
+        } else {
+          toast.error("Registration failed: " + error.message);
+        }
+      } else {
+        toast.success("Successfully registered!");
+        setRegistrationStatus("REGISTERED");
+        setRegCount((c) => c + 1);
+        setIdCardFile(null);
+        setIdCardPreview(null);
+      }
     }
     setRegistering(false);
   };
@@ -194,6 +214,8 @@ export default function EventDetail() {
   const canRegister = event?.status === "PUBLISHED" && !registrationStatus && !isFull;
   const isRegistered = registrationStatus === "REGISTERED";
   const isCancelled = registrationStatus === "CANCELLED";
+  const isRejected = registrationStatus === "REJECTED";
+  const isApproved = registrationStatus === "APPROVED";
 
   if (loading) {
     return (
@@ -311,14 +333,29 @@ export default function EventDetail() {
 
         {/* Registration Section */}
         <div className="overload-detail-register">
-          {isRegistered && (
+          {isApproved && (
             <div style={{ textAlign: "center" }}>
               <CheckCircle size={48} style={{ color: "#10b981", margin: "0 auto 16px" }} />
               <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
-                You're Registered!
+                Registration Approved!
+              </h3>
+              <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "8px" }}>
+                Your ID card has been verified. A confirmation email has been sent.
+              </p>
+              <p style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600 }}>
+                We'll see you at the event! 🎉
+              </p>
+            </div>
+          )}
+
+          {isRegistered && (
+            <div style={{ textAlign: "center" }}>
+              <Clock size={48} style={{ color: "#f59e0b", margin: "0 auto 16px" }} />
+              <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
+                Registration Pending Review
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                We'll see you at the event.
+                Your ID card is being verified. You'll receive a confirmation once approved.
               </p>
               <button
                 onClick={handleCancel}
@@ -341,11 +378,23 @@ export default function EventDetail() {
             </div>
           )}
 
-          {isCancelled && (
+          {(isCancelled || isRejected) && (
             <div style={{ textAlign: "center" }}>
-              <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                Your registration was cancelled. You can register again.
-              </p>
+              {isRejected ? (
+                <>
+                  <XCircle size={48} style={{ color: "#ef4444", margin: "0 auto 16px" }} />
+                  <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
+                    Registration Rejected
+                  </h3>
+                  <p style={{ color: "#71717a", marginBottom: "16px" }}>
+                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                  </p>
+                </>
+              ) : (
+                <p style={{ color: "#71717a", marginBottom: "16px" }}>
+                  Your registration was cancelled. You can register again.
+                </p>
+              )}
 
               {user && (
                 <div style={{ marginBottom: "24px" }}>
