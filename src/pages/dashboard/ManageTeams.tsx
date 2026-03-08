@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Plus, Trash2, Users as UsersIcon, UserPlus, X } from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Team {
   id: string;
@@ -37,11 +38,24 @@ export default function ManageTeams() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
-  // Add member form state
   const [showAddMember, setShowAddMember] = useState(false);
   const [allUsers, setAllUsers] = useState<{ id: string; full_name: string | null }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedPosition, setSelectedPosition] = useState<'MEMBER' | 'LEAD'>('MEMBER');
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({ title: '', description: '', confirmLabel: 'Confirm', onConfirm: () => {} });
+
+  const openConfirm = (config: typeof confirmConfig) => {
+    setConfirmConfig(config);
+    setConfirmOpen(true);
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { navigate('/login'); return; }
@@ -52,7 +66,6 @@ export default function ManageTeams() {
   const fetchTeams = async () => {
     const { data, error } = await supabase.from('teams').select('*').order('created_at', { ascending: false });
     if (!error && data) {
-      // Fetch member counts
       const teamsWithCounts = await Promise.all(
         data.map(async (t) => {
           const { count } = await supabase
@@ -89,11 +102,18 @@ export default function ManageTeams() {
     setCreating(false);
   };
 
-  const handleDeleteTeam = async (id: string) => {
-    if (!confirm('Delete this team? All members will be removed.')) return;
-    const { error } = await supabase.from('teams').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success('Team deleted'); fetchTeams(); if (selectedTeam === id) setSelectedTeam(null); }
+  const handleDeleteTeam = (id: string) => {
+    openConfirm({
+      title: 'Delete Team',
+      description: 'Delete this team? All members will be removed. This cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        const { error } = await supabase.from('teams').delete().eq('id', id);
+        if (error) toast.error(error.message);
+        else { toast.success('Team deleted'); fetchTeams(); if (selectedTeam === id) setSelectedTeam(null); }
+      },
+    });
   };
 
   const loadMembers = async (teamId: string) => {
@@ -134,11 +154,18 @@ export default function ManageTeams() {
     }
   };
 
-  const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Remove this member?')) return;
-    const { error } = await supabase.from('team_members').delete().eq('id', memberId);
-    if (error) toast.error(error.message);
-    else { toast.success('Member removed'); if (selectedTeam) { loadMembers(selectedTeam); fetchTeams(); } }
+  const handleRemoveMember = (memberId: string) => {
+    openConfirm({
+      title: 'Remove Member',
+      description: 'Remove this member from the team?',
+      confirmLabel: 'Remove',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        const { error } = await supabase.from('team_members').delete().eq('id', memberId);
+        if (error) toast.error(error.message);
+        else { toast.success('Member removed'); if (selectedTeam) { loadMembers(selectedTeam); fetchTeams(); } }
+      },
+    });
   };
 
   if (authLoading || loading) {
@@ -171,7 +198,6 @@ export default function ManageTeams() {
           )}
         </div>
 
-        {/* Create team form */}
         {showCreateForm && (
           <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Create New Team</h2>
@@ -220,7 +246,6 @@ export default function ManageTeams() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Teams list */}
           <div className="lg:col-span-1 space-y-3">
             {teams.length === 0 ? (
               <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-8 text-center">
@@ -262,7 +287,6 @@ export default function ManageTeams() {
             )}
           </div>
 
-          {/* Team details / members */}
           <div className="lg:col-span-2">
             {!selectedTeam ? (
               <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-12 text-center">
@@ -284,7 +308,6 @@ export default function ManageTeams() {
                   </button>
                 </div>
 
-                {/* Add member form */}
                 {showAddMember && (
                   <div className="bg-black/50 border border-gray-700 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-between mb-3">
@@ -331,7 +354,6 @@ export default function ManageTeams() {
                   </div>
                 )}
 
-                {/* Members list */}
                 {loadingMembers ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#9113ff]"></div>
@@ -382,6 +404,16 @@ export default function ManageTeams() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant="danger"
+        onConfirm={confirmConfig.onConfirm}
+      />
     </DashboardLayout>
   );
 }
