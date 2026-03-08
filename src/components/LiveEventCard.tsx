@@ -49,7 +49,7 @@ export function LiveEventCard({
   return (
     <Link
       to={`/events/${id}`}
-      className="event-card-live group"
+      className={`event-card-live group${is_featured ? ' event-card-featured' : ''}`}
       style={{ textDecoration: "none", color: "inherit" }}
     >
       {/* Image */}
