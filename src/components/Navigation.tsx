@@ -50,11 +50,12 @@ export const Navigation = () => {
                 </div>
                 <div className="nav-links-desktop">
                   <nav>
-                    <ul>
+                    <ul className="flex items-center gap-1">
                       {navItems.map((item) => (
                         <li key={item.name}>
                           <Link
                             to={item.href}
+                            className="nav-link-item"
                             style={{
                               color: location.pathname === item.href ? "#9113ff" : undefined,
                             }}
@@ -69,22 +70,22 @@ export const Navigation = () => {
                             <li>
                               <Link
                                 to="/dashboard"
+                                className="nav-link-item flex items-center gap-1.5"
                                 style={{ color: location.pathname.startsWith("/dashboard") ? "#9113ff" : undefined }}
                               >
-                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <LayoutDashboard size={16} /> Dashboard
-                                </span>
+                                <LayoutDashboard size={16} />
+                                <span>Dashboard</span>
                               </Link>
                             </li>
                           )}
                           <li>
                             <Link
                               to="/profile"
+                              className="nav-link-item flex items-center gap-1.5"
                               style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
                             >
-                              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <User size={16} /> Profile
-                              </span>
+                              <User size={16} />
+                              <span>Profile</span>
                             </Link>
                           </li>
                         </>
@@ -92,11 +93,11 @@ export const Navigation = () => {
                         <li>
                           <Link
                             to="/login"
+                            className="nav-link-item flex items-center gap-1.5"
                             style={{ color: location.pathname === "/login" ? "#9113ff" : undefined }}
                           >
-                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <LogIn size={16} /> Login
-                            </span>
+                            <LogIn size={16} />
+                            <span>Login</span>
                           </Link>
                         </li>
                       )}
