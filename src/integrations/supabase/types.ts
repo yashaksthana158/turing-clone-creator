@@ -724,7 +724,12 @@ export type Database = {
         | "APPROVED"
         | "PUBLISHED"
         | "CLOSED"
-      registration_status: "REGISTERED" | "CANCELLED" | "ATTENDED"
+      registration_status:
+        | "REGISTERED"
+        | "CANCELLED"
+        | "ATTENDED"
+        | "APPROVED"
+        | "REJECTED"
       task_status:
         | "PENDING"
         | "IN_PROGRESS"
@@ -876,7 +881,13 @@ export const Constants = {
         "PUBLISHED",
         "CLOSED",
       ],
-      registration_status: ["REGISTERED", "CANCELLED", "ATTENDED"],
+      registration_status: [
+        "REGISTERED",
+        "CANCELLED",
+        "ATTENDED",
+        "APPROVED",
+        "REJECTED",
+      ],
       task_status: [
         "PENDING",
         "IN_PROGRESS",
