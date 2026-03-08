@@ -410,6 +410,11 @@ export default function DashboardEvents() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-1">
                                 <h3 className="text-white font-semibold">{evt.title}</h3>
+                                {evt.is_featured && (
+                                  <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                                    <Star size={11} className="fill-current" /> Featured
+                                  </span>
+                                )}
                                 <span className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${statusBadge(evt.status)}`}>
                                   {evt.status.replace(/_/g, ' ')}
                                 </span>
