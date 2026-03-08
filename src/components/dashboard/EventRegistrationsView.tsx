@@ -22,11 +22,15 @@ interface RegistrationRow {
 interface EventOption {
   id: string;
   title: string;
-  status: string;
+  status?: string;
   event_date: string | null;
 }
 
-export default function EventRegistrationsView() {
+interface EventRegistrationsViewProps {
+  source?: 'events' | 'overload';
+}
+
+export default function EventRegistrationsView({ source = 'events' }: EventRegistrationsViewProps) {
   const [events, setEvents] = useState<EventOption[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventOption | null>(null);
@@ -41,6 +45,10 @@ export default function EventRegistrationsView() {
   const [bulkApproving, setBulkApproving] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const isOverload = source === 'overload';
+  const regTable = isOverload ? 'overload_event_registrations' : 'event_registrations';
+  const eventIdCol = isOverload ? 'overload_event_id' : 'event_id';
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -54,11 +62,19 @@ export default function EventRegistrationsView() {
 
   const fetchEvents = async () => {
     setEventsLoading(true);
-    const { data } = await supabase
-      .from('events')
-      .select('id, title, status, event_date')
-      .order('created_at', { ascending: false });
-    setEvents((data as EventOption[]) || []);
+    if (isOverload) {
+      const { data } = await supabase
+        .from('overload_events')
+        .select('id, name, edition_id')
+        .order('sort_order', { ascending: true });
+      setEvents((data || []).map((e: any) => ({ id: e.id, title: e.name, event_date: null })));
+    } else {
+      const { data } = await supabase
+        .from('events')
+        .select('id, title, status, event_date')
+        .order('created_at', { ascending: false });
+      setEvents((data as EventOption[]) || []);
+    }
     setEventsLoading(false);
   };
 
@@ -67,9 +83,9 @@ export default function EventRegistrationsView() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('event_registrations')
-      .select('id, user_id, event_id, status, registered_at, id_card_url')
-      .eq('event_id', selectedEventId)
+      .from(regTable as any)
+      .select('id, user_id, status, registered_at, id_card_url')
+      .eq(eventIdCol, selectedEventId)
       .order('registered_at', { ascending: false });
 
     if (error) {
@@ -78,7 +94,8 @@ export default function EventRegistrationsView() {
       return;
     }
 
-    const userIds = (data || []).map(r => r.user_id);
+    const rows = (data || []) as any[];
+    const userIds = rows.map((r: any) => r.user_id);
     let profiles: Record<string, any> = {};
     if (userIds.length > 0) {
       const { data: profileData } = await supabase
@@ -88,8 +105,9 @@ export default function EventRegistrationsView() {
       (profileData || []).forEach((p: any) => { profiles[p.id] = p; });
     }
 
-    const enriched = (data || []).map(r => ({
+    const enriched = rows.map((r: any) => ({
       ...r,
+      event_id: isOverload ? r.overload_event_id : r.event_id,
       profile: profiles[r.user_id] || undefined,
     }));
 
@@ -115,7 +133,7 @@ export default function EventRegistrationsView() {
     setActionLoading(prev => ({ ...prev, [registrationId]: true }));
 
     const { error } = await supabase
-      .from('event_registrations')
+      .from(regTable as any)
       .update({ status: newStatus })
       .eq('id', registrationId);
 
@@ -142,7 +160,7 @@ export default function EventRegistrationsView() {
 
     const ids = Array.from(selectedIds);
     const { error } = await supabase
-      .from('event_registrations')
+      .from(regTable as any)
       .update({ status: 'APPROVED' as any })
       .in('id', ids);
 
@@ -253,7 +271,7 @@ export default function EventRegistrationsView() {
             <option value="">Choose an event...</option>
             {events.map(evt => (
               <option key={evt.id} value={evt.id}>
-                {evt.title} ({evt.status.replace(/_/g, ' ')})
+                {evt.title}{evt.status ? ` (${evt.status.replace(/_/g, ' ')})` : ''}
               </option>
             ))}
           </select>

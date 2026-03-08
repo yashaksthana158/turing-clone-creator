@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import EventRegistrationsView from "@/components/dashboard/EventRegistrationsView";
 import { useRef } from "react";
 
 /** Bulk upload button for gallery images */
@@ -100,7 +101,7 @@ interface GalleryImg {
   sort_order: number;
 }
 
-type Tab = "details" | "events" | "schedule" | "sponsors" | "gallery";
+type Tab = "details" | "events" | "schedule" | "sponsors" | "gallery" | "registrations";
 
 export default function DashboardOverload() {
   const [editions, setEditions] = useState<Edition[]>([]);
@@ -212,6 +213,7 @@ export default function DashboardOverload() {
     { key: "schedule", label: "Schedule" },
     { key: "sponsors", label: "Sponsors" },
     { key: "gallery", label: "Gallery" },
+    { key: "registrations", label: "Registrations" },
   ];
 
   return (
@@ -477,6 +479,11 @@ export default function DashboardOverload() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Registrations tab */}
+            {activeTab === "registrations" && (
+              <EventRegistrationsView source="overload" />
             )}
           </>
         )}
