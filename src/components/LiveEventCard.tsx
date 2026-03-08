@@ -117,7 +117,6 @@ export function LiveEventCard({
             </div>
           </div>
         )}
-        </div>
 
         {description && <p className="event-card-live-desc">{description}</p>}
 
