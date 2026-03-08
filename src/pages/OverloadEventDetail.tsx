@@ -192,8 +192,6 @@ const OverloadEventDetail = () => {
   const rulesList = event.rules?.split("\n").filter(Boolean) || [];
   const coordinatorsList = event.coordinators?.split("\n").filter(Boolean) || [];
 
-  // IdCardUpload is now imported from shared component
-
   return (
     <div>
       <Navigation />
