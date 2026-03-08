@@ -61,6 +61,17 @@ interface SubEvent {
   image_url: string | null;
   link_url: string | null;
   sort_order: number;
+  description: string | null;
+  event_date: string | null;
+  event_time: string | null;
+  venue: string | null;
+  prizes: string | null;
+  rules: string | null;
+  event_format: string | null;
+  winning_criteria: string | null;
+  coordinators: string | null;
+  hero_image_url: string | null;
+  register_url: string | null;
 }
 
 interface ScheduleItem {
@@ -326,18 +337,71 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Event
                 </button>
                 {subEvents.map((ev) => (
-                  <div key={ev.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                      <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
-                      <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                      <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <details key={ev.id} className="bg-zinc-900 rounded border border-zinc-800">
+                    <summary className="p-3 cursor-pointer text-white text-sm font-medium flex items-center gap-2">
+                      {ev.name || "Untitled"} {ev.type ? `(${ev.type})` : ""}
+                    </summary>
+                    <div className="p-3 pt-0 space-y-2 border-t border-zinc-800">
+                      <div className="flex gap-2 items-center">
+                        <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                        <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
+                        <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                        <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <ImageUpload value={ev.image_url || ""} onChange={(url) => updateRow("overload_events", ev.id, { image_url: url })} folder={`events/${selected.year}`} placeholder="Card image" className="flex-1" />
+                        {ev.image_url && <img src={ev.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Event Date</label>
+                          <input value={ev.event_date || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_date: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 20 March 2025" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Event Time</label>
+                          <input value={ev.event_time || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_time: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 1:30 PM - 2:30 PM" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Venue</label>
+                          <input value={ev.venue || ""} onChange={(e) => updateRow("overload_events", ev.id, { venue: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Seminar Hall" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Prizes</label>
+                          <input value={ev.prizes || ""} onChange={(e) => updateRow("overload_events", ev.id, { prizes: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Cash prizes worth ₹5000" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-400 mb-1">Description</label>
+                        <textarea value={ev.description || ""} onChange={(e) => updateRow("overload_events", ev.id, { description: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="About the event..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-400 mb-1">Rules (one per line)</label>
+                        <textarea value={ev.rules || ""} onChange={(e) => updateRow("overload_events", ev.id, { rules: e.target.value })} rows={4} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Rule 1&#10;Rule 2&#10;Rule 3" />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Event Format</label>
+                          <textarea value={ev.event_format || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_format: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Format description..." />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-400 mb-1">Winning Criteria</label>
+                          <textarea value={ev.winning_criteria || ""} onChange={(e) => updateRow("overload_events", ev.id, { winning_criteria: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Winning criteria..." />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-400 mb-1">Coordinators (one per line: Name | Phone)</label>
+                        <textarea value={ev.coordinators || ""} onChange={(e) => updateRow("overload_events", ev.id, { coordinators: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="John Doe | 9876543210&#10;Jane Doe | 9876543211" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-400 mb-1">Hero Image</label>
+                        <ImageUpload value={ev.hero_image_url || ""} onChange={(url) => updateRow("overload_events", ev.id, { hero_image_url: url })} folder={`events/${selected.year}`} placeholder="Hero background image" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-400 mb-1">Register URL</label>
+                        <input value={ev.register_url || ""} onChange={(e) => updateRow("overload_events", ev.id, { register_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="https://forms.google.com/..." />
+                      </div>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <ImageUpload value={ev.image_url || ""} onChange={(url) => updateRow("overload_events", ev.id, { image_url: url })} folder={`events/${selected.year}`} placeholder="Event image" className="flex-1" />
-                      {ev.image_url && <img src={ev.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
-                    </div>
-                  </div>
+                  </details>
                 ))}
               </div>
             )}

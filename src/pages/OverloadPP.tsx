@@ -1,6 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -209,29 +209,28 @@ const OverloadPP = () => {
         <section className="overload-events-section">
           <h2 className="overload-section-title">Events</h2>
           <div className="overload-events-grid">
-            {events.map((event) => (
-              <div key={event.id} className="overload-event-card">
-                {event.link_url ? (
-                  <a href={event.link_url}>
-                    <img
-                      src={event.image_url || "/img/performer/1.webp"}
-                      alt={event.name}
-                      className="overload-event-img"
-                    />
-                  </a>
-                ) : (
-                  <img
-                    src={event.image_url || "/img/performer/1.webp"}
-                    alt={event.name}
-                    className="overload-event-img"
-                  />
-                )}
-                <div className="overload-event-info">
-                  <h4>{event.name}</h4>
-                  {event.type && <span className="overload-event-type">{event.type}</span>}
+            {events.map((event) => {
+              const detailUrl = `/overloadpp/${edition.year}/event/${event.id}`;
+              const href = event.link_url || detailUrl;
+              const isExternal = !!event.link_url;
+              return (
+                <div key={event.id} className="overload-event-card">
+                  {isExternal ? (
+                    <a href={href} target="_blank" rel="noreferrer">
+                      <img src={event.image_url || "/img/performer/1.webp"} alt={event.name} className="overload-event-img" />
+                    </a>
+                  ) : (
+                    <Link to={href}>
+                      <img src={event.image_url || "/img/performer/1.webp"} alt={event.name} className="overload-event-img" />
+                    </Link>
+                  )}
+                  <div className="overload-event-info">
+                    <h4>{event.name}</h4>
+                    {event.type && <span className="overload-event-type">{event.type}</span>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

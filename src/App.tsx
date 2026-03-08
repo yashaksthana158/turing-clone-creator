@@ -10,6 +10,7 @@ import EventDetail from "./pages/EventDetail";
 import About from "./pages/About";
 import Teams from "./pages/Teams";
 import OverloadPP from "./pages/OverloadPP";
+import OverloadEventDetail from "./pages/OverloadEventDetail";
 import DashboardOverload from "./pages/dashboard/DashboardOverload";
 import Gallery from "./pages/Gallery";
 import ComingSoon from "./pages/ComingSoon";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/teams" element={<Teams />} />
             <Route path="/overloadpp" element={<OverloadPP />} />
             <Route path="/overloadpp/:year" element={<OverloadPP />} />
+            <Route path="/overloadpp/:year/event/:eventId" element={<OverloadEventDetail />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/gallery/:year" element={<ComingSoon section="Gallery" />} />
             
