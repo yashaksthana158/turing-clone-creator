@@ -68,11 +68,12 @@ export default function EventDetail() {
     }
     setEvent(data);
 
+    // Count both REGISTERED and APPROVED for capacity
     const { count } = await supabase
       .from("event_registrations")
       .select("id", { count: "exact", head: true })
       .eq("event_id", id!)
-      .eq("status", "REGISTERED");
+      .in("status", ["REGISTERED", "APPROVED"]);
     setRegCount(count || 0);
     setLoading(false);
   };
