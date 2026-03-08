@@ -60,7 +60,6 @@ const Events = () => {
 
       if (data && data.length > 0) {
         const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
-        const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
         const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
 
         const counts = await Promise.all(
