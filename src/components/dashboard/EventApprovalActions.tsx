@@ -175,6 +175,45 @@ export default function EventApprovalActions({
     setLoading(false);
   };
 
+  const handleUnpublish = async () => {
+    setLoading(true);
+    const { error } = await supabase
+      .from('events')
+      .update({ status: 'APPROVED' })
+      .eq('id', eventId);
+
+    if (error) {
+      toast.error('Failed to unpublish event');
+    } else {
+      toast.success('Event removed from public page');
+      onUpdated();
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    // Delete related registrations and approvals first
+    await Promise.all([
+      supabase.from('event_registrations').delete().eq('event_id', eventId),
+      supabase.from('approvals').delete().eq('item_id', eventId),
+    ]);
+
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', eventId);
+
+    if (error) {
+      toast.error('Failed to delete event');
+    } else {
+      toast.success('Event deleted');
+      onUpdated();
+    }
+    setConfirmDelete(false);
+    setLoading(false);
+  };
+
   if (loading) {
     return <Loader2 size={16} className="animate-spin text-gray-400" />;
   }
