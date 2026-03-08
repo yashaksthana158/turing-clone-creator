@@ -14,6 +14,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
+import ProfilePage from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
