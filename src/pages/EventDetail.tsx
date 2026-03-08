@@ -180,6 +180,29 @@ export default function EventDetail() {
           Back to Events
         </Link>
 
+        {/* Event Poster */}
+        {event.poster_url && (
+          <div
+            style={{
+              borderRadius: "16px",
+              overflow: "hidden",
+              marginBottom: "24px",
+              maxHeight: "400px",
+            }}
+          >
+            <img
+              src={event.poster_url}
+              alt={event.title}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          </div>
+        )}
+
         {/* Event Header */}
         <div
           style={{

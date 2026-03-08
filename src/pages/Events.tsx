@@ -171,18 +171,22 @@ const Events = () => {
                 style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
               >
                 <div className="event-card-image">
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 80% 30%) 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Calendar size={48} style={{ color: "white", opacity: 0.5 }} />
-                  </div>
+                  {event.poster_url ? (
+                    <img src={event.poster_url} alt={event.title} />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 80% 30%) 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Calendar size={48} style={{ color: "white", opacity: 0.5 }} />
+                    </div>
+                  )}
                   <span className="event-badge" style={{ backgroundColor: "#9113ff" }}>
                     Open
                   </span>
