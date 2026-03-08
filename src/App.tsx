@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import About from "./pages/About";
@@ -15,6 +16,12 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
 import ProfilePage from "./pages/Profile";
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import ManageTeams from "./pages/dashboard/ManageTeams";
+import ManageUsers from "./pages/dashboard/ManageUsers";
+import DashboardEvents from "./pages/dashboard/DashboardEvents";
+import DashboardTasks from "./pages/dashboard/DashboardTasks";
+import DashboardRoles from "./pages/dashboard/DashboardRoles";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +47,14 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/profile" element={<ProfilePage />} />
+
+            {/* Dashboard Routes (protected) */}
+            <Route path="/dashboard" element={<ProtectedRoute minRoleLevel={2}><DashboardOverview /></ProtectedRoute>} />
+            <Route path="/dashboard/teams" element={<ProtectedRoute minRoleLevel={3}><ManageTeams /></ProtectedRoute>} />
+            <Route path="/dashboard/users" element={<ProtectedRoute minRoleLevel={5}><ManageUsers /></ProtectedRoute>} />
+            <Route path="/dashboard/events" element={<ProtectedRoute minRoleLevel={2}><DashboardEvents /></ProtectedRoute>} />
+            <Route path="/dashboard/tasks" element={<ProtectedRoute minRoleLevel={2}><DashboardTasks /></ProtectedRoute>} />
+            <Route path="/dashboard/roles" element={<ProtectedRoute minRoleLevel={5}><DashboardRoles /></ProtectedRoute>} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
