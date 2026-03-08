@@ -7,8 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
-  CheckCircle, XCircle, Upload, X, FileImage, Loader2,
+  CheckCircle, XCircle, Loader2,
 } from "lucide-react";
+import { IdCardUpload } from "@/components/IdCardUpload";
 
 interface OverloadEventData {
   id: string;
