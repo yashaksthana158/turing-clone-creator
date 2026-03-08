@@ -1,21 +1,54 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { LiveEventCard } from "@/components/LiveEventCard";
+import { ArrowRight } from "lucide-react";
+
+interface DbEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  venue: string | null;
+  poster_url: string | null;
+  category: string | null;
+  max_participants: number | null;
+}
+
 export const RegistrationsSection = () => {
-  const events = [
-    {
-      image: "/img/program_details/4.webp",
-      link: "/coderush",
-      label: "View results",
-    },
-    {
-      image: "/img/program_details/3.webp",
-      link: "/techwar",
-      label: "View results",
-    },
-    {
-      image: "/img/program_details/2.webp",
-      link: "/hackzzle",
-      label: "View results",
-    },
-  ];
+  const [events, setEvents] = useState<(DbEvent & { registration_count: number })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, venue, poster_url, category, max_participants")
+        .eq("status", "PUBLISHED")
+        .order("event_date", { ascending: true })
+        .limit(3);
+
+      if (data && data.length > 0) {
+        // Fetch registration counts
+        const counts = await Promise.all(
+          data.map(async (evt: any) => {
+            const { count } = await supabase
+              .from("event_registrations")
+              .select("id", { count: "exact", head: true })
+              .eq("event_id", evt.id)
+              .eq("status", "REGISTERED");
+            return { ...evt, registration_count: count || 0 };
+          })
+        );
+        setEvents(counts);
+      }
+      setLoading(false);
+    };
+    fetchEvents();
+  }, []);
+
+  if (loading) return null;
+  if (events.length === 0) return null;
 
   return (
     <section className="upcoming-events">
@@ -23,22 +56,19 @@ export const RegistrationsSection = () => {
         <span className="red">Live</span>&nbsp;Registrations
       </h2>
       <div className="container">
-        <div className="events-grid">
-          {events.map((event, index) => (
-            <div key={index}>
-              <div className="upcoming-event-card">
-                <div
-                  className="upcoming-event-img"
-                  style={{
-                    backgroundImage: `url('${event.image}')`,
-                  }}
-                ></div>
-                <a href={event.link} className="btn-custom">
-                  {event.label}
-                </a>
-              </div>
-            </div>
+        <div className="events-grid-pro" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          {events.map((event) => (
+            <LiveEventCard
+              key={event.id}
+              {...event}
+              showCountdown
+            />
           ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <Link to="/events" className="btn-custom" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            View All Events <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </section>
