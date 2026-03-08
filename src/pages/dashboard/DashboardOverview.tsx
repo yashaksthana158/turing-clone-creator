@@ -29,27 +29,32 @@ export default function DashboardOverview() {
   }, [user, loading]);
 
   const fetchStats = async () => {
-    const promises: Promise<any>[] = [
+    const [eventsRes, myRegsRes] = await Promise.all([
       supabase.from('events').select('id', { count: 'exact', head: true }).eq('status', 'PUBLISHED'),
       supabase.from('event_registrations').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
-    ];
+    ]);
+
+    let teams = 0, tasks = 0, users = 0;
 
     if (hasMinRoleLevel(3)) {
-      promises.push(supabase.from('teams').select('id', { count: 'exact', head: true }));
-      promises.push(supabase.from('tasks').select('id', { count: 'exact', head: true }));
+      const [teamsRes, tasksRes] = await Promise.all([
+        supabase.from('teams').select('id', { count: 'exact', head: true }),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }),
+      ]);
+      teams = teamsRes.count || 0;
+      tasks = tasksRes.count || 0;
     }
     if (hasMinRoleLevel(4)) {
-      promises.push(supabase.from('profiles').select('id', { count: 'exact', head: true }));
+      const usersRes = await supabase.from('profiles').select('id', { count: 'exact', head: true });
+      users = usersRes.count || 0;
     }
 
-    const results = await Promise.all(promises);
-
     setStats({
-      events: results[0].count || 0,
-      myRegistrations: results[1].count || 0,
-      teams: hasMinRoleLevel(3) ? (results[2]?.count || 0) : 0,
-      tasks: hasMinRoleLevel(3) ? (results[3]?.count || 0) : 0,
-      users: hasMinRoleLevel(4) ? (results[4]?.count || 0) : 0,
+      events: eventsRes.count || 0,
+      myRegistrations: myRegsRes.count || 0,
+      teams,
+      tasks,
+      users,
     });
   };
 
