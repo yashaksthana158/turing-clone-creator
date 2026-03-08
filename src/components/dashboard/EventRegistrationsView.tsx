@@ -16,6 +16,8 @@ interface RegistrationRow {
     college: string | null;
     course: string | null;
     phone: string | null;
+    roll_no: string | null;
+    admission_year: number | null;
   };
 }
 
@@ -100,7 +102,7 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
     if (userIds.length > 0) {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, full_name, college, course, phone')
+        .select('id, full_name, college, course, phone, roll_no, admission_year')
         .in('id', userIds);
       (profileData || []).forEach((p: any) => { profiles[p.id] = p; });
     }
@@ -401,6 +403,8 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500">
+                        {reg.profile?.roll_no && <span>Roll: {reg.profile.roll_no}</span>}
+                        {reg.profile?.admission_year && <span>Year: {reg.profile.admission_year}</span>}
                         {reg.profile?.college && <span>{reg.profile.college}</span>}
                         {reg.profile?.course && <span>{reg.profile.course}</span>}
                         {reg.profile?.phone && <span>{reg.profile.phone}</span>}
