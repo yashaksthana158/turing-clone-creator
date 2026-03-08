@@ -114,6 +114,7 @@ export default function CreateEventModal({ open, onClose, onCreated }: CreateEve
     setVenue('');
     setEventDate('');
     setMaxParticipants('');
+    setCategory('');
     setPosterFile(null);
     setPosterPreview(null);
     onCreated();
