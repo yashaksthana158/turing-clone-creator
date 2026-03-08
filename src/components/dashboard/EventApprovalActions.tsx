@@ -266,14 +266,27 @@ export default function EventApprovalActions({
         </>
       )}
 
-      {/* Can still mark attendance on closed events */}
-      {eventStatus === 'CLOSED' && isTeamLead() && onMarkAttendance && (
-        <button
-          onClick={onMarkAttendance}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
-        >
-          <ClipboardCheck size={13} />
-          Mark Attendance
+      {/* Can still mark attendance on closed events + reopen */}
+      {eventStatus === 'CLOSED' && isTeamLead() && (
+        <>
+          {onMarkAttendance && (
+            <button
+              onClick={onMarkAttendance}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
+            >
+              <ClipboardCheck size={13} />
+              Mark Attendance
+            </button>
+          )}
+          <button
+            onClick={handleReopenEvent}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-500/30 transition-colors"
+          >
+            <Unlock size={13} />
+            Reopen Event
+          </button>
+        </>
+      )}
         </button>
       )}
     </div>
