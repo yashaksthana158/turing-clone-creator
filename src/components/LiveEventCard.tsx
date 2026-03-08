@@ -25,6 +25,7 @@ interface LiveEventCardProps {
   registration_count?: number;
   showCountdown?: boolean;
   is_featured?: boolean;
+  external_url?: string | null;
 }
 
 export function LiveEventCard({
