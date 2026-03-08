@@ -63,6 +63,43 @@ export const Navigation = () => {
                           </Link>
                         </li>
                       ))}
+                      {user ? (
+                        <>
+                          {hasMinRoleLevel(2) && (
+                            <li>
+                              <Link
+                                to="/dashboard"
+                                style={{ color: location.pathname.startsWith("/dashboard") ? "#9113ff" : undefined }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <LayoutDashboard size={16} /> Dashboard
+                                </span>
+                              </Link>
+                            </li>
+                          )}
+                          <li>
+                            <Link
+                              to="/profile"
+                              style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <User size={16} /> Profile
+                              </span>
+                            </Link>
+                          </li>
+                        </>
+                      ) : (
+                        <li>
+                          <Link
+                            to="/login"
+                            style={{ color: location.pathname === "/login" ? "#9113ff" : undefined }}
+                          >
+                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <LogIn size={16} /> Login
+                            </span>
+                          </Link>
+                        </li>
+                      )}
                     </ul>
                   </nav>
                 </div>
