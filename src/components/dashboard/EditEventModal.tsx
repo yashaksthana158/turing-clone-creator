@@ -40,6 +40,7 @@ export default function EditEventModal({ open, event, onClose, onUpdated }: Edit
       setVenue(event.venue || '');
       setEventDate(event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : '');
       setMaxParticipants(event.max_participants?.toString() || '');
+      setCategory(event.category || '');
       setPosterPreview(event.poster_url || null);
       setPosterFile(null);
     }
