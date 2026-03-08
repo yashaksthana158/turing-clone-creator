@@ -1,8 +1,43 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp } from "lucide-react";
+import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRef } from "react";
+
+/** Bulk upload button for gallery images */
+function GalleryUploadButton({ folder, editionId, nextOrder, onUploaded }: { folder: string; editionId: string; nextOrder: number; onUploaded: () => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFiles(files: FileList) {
+    setUploading(true);
+    let order = nextOrder;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const ext = file.name.split(".").pop() || "webp";
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("overload-assets").upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) { toast.error(`Failed: ${file.name}`); continue; }
+      const { data: urlData } = supabase.storage.from("overload-assets").getPublicUrl(path);
+      await (supabase.from as any)("overload_gallery").insert({ edition_id: editionId, image_url: urlData.publicUrl, sort_order: order++ });
+    }
+    setUploading(false);
+    toast.success("Images uploaded");
+    onUploaded();
+  }
+
+  return (
+    <>
+      <button onClick={() => ref.current?.click()} disabled={uploading} className="flex items-center gap-2 px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm">
+        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+        {uploading ? "Uploading…" : "Upload Images"}
+      </button>
+      <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); e.target.value = ""; }} />
+    </>
+  );
+}
 
 interface Edition {
   id: string;
@@ -216,7 +251,7 @@ export default function DashboardOverload() {
             {/* Details tab */}
             {activeTab === "details" && (
               <div className="space-y-4 max-w-xl">
-                {(["title", "date_label", "venue", "hero_image_url", "banner_image_url", "register_url"] as const).map((field) => (
+                {(["title", "date_label", "venue", "register_url"] as const).map((field) => (
                   <div key={field}>
                     <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
                     <input
@@ -224,6 +259,20 @@ export default function DashboardOverload() {
                       onChange={(e) => setEditEdition({ ...editEdition, [field]: e.target.value })}
                       className="w-full px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm"
                     />
+                  </div>
+                ))}
+                {(["hero_image_url", "banner_image_url"] as const).map((field) => (
+                  <div key={field}>
+                    <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
+                    <ImageUpload
+                      value={(editEdition as any)[field] || ""}
+                      onChange={(url) => setEditEdition({ ...editEdition, [field]: url })}
+                      folder={`editions/${selected.year}`}
+                      size="md"
+                    />
+                    {(editEdition as any)[field] && (
+                      <img src={(editEdition as any)[field]} alt="" className="mt-2 h-20 rounded object-cover" />
+                    )}
                   </div>
                 ))}
                 <div>
@@ -256,12 +305,17 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Event
                 </button>
                 {subEvents.map((ev) => (
-                  <div key={ev.id} className="flex gap-2 items-center bg-zinc-900 rounded p-3 border border-zinc-800">
-                    <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                    <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
-                    <input value={ev.image_url || ""} onChange={(e) => updateRow("overload_events", ev.id, { image_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Image URL" />
-                    <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                    <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <div key={ev.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                      <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
+                      <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                      <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <ImageUpload value={ev.image_url || ""} onChange={(url) => updateRow("overload_events", ev.id, { image_url: url })} folder={`events/${selected.year}`} placeholder="Event image" className="flex-1" />
+                      {ev.image_url && <img src={ev.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -274,13 +328,18 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Schedule Item
                 </button>
                 {scheduleItems.map((item) => (
-                  <div key={item.id} className="flex gap-2 items-center bg-zinc-900 rounded p-3 border border-zinc-800 flex-wrap">
-                    <input value={item.time_label} onChange={(e) => updateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
-                    <input value={item.venue || ""} onChange={(e) => updateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
-                    <input value={item.event_name} onChange={(e) => updateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
-                    <input value={item.image_url || ""} onChange={(e) => updateRow("overload_schedule", item.id, { image_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Image URL" />
-                    <input type="number" value={item.sort_order} onChange={(e) => updateRow("overload_schedule", item.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                    <button onClick={() => deleteRow("overload_schedule", item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <div key={item.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input value={item.time_label} onChange={(e) => updateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
+                      <input value={item.venue || ""} onChange={(e) => updateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
+                      <input value={item.event_name} onChange={(e) => updateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
+                      <input type="number" value={item.sort_order} onChange={(e) => updateRow("overload_schedule", item.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                      <button onClick={() => deleteRow("overload_schedule", item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <ImageUpload value={item.image_url || ""} onChange={(url) => updateRow("overload_schedule", item.id, { image_url: url })} folder={`schedule/${selected.year}`} placeholder="Schedule image" className="flex-1" />
+                      {item.image_url && <img src={item.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -293,12 +352,17 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Sponsor
                 </button>
                 {sponsorsList.map((sp) => (
-                  <div key={sp.id} className="flex gap-2 items-center bg-zinc-900 rounded p-3 border border-zinc-800">
-                    <input value={sp.name} onChange={(e) => updateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                    <input value={sp.logo_url || ""} onChange={(e) => updateRow("overload_sponsors", sp.id, { logo_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Logo URL" />
-                    <input value={sp.website_url || ""} onChange={(e) => updateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
-                    <input type="number" value={sp.sort_order} onChange={(e) => updateRow("overload_sponsors", sp.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                    <button onClick={() => deleteRow("overload_sponsors", sp.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <div key={sp.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <input value={sp.name} onChange={(e) => updateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                      <input value={sp.website_url || ""} onChange={(e) => updateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
+                      <input type="number" value={sp.sort_order} onChange={(e) => updateRow("overload_sponsors", sp.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                      <button onClick={() => deleteRow("overload_sponsors", sp.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <ImageUpload value={sp.logo_url || ""} onChange={(url) => updateRow("overload_sponsors", sp.id, { logo_url: url })} folder={`sponsors/${selected.year}`} placeholder="Logo image" className="flex-1" />
+                      {sp.logo_url && <img src={sp.logo_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -307,15 +371,18 @@ export default function DashboardOverload() {
             {/* Gallery tab */}
             {activeTab === "gallery" && (
               <div className="space-y-3">
-                <button onClick={() => addRow("overload_gallery", { image_url: "/img/gallery/1.webp", sort_order: galleryList.length + 1 })} className="flex items-center gap-2 px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">
-                  <Plus size={14} /> Add Image
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => addRow("overload_gallery", { image_url: "/img/gallery/1.webp", sort_order: galleryList.length + 1 })} className="flex items-center gap-2 px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">
+                    <Plus size={14} /> Add by URL
+                  </button>
+                  <GalleryUploadButton folder={`gallery/${selected.year}`} editionId={selectedId!} nextOrder={galleryList.length + 1} onUploaded={() => selectedId && fetchSubData(selectedId)} />
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {galleryList.map((img) => (
                     <div key={img.id} className="relative group bg-zinc-900 rounded border border-zinc-800 overflow-hidden">
                       <img src={img.image_url} alt="" className="w-full h-32 object-cover" />
                       <div className="p-2 space-y-1">
-                        <input value={img.image_url} onChange={(e) => updateRow("overload_gallery", img.id, { image_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-xs" placeholder="URL" />
+                        <ImageUpload value={img.image_url} onChange={(url) => updateRow("overload_gallery", img.id, { image_url: url })} folder={`gallery/${selected.year}`} placeholder="URL" />
                         <div className="flex items-center gap-1">
                           <input type="number" value={img.sort_order} onChange={(e) => updateRow("overload_gallery", img.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-14 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-xs" />
                           <button onClick={() => deleteRow("overload_gallery", img.id)} className="text-red-400 hover:text-red-300 ml-auto"><Trash2 size={12} /></button>
