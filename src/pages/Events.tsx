@@ -87,6 +87,7 @@ const Events = () => {
         .eq("is_published", true);
 
       if (editions && editions.length > 0) {
+        const now = new Date();
         for (const edition of editions) {
           const { data: oEvents } = await supabase
             .from("overload_events")
@@ -95,8 +96,11 @@ const Events = () => {
             .order("sort_order", { ascending: true });
 
           if (oEvents) {
+            const editionDate = edition.date_label ? new Date(edition.date_label) : null;
+            const isPast = editionDate && !isNaN(editionDate.getTime()) && editionDate < now;
+
             for (const oe of oEvents) {
-              unified.push({
+              const item: UnifiedEvent = {
                 id: `overload-${oe.id}`,
                 title: oe.name,
                 description: `Part of ${edition.title}`,
@@ -108,7 +112,12 @@ const Events = () => {
                 registration_count: 0,
                 is_featured: false,
                 external_url: oe.link_url || edition.register_url || null,
-              });
+              };
+              if (isPast) {
+                pastOverload.push(item);
+              } else {
+                unified.push(item);
+              }
             }
           }
         }
