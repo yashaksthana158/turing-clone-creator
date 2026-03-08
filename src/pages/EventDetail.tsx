@@ -287,7 +287,7 @@ export default function EventDetail() {
                 Registration Approved!
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "8px" }}>
-                Your ID card has been verified. A confirmation email has been sent.
+                Your registration has been approved. A confirmation email has been sent.
               </p>
               <p style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600 }}>
                 We'll see you at the event! 🎉
@@ -302,7 +302,7 @@ export default function EventDetail() {
                 Registration Pending Review
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                Your ID card is being verified. You'll receive a confirmation once approved.
+                Your registration is being reviewed. You'll receive a confirmation once approved.
               </p>
               <button
                 onClick={handleCancel}
@@ -334,7 +334,7 @@ export default function EventDetail() {
                     Registration Rejected
                   </h3>
                   <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                    Your registration was rejected. You can try again.
                   </p>
                 </>
               ) : (
@@ -342,11 +342,6 @@ export default function EventDetail() {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-
-              {user && (
-                <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />
-              )}
-
               <button
                 onClick={handleRegister}
                 disabled={registering || isFull}
@@ -363,13 +358,8 @@ export default function EventDetail() {
                 Ready to join?
               </h3>
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
-                {user ? "Upload your ID card and register." : "Create an account to register for this event."}
+                {user ? "Click below to register for this event." : "Create an account to register for this event."}
               </p>
-
-              {user && (
-                <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />
-              )}
-
               <button
                 onClick={handleRegister}
                 disabled={registering}
