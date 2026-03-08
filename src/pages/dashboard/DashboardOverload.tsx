@@ -212,6 +212,7 @@ export default function DashboardOverload() {
     { key: "schedule", label: "Schedule" },
     { key: "sponsors", label: "Sponsors" },
     { key: "gallery", label: "Gallery" },
+    { key: "registrations", label: "Registrations" },
   ];
 
   return (
