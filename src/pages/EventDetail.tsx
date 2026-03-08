@@ -346,6 +346,76 @@ export default function EventDetail() {
               <p style={{ color: "#71717a", marginBottom: "16px" }}>
                 Your registration was cancelled. You can register again.
               </p>
+
+              {user && (
+                <div style={{ marginBottom: "24px" }}>
+                  {!idCardFile ? (
+                    <label
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "32px 24px",
+                        border: "2px dashed rgba(145, 19, 255, 0.4)",
+                        borderRadius: "12px",
+                        cursor: "pointer",
+                        background: "rgba(145, 19, 255, 0.05)",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <Upload size={32} style={{ color: "#9113ff" }} />
+                      <span style={{ color: "#a1a1aa", fontSize: "0.9rem" }}>
+                        Upload your College ID Card
+                      </span>
+                      <span style={{ color: "#52525b", fontSize: "0.75rem" }}>
+                        Image or PDF, max 5MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleIdCardSelect}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        background: "rgba(145, 19, 255, 0.1)",
+                        borderRadius: "12px",
+                        border: "1px solid rgba(145, 19, 255, 0.3)",
+                      }}
+                    >
+                      {idCardPreview ? (
+                        <img
+                          src={idCardPreview}
+                          alt="ID Card"
+                          style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }}
+                        />
+                      ) : (
+                        <FileImage size={40} style={{ color: "#9113ff" }} />
+                      )}
+                      <div style={{ flex: 1, textAlign: "left" }}>
+                        <p style={{ color: "white", fontSize: "0.85rem", margin: 0 }}>{idCardFile.name}</p>
+                        <p style={{ color: "#71717a", fontSize: "0.75rem", margin: 0 }}>
+                          {(idCardFile.size / 1024).toFixed(0)} KB
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setIdCardFile(null); setIdCardPreview(null); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                      >
+                        <X size={20} style={{ color: "#ef4444" }} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handleRegister}
                 disabled={registering || isFull}
