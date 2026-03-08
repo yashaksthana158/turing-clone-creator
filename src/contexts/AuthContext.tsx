@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string, college?: string, course?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, college?: string, course?: string, rollNo?: string, admissionYear?: number, idCardUrl?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -99,6 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           full_name: fullName,
           college,
           course,
+          roll_no: rollNo,
+          admission_year: admissionYear,
+          id_card_url: idCardUrl,
         },
       },
     });
