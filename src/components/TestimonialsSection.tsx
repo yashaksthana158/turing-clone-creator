@@ -21,20 +21,16 @@ export const TestimonialsSection = () => {
   ];
 
   return (
-    <div id="testimonial" className="py-5 text-center">
+    <div id="testimonial" style={{ textAlign: "center" }}>
       <div className="container">
         <div className="section-title">Testimonials</div>
-        <div className="section-subtitle mb-5 pb-3">What Our Members Say</div>
-        <div className="row g-4">
+        <div className="section-subtitle">What Our Members Say</div>
+        <div className="testimonial-grid">
           {testimonials.map((testimonial, index) => (
-            <div className="col-md-4" key={index}>
-              <div className="card h-100">
-                <div className="card-body">
-                  <h6 className="mt-1 text-light">{testimonial.name}</h6>
-                  <small className="text-warning">{testimonial.role}</small>
-                  <p className="mt-3">{testimonial.content}</p>
-                </div>
-              </div>
+            <div className="testimonial-card" key={index}>
+              <h6>{testimonial.name}</h6>
+              <small>{testimonial.role}</small>
+              <p>{testimonial.content}</p>
             </div>
           ))}
         </div>
