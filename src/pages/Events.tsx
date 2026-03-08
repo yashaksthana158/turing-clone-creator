@@ -5,17 +5,18 @@ import { Calendar, MapPin, Users, Mic, Trophy, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveEventCard } from "@/components/LiveEventCard";
 
-interface DbEvent {
+interface UnifiedEvent {
   id: string;
   title: string;
   description: string | null;
   event_date: string | null;
   venue: string | null;
-  status: string;
   max_participants: number | null;
   poster_url: string | null;
   category: string | null;
   is_featured: boolean;
+  registration_count: number;
+  external_url?: string | null;
 }
 
 const hardcodedEvents = [
@@ -38,22 +39,23 @@ const getCategoryColor = (category: string) => {
   return colors[category] || "#9113ff";
 };
 
-const CATEGORIES = ["all", "coding", "gaming", "debate", "puzzle", "fun", "workshop", "hackathon", "seminar"];
+const CATEGORIES = ["all", "coding", "gaming", "debate", "puzzle", "fun", "workshop", "hackathon", "seminar", "flagship"];
 
 const Events = () => {
-  const [dbEvents, setDbEvents] = useState<(DbEvent & { registration_count: number })[]>([]);
+  const [allEvents, setAllEvents] = useState<UnifiedEvent[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvents = async () => {
+      let unified: UnifiedEvent[] = [];
+
+      // Fetch regular published events
       const { data } = await supabase
         .from("events")
-        .select("id, title, description, event_date, venue, status, max_participants, poster_url, category, is_featured")
-        .eq("status", "PUBLISHED")
-        .order("is_featured", { ascending: false })
-        .order("event_date", { ascending: true });
+        .select("id, title, description, event_date, venue, max_participants, poster_url, category, is_featured")
+        .eq("status", "PUBLISHED");
 
       if (data && data.length > 0) {
         const counts = await Promise.all(
@@ -63,17 +65,61 @@ const Events = () => {
               .select("id", { count: "exact", head: true })
               .eq("event_id", evt.id)
               .eq("status", "REGISTERED");
-            return { ...evt, registration_count: count || 0 };
+            return { ...evt, registration_count: count || 0, external_url: null };
           })
         );
-        setDbEvents(counts);
+        unified = counts;
       }
+
+      // Fetch overload events from published editions
+      const { data: editions } = await supabase
+        .from("overload_editions")
+        .select("id, date_label, venue, register_url, title")
+        .eq("is_published", true);
+
+      if (editions && editions.length > 0) {
+        for (const edition of editions) {
+          const { data: oEvents } = await supabase
+            .from("overload_events")
+            .select("id, name, type, image_url, link_url")
+            .eq("edition_id", edition.id)
+            .order("sort_order", { ascending: true });
+
+          if (oEvents) {
+            for (const oe of oEvents) {
+              unified.push({
+                id: `overload-${oe.id}`,
+                title: oe.name,
+                description: `Part of ${edition.title}`,
+                event_date: edition.date_label || null,
+                venue: edition.venue || null,
+                poster_url: oe.image_url || null,
+                category: oe.type || "flagship",
+                max_participants: null,
+                registration_count: 0,
+                is_featured: false,
+                external_url: oe.link_url || edition.register_url || null,
+              });
+            }
+          }
+        }
+      }
+
+      // Sort: featured first, then by event_date ascending (upcoming first)
+      unified.sort((a, b) => {
+        if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+        const dateA = a.event_date ? new Date(a.event_date).getTime() : Infinity;
+        const dateB = b.event_date ? new Date(b.event_date).getTime() : Infinity;
+        return dateA - dateB;
+      });
+
+      setAllEvents(unified);
       setLoading(false);
     };
     fetchEvents();
   }, []);
 
-  const filteredDbEvents = dbEvents.filter((e) => {
+  const filteredEvents = allEvents.filter((e) => {
     const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase());
     const matchCat = categoryFilter === "all" || (e.category?.toLowerCase() === categoryFilter);
     return matchSearch && matchCat;
@@ -97,7 +143,7 @@ const Events = () => {
         </div>
       </section>
 
-      {/* Live DB Events */}
+      {/* Live Events */}
       <section className="events-grid-section">
         <div className="section-header-pro">
           <h2>
@@ -135,9 +181,9 @@ const Events = () => {
           <div style={{ display: "flex", justifyContent: "center", padding: "3rem 0" }}>
             <div className="animate-spin" style={{ width: 40, height: 40, border: "3px solid transparent", borderTopColor: "#9113ff", borderRadius: "50%" }} />
           </div>
-        ) : filteredDbEvents.length > 0 ? (
+        ) : filteredEvents.length > 0 ? (
           <div className="events-grid-pro">
-            {filteredDbEvents.map((event) => (
+            {filteredEvents.map((event) => (
               <LiveEventCard
                 key={event.id}
                 {...event}
@@ -149,7 +195,7 @@ const Events = () => {
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
             <Calendar size={48} style={{ color: "#555", margin: "0 auto 1rem" }} />
             <p style={{ color: "#888" }}>
-              {dbEvents.length === 0
+              {allEvents.length === 0
                 ? "No upcoming events right now. Check back soon!"
                 : "No events match your search."}
             </p>
