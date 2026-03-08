@@ -38,6 +38,7 @@ export function LiveEventCard({
   max_participants,
   registration_count = 0,
   showCountdown = true,
+  is_featured = false,
 }: LiveEventCardProps) {
   const catColor = category ? CATEGORY_COLORS[category.toLowerCase()] || "#9113ff" : "#9113ff";
   const isFull = max_participants ? registration_count >= max_participants : false;
