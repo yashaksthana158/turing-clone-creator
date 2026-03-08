@@ -11,6 +11,7 @@ import About from "./pages/About";
 import Teams from "./pages/Teams";
 import OverloadPP from "./pages/OverloadPP";
 import Gallery from "./pages/Gallery";
+import ComingSoon from "./pages/ComingSoon";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -42,7 +43,9 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/overloadpp" element={<OverloadPP />} />
+            <Route path="/overloadpp/:year" element={<ComingSoon section="Overload++" />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/gallery/:year" element={<ComingSoon section="Gallery" />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />

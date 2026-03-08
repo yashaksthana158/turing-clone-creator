@@ -1,11 +1,20 @@
-import { useState, useEffect } from "react";
-import { Menu, X, User, LayoutDashboard, LogIn } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Menu, X, User, LayoutDashboard, LogIn, ChevronDown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+
+interface NavItem {
+  name: string;
+  href: string;
+  children?: { name: string; href: string; comingSoon?: boolean }[];
+}
 
 export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const dropdownTimeout = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, hasMinRoleLevel } = useAuth();
@@ -18,19 +27,45 @@ export const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: "Home", href: "/" },
     { name: "Events", href: "/events" },
     { name: "About", href: "/about" },
     { name: "Teams", href: "/teams" },
-    { name: "Overload++", href: "/overloadpp" },
-    { name: "Gallery", href: "/gallery" },
+    {
+      name: "Overload++",
+      href: "/overloadpp",
+      children: [
+        { name: "2026", href: "/overloadpp/2026" },
+        { name: "2025", href: "/overloadpp" },
+        { name: "2024", href: "/overloadpp/2024" },
+        { name: "Archive", href: "/overloadpp/archive" },
+      ],
+    },
+    {
+      name: "Gallery",
+      href: "/gallery",
+      children: [
+        { name: "2026", href: "/gallery/2026", comingSoon: true },
+        { name: "2025", href: "/gallery" },
+        { name: "2024", href: "/gallery/2024" },
+        { name: "Archive", href: "/gallery/archive" },
+      ],
+    },
   ];
+
+  const handleMouseEnter = (name: string) => {
+    if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
+    setOpenDropdown(name);
+  };
+
+  const handleMouseLeave = () => {
+    dropdownTimeout.current = setTimeout(() => setOpenDropdown(null), 150);
+  };
 
   return (
     <header>
@@ -52,16 +87,40 @@ export const Navigation = () => {
                   <nav>
                     <ul className="flex items-center gap-1">
                       {navItems.map((item) => (
-                        <li key={item.name}>
+                        <li
+                          key={item.name}
+                          className="nav-dropdown-wrapper"
+                          onMouseEnter={() => item.children && handleMouseEnter(item.name)}
+                          onMouseLeave={() => item.children && handleMouseLeave()}
+                        >
                           <Link
                             to={item.href}
                             className="nav-link-item"
                             style={{
-                              color: location.pathname === item.href ? "#9113ff" : undefined,
+                              color: location.pathname === item.href || location.pathname.startsWith(item.href + "/") ? "#9113ff" : undefined,
                             }}
                           >
                             {item.name}
+                            {item.children && <ChevronDown size={12} className="ml-1" />}
                           </Link>
+                          {item.children && openDropdown === item.name && (
+                            <div className="nav-dropdown-menu">
+                              {item.children.map((child) => (
+                                <Link
+                                  key={child.href}
+                                  to={child.comingSoon ? "#" : child.href}
+                                  className={`nav-dropdown-item ${child.comingSoon ? "nav-dropdown-disabled" : ""}`}
+                                  onClick={(e) => {
+                                    if (child.comingSoon) e.preventDefault();
+                                    else setOpenDropdown(null);
+                                  }}
+                                >
+                                  {child.name}
+                                  {child.comingSoon && <span className="nav-coming-soon">Coming Soon</span>}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
                         </li>
                       ))}
                       {user ? (
@@ -113,15 +172,41 @@ export const Navigation = () => {
           >
             <X size={28} />
           </button>
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={() => setMobileOpen(false)}
-            >
-              {item.name}
-            </Link>
-          ))}
+          {navItems.map((item) =>
+            item.children ? (
+              <div key={item.name} className="mobile-dropdown-group">
+                <button
+                  className="mobile-dropdown-toggle"
+                  onClick={() => setMobileExpanded(mobileExpanded === item.name ? null : item.name)}
+                >
+                  {item.name}
+                  <ChevronDown size={16} className={`ml-1 transition-transform ${mobileExpanded === item.name ? "rotate-180" : ""}`} />
+                </button>
+                {mobileExpanded === item.name && (
+                  <div className="mobile-dropdown-items">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        to={child.comingSoon ? "#" : child.href}
+                        className={child.comingSoon ? "nav-dropdown-disabled" : ""}
+                        onClick={(e) => {
+                          if (child.comingSoon) { e.preventDefault(); return; }
+                          setMobileOpen(false);
+                        }}
+                      >
+                        {child.name}
+                        {child.comingSoon && <span className="nav-coming-soon">Coming Soon</span>}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link key={item.name} to={item.href} onClick={() => setMobileOpen(false)}>
+                {item.name}
+              </Link>
+            )
+          )}
           {user ? (
             <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
           ) : (
