@@ -51,6 +51,7 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       let unified: UnifiedEvent[] = [];
+      let pastOverload: UnifiedEvent[] = [];
 
       // Fetch regular published events
       const { data } = await supabase
