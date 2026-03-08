@@ -31,6 +31,7 @@ export default function EventApprovalActions({
   const { user } = useAuth();
   const { hasMinRoleLevel, isTeamLead, isPresident } = useRole();
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleSubmitForReview = async () => {
     setLoading(true);
