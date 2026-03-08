@@ -53,6 +53,11 @@ export default function DashboardCertificates() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Bulk attendees
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [attendeeCount, setAttendeeCount] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     fetchCertificates();
     if (isAdmin) {
