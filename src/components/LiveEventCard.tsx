@@ -102,6 +102,23 @@ export function LiveEventCard({
           )}
         </div>
 
+        {/* Registration Progress Bar */}
+        {max_participants && (
+          <div className="event-card-live-progress">
+            <div className="event-card-live-progress-header">
+              <span>{registration_count} registered</span>
+              <span>{max_participants - registration_count > 0 ? `${max_participants - registration_count} spots left` : 'Full'}</span>
+            </div>
+            <div className="event-card-live-progress-bar">
+              <div
+                className={`event-card-live-progress-fill${registration_count >= max_participants ? ' full' : registration_count >= max_participants * 0.8 ? ' almost' : ''}`}
+                style={{ width: `${Math.min((registration_count / max_participants) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        </div>
+
         {description && <p className="event-card-live-desc">{description}</p>}
 
         <div className="event-card-live-cta">
