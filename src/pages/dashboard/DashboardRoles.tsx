@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Shield, ArrowRightLeft, Search, Loader2, Users, Check, X, Info } from 'lucide-react';
+import { Shield, ArrowRightLeft, Search, Loader2, Users, Check, X, Info, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
@@ -63,6 +63,11 @@ export default function DashboardRoles() {
   const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [activeTab, setActiveTab] = useState<'matrix' | 'users' | 'transfer'>('matrix');
+  const [newPermName, setNewPermName] = useState('');
+  const [newPermDesc, setNewPermDesc] = useState('');
+  const [creatingPerm, setCreatingPerm] = useState(false);
+  const [showAddPerm, setShowAddPerm] = useState(false);
+  const [deletingPerm, setDeletingPerm] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -165,6 +170,43 @@ export default function DashboardRoles() {
     setTransferTarget(null);
   };
 
+  const handleCreatePermission = async () => {
+    if (!isSuperAdmin() || !newPermName.trim()) return;
+    setCreatingPerm(true);
+    const slug = newPermName.trim().toLowerCase().replace(/\s+/g, '_');
+    const { data, error } = await supabase
+      .from('permissions')
+      .insert({ name: slug, description: newPermDesc.trim() || null })
+      .select('id, name, description')
+      .single();
+    if (error) {
+      toast.error(error.code === '23505' ? 'Permission already exists' : 'Failed to create permission');
+    } else if (data) {
+      setPermissions(prev => [...prev, data as PermissionDef].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewPermName('');
+      setNewPermDesc('');
+      setShowAddPerm(false);
+      toast.success('Permission created');
+    }
+    setCreatingPerm(false);
+  };
+
+  const handleDeletePermission = async (permId: string) => {
+    if (!isSuperAdmin()) return;
+    const perm = permissions.find(p => p.id === permId);
+    if (!confirm(`Delete permission "${perm?.name}"? This will also remove it from all roles.`)) return;
+    setDeletingPerm(permId);
+    const { error } = await supabase.from('permissions').delete().eq('id', permId);
+    if (error) {
+      toast.error('Failed to delete permission');
+    } else {
+      setPermissions(prev => prev.filter(p => p.id !== permId));
+      setRolePermissions(prev => prev.filter(rp => rp.permission_id !== permId));
+      toast.success('Permission deleted');
+    }
+    setDeletingPerm(null);
+  };
+
   const filteredUsers = users.filter(u =>
     (u.full_name || u.id).toLowerCase().includes(search.toLowerCase())
   );
@@ -235,7 +277,55 @@ export default function DashboardRoles() {
                   {!isSuperAdmin() && (
                     <span className="text-xs text-gray-500 ml-2">(read-only)</span>
                   )}
+                  <div className="ml-auto">
+                    {isSuperAdmin() && !showAddPerm && (
+                      <button
+                        onClick={() => setShowAddPerm(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 border border-purple-600/30 rounded-lg transition-colors"
+                      >
+                        <Plus size={14} /> Add Permission
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {showAddPerm && isSuperAdmin() && (
+                  <div className="flex items-end gap-3 p-3 bg-black/30 border border-gray-700 rounded-lg">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-gray-500 mb-1 block">Name</label>
+                      <input
+                        type="text"
+                        value={newPermName}
+                        onChange={e => setNewPermName(e.target.value)}
+                        placeholder="e.g. manage_events"
+                        className="w-full px-3 py-1.5 text-sm bg-black border border-gray-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-gray-500 mb-1 block">Description (optional)</label>
+                      <input
+                        type="text"
+                        value={newPermDesc}
+                        onChange={e => setNewPermDesc(e.target.value)}
+                        placeholder="What this permission controls"
+                        className="w-full px-3 py-1.5 text-sm bg-black border border-gray-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handleCreatePermission}
+                      disabled={creatingPerm || !newPermName.trim()}
+                      className="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors disabled:opacity-50"
+                    >
+                      {creatingPerm ? <Loader2 size={14} className="animate-spin" /> : 'Create'}
+                    </button>
+                    <button
+                      onClick={() => { setShowAddPerm(false); setNewPermName(''); setNewPermDesc(''); }}
+                      className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
@@ -270,6 +360,16 @@ export default function DashboardRoles() {
                                     {perm.description}
                                   </span>
                                 </span>
+                              )}
+                              {isSuperAdmin() && (
+                                <button
+                                  onClick={() => handleDeletePermission(perm.id)}
+                                  disabled={deletingPerm === perm.id}
+                                  className="ml-auto text-gray-700 hover:text-red-400 transition-colors disabled:opacity-50"
+                                  title="Delete permission"
+                                >
+                                  {deletingPerm === perm.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                                </button>
                               )}
                             </div>
                           </td>
