@@ -217,7 +217,7 @@ export default function DashboardOverload() {
             {/* Details tab */}
             {activeTab === "details" && (
               <div className="space-y-4 max-w-xl">
-                {(["title", "date_label", "venue", "hero_image_url", "banner_image_url", "register_url"] as const).map((field) => (
+                {(["title", "date_label", "venue", "register_url"] as const).map((field) => (
                   <div key={field}>
                     <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
                     <input
@@ -225,6 +225,20 @@ export default function DashboardOverload() {
                       onChange={(e) => setEditEdition({ ...editEdition, [field]: e.target.value })}
                       className="w-full px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm"
                     />
+                  </div>
+                ))}
+                {(["hero_image_url", "banner_image_url"] as const).map((field) => (
+                  <div key={field}>
+                    <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
+                    <ImageUpload
+                      value={(editEdition as any)[field] || ""}
+                      onChange={(url) => setEditEdition({ ...editEdition, [field]: url })}
+                      folder={`editions/${selected.year}`}
+                      size="md"
+                    />
+                    {(editEdition as any)[field] && (
+                      <img src={(editEdition as any)[field]} alt="" className="mt-2 h-20 rounded object-cover" />
+                    )}
                   </div>
                 ))}
                 <div>
