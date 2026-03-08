@@ -66,7 +66,7 @@ export const Navigation = () => {
                       ))}
                       {user ? (
                         <>
-                          {hasMinRoleLevel(2) && (
+                          {hasMinRoleLevel(2) ? (
                             <li>
                               <Link
                                 to="/dashboard"
@@ -77,17 +77,18 @@ export const Navigation = () => {
                                 <span>Dashboard</span>
                               </Link>
                             </li>
+                          ) : (
+                            <li>
+                              <Link
+                                to="/profile"
+                                className="nav-link-item flex items-center gap-1.5"
+                                style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
+                              >
+                                <User size={16} />
+                                <span>Profile</span>
+                              </Link>
+                            </li>
                           )}
-                          <li>
-                            <Link
-                              to="/profile"
-                              className="nav-link-item flex items-center gap-1.5"
-                              style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
-                            >
-                              <User size={16} />
-                              <span>Profile</span>
-                            </Link>
-                          </li>
                         </>
                       ) : (
                         <li>
@@ -138,10 +139,11 @@ export const Navigation = () => {
           ))}
           {user ? (
             <>
-              {hasMinRoleLevel(2) && (
+              {hasMinRoleLevel(2) ? (
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+              ) : (
+                <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
               )}
-              <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
             </>
           ) : (
             <Link to="/login" onClick={() => setMobileOpen(false)}>Login</Link>
