@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Shield, ArrowRightLeft, Search, Loader2, Users } from 'lucide-react';
+import { Shield, ArrowRightLeft, Search, Loader2, Users, Check, X, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
@@ -14,12 +14,25 @@ interface RoleDef {
   description: string | null;
 }
 
+interface PermissionDef {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+interface RolePermissionEntry {
+  id: string;
+  role_id: string;
+  permission_id: string;
+}
+
 interface UserWithRoles {
   id: string;
   full_name: string | null;
-  email: string;
   roles: AppRole[];
 }
+
+const ROLE_ORDER: AppRole[] = ['SUPER_ADMIN', 'PRESIDENT', 'TEAM_LEAD', 'TEAM_MEMBER', 'PARTICIPANT'];
 
 const ROLE_COLORS: Record<AppRole, string> = {
   SUPER_ADMIN: 'bg-red-600/20 text-red-400 border-red-600/30',
@@ -29,84 +42,112 @@ const ROLE_COLORS: Record<AppRole, string> = {
   PARTICIPANT: 'bg-gray-600/20 text-gray-400 border-gray-600/30',
 };
 
+const ROLE_HEADER_COLORS: Record<AppRole, string> = {
+  SUPER_ADMIN: 'text-red-400',
+  PRESIDENT: 'text-purple-400',
+  TEAM_LEAD: 'text-blue-400',
+  TEAM_MEMBER: 'text-green-400',
+  PARTICIPANT: 'text-gray-400',
+};
+
 export default function DashboardRoles() {
   const { user } = useAuth();
   const { isSuperAdmin } = useRole();
   const [roleDefs, setRoleDefs] = useState<RoleDef[]>([]);
+  const [permissions, setPermissions] = useState<PermissionDef[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<RolePermissionEntry[]>([]);
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
+  const [activeTab, setActiveTab] = useState<'matrix' | 'users' | 'transfer'>('matrix');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
 
-    // Fetch roles
-    const { data: roles } = await supabase.from('roles').select('id, name, description');
-    setRoleDefs((roles as RoleDef[]) || []);
+    const [rolesRes, permsRes, rpRes, profilesRes, urRes] = await Promise.all([
+      supabase.from('roles').select('id, name, description'),
+      supabase.from('permissions').select('id, name, description').order('name'),
+      supabase.from('role_permissions').select('id, role_id, permission_id'),
+      supabase.from('profiles').select('id, full_name'),
+      supabase.from('user_roles').select('user_id, role_id, roles(name)'),
+    ]);
 
-    // Fetch profiles
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name');
+    const sortedRoles = ((rolesRes.data as RoleDef[]) || []).sort(
+      (a, b) => ROLE_ORDER.indexOf(a.name) - ROLE_ORDER.indexOf(b.name)
+    );
+    setRoleDefs(sortedRoles);
+    setPermissions((permsRes.data as PermissionDef[]) || []);
+    setRolePermissions((rpRes.data as RolePermissionEntry[]) || []);
 
-    // Fetch user_roles
-    const { data: userRoles } = await supabase
-      .from('user_roles')
-      .select('user_id, role_id, roles(name)');
-
-    // Build user map
     const userMap = new Map<string, UserWithRoles>();
-    for (const p of profiles || []) {
-      userMap.set(p.id, { id: p.id, full_name: p.full_name, email: '', roles: [] });
+    for (const p of profilesRes.data || []) {
+      userMap.set(p.id, { id: p.id, full_name: p.full_name, roles: [] });
     }
-
-    // Get emails via auth - we can't, so we'll show user IDs or names
-    // Actually fetch from auth users isn't possible client-side. We'll show profile info.
-
-    for (const ur of (userRoles as any[]) || []) {
+    for (const ur of (urRes.data as any[]) || []) {
       const u = userMap.get(ur.user_id);
-      if (u && ur.roles?.name) {
-        u.roles.push(ur.roles.name);
-      }
+      if (u && ur.roles?.name) u.roles.push(ur.roles.name);
     }
-
     setUsers(Array.from(userMap.values()));
     setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const hasPermission = (roleId: string, permissionId: string) =>
+    rolePermissions.some(rp => rp.role_id === roleId && rp.permission_id === permissionId);
+
+  const handleTogglePermission = async (roleId: string, permissionId: string) => {
+    if (!isSuperAdmin()) return;
+    const key = `${roleId}-${permissionId}`;
+    setToggling(key);
+
+    const existing = rolePermissions.find(rp => rp.role_id === roleId && rp.permission_id === permissionId);
+
+    if (existing) {
+      const { error } = await supabase.from('role_permissions').delete().eq('id', existing.id);
+      if (error) {
+        toast.error('Failed to remove permission');
+      } else {
+        setRolePermissions(prev => prev.filter(rp => rp.id !== existing.id));
+        toast.success('Permission removed');
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('role_permissions')
+        .insert({ role_id: roleId, permission_id: permissionId })
+        .select('id, role_id, permission_id')
+        .single();
+      if (error) {
+        toast.error('Failed to add permission');
+      } else if (data) {
+        setRolePermissions(prev => [...prev, data as RolePermissionEntry]);
+        toast.success('Permission added');
+      }
+    }
+    setToggling(null);
   };
 
   const handleTransferAdmin = async (targetUserId: string) => {
     if (!user || !isSuperAdmin()) return;
-
     const targetUser = users.find(u => u.id === targetUserId);
-    const confirmMsg = `Transfer Super Admin to ${targetUser?.full_name || targetUserId}? You will lose your Super Admin role.`;
-    if (!confirm(confirmMsg)) return;
+    if (!confirm(`Transfer Super Admin to ${targetUser?.full_name || 'this user'}? You will lose your Super Admin role.`)) return;
 
     setTransferring(true);
     setTransferTarget(targetUserId);
 
     try {
-      // Get SUPER_ADMIN role id
       const adminRole = roleDefs.find(r => r.name === 'SUPER_ADMIN');
       if (!adminRole) throw new Error('SUPER_ADMIN role not found');
 
-      // Assign to new user
       const { error: assignError } = await supabase
         .from('user_roles')
         .insert({ user_id: targetUserId, role_id: adminRole.id, assigned_by: user.id });
 
-      if (assignError) {
-        if (assignError.code === '23505') {
-          // Already has the role, just remove from current
-        } else {
-          throw assignError;
-        }
-      }
+      if (assignError && assignError.code !== '23505') throw assignError;
 
-      // Remove from current user
       const { error: removeError } = await supabase
         .from('user_roles')
         .delete()
@@ -115,14 +156,11 @@ export default function DashboardRoles() {
 
       if (removeError) throw removeError;
 
-      toast.success('Super Admin transferred! You will be redirected.');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
+      toast.success('Super Admin transferred! Redirecting...');
+      setTimeout(() => { window.location.href = '/'; }, 1500);
     } catch (err: any) {
       toast.error(err.message || 'Transfer failed');
     }
-
     setTransferring(false);
     setTransferTarget(null);
   };
@@ -131,18 +169,26 @@ export default function DashboardRoles() {
     (u.full_name || u.id).toLowerCase().includes(search.toLowerCase())
   );
 
-  // Group users by role for overview
   const roleUserCounts = roleDefs.map(r => ({
     ...r,
     count: users.filter(u => u.roles.includes(r.name)).length,
   }));
+
+  const formatPermName = (name: string) =>
+    name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const tabs = [
+    { id: 'matrix' as const, label: 'Permission Matrix', icon: Shield },
+    { id: 'users' as const, label: 'Users & Roles', icon: Users },
+    ...(isSuperAdmin() ? [{ id: 'transfer' as const, label: 'Transfer Admin', icon: ArrowRightLeft }] : []),
+  ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-white font-['Oxanium']">Roles & Permissions</h1>
-          <p className="text-gray-400 mt-1">View roles and transfer Super Admin</p>
+          <p className="text-gray-400 mt-1">Manage role permissions and transfer admin access</p>
         </div>
 
         {loading ? (
@@ -155,22 +201,175 @@ export default function DashboardRoles() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {roleUserCounts.map(r => (
                 <div key={r.id} className={`rounded-lg border p-4 ${ROLE_COLORS[r.name]}`}>
-                  <div className="text-2xl font-bold">{r.count}</div>
-                  <div className="text-xs mt-1 opacity-80">{r.name.replace('_', ' ')}</div>
+                  <div className="text-2xl font-bold font-['Oxanium']">{r.count}</div>
+                  <div className="text-xs mt-1 opacity-80">{r.name.replace(/_/g, ' ')}</div>
+                  {r.description && <div className="text-[10px] mt-0.5 opacity-60">{r.description}</div>}
                 </div>
               ))}
             </div>
 
-            {/* Transfer Admin Section */}
-            {isSuperAdmin() && (
+            {/* Tabs */}
+            <div className="flex gap-1 border-b border-gray-800 pb-0">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-[#1c1c1c] text-white border border-gray-800 border-b-[#1c1c1c] -mb-px'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <tab.icon size={16} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Permission Matrix Tab */}
+            {activeTab === 'matrix' && (
+              <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield size={20} className="text-purple-500" />
+                  <h2 className="text-lg font-semibold text-white">Permission Matrix</h2>
+                  {!isSuperAdmin() && (
+                    <span className="text-xs text-gray-500 ml-2">(read-only)</span>
+                  )}
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-3 px-3 text-gray-400 font-medium sticky left-0 bg-[#1c1c1c] min-w-[200px] border-b border-gray-700">
+                          Permission
+                        </th>
+                        {roleDefs.map(role => (
+                          <th
+                            key={role.id}
+                            className={`py-3 px-2 text-center font-medium border-b border-gray-700 min-w-[100px] ${ROLE_HEADER_COLORS[role.name]}`}
+                          >
+                            <div className="text-xs leading-tight">{role.name.replace(/_/g, ' ')}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {permissions.map((perm, idx) => (
+                        <tr
+                          key={perm.id}
+                          className={`${idx % 2 === 0 ? 'bg-black/20' : ''} hover:bg-white/5 transition-colors`}
+                        >
+                          <td className="py-2.5 px-3 sticky left-0 bg-[#1c1c1c]" style={{ zIndex: 1 }}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-xs font-medium">{formatPermName(perm.name)}</span>
+                              {perm.description && (
+                                <span className="group relative">
+                                  <Info size={12} className="text-gray-600 cursor-help" />
+                                  <span className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-gray-900 text-gray-300 text-[10px] px-2 py-1 rounded whitespace-nowrap border border-gray-700 z-10">
+                                    {perm.description}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          {roleDefs.map(role => {
+                            const enabled = hasPermission(role.id, perm.id);
+                            const isToggling = toggling === `${role.id}-${perm.id}`;
+                            return (
+                              <td key={role.id} className="py-2.5 px-2 text-center">
+                                <button
+                                  onClick={() => handleTogglePermission(role.id, perm.id)}
+                                  disabled={!isSuperAdmin() || isToggling}
+                                  className={`w-8 h-8 rounded-md border inline-flex items-center justify-center transition-all ${
+                                    enabled
+                                      ? 'bg-purple-600/30 border-purple-500/50 text-purple-400 hover:bg-purple-600/50'
+                                      : 'bg-gray-800/50 border-gray-700/50 text-gray-700 hover:border-gray-600 hover:text-gray-500'
+                                  } ${!isSuperAdmin() ? 'cursor-default' : 'cursor-pointer'} disabled:opacity-50`}
+                                >
+                                  {isToggling ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : enabled ? (
+                                    <Check size={14} />
+                                  ) : (
+                                    <X size={14} />
+                                  )}
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center gap-4 pt-2 text-[10px] text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <span className="w-4 h-4 rounded bg-purple-600/30 border border-purple-500/50 inline-flex items-center justify-center"><Check size={10} className="text-purple-400" /></span>
+                    Granted
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-4 h-4 rounded bg-gray-800/50 border border-gray-700/50 inline-flex items-center justify-center"><X size={10} className="text-gray-700" /></span>
+                    Not granted
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Users & Roles Tab */}
+            {activeTab === 'users' && (
               <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6 space-y-4">
                 <div className="flex items-center gap-2">
-                  <ArrowRightLeft size={20} className="text-purple-500" />
+                  <Users size={20} className="text-purple-500" />
+                  <h2 className="text-lg font-semibold text-white">All Users & Roles</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-700">
+                        <th className="text-left py-2 text-gray-400 font-medium">User</th>
+                        <th className="text-left py-2 text-gray-400 font-medium">Roles</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map(u => (
+                        <tr key={u.id} className="border-b border-gray-800/50 hover:bg-white/5">
+                          <td className="py-3 text-white">
+                            {u.full_name || 'Unnamed User'}
+                            {u.id === user?.id && (
+                              <span className="ml-2 text-[10px] text-purple-400">(you)</span>
+                            )}
+                          </td>
+                          <td className="py-3">
+                            <div className="flex gap-1 flex-wrap">
+                              {u.roles.length > 0 ? u.roles.map(r => (
+                                <span key={r} className={`text-[10px] px-1.5 py-0.5 rounded border ${ROLE_COLORS[r]}`}>
+                                  {r.replace(/_/g, ' ')}
+                                </span>
+                              )) : (
+                                <span className="text-gray-600 text-xs">No roles</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Transfer Admin Tab */}
+            {activeTab === 'transfer' && isSuperAdmin() && (
+              <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <ArrowRightLeft size={20} className="text-red-400" />
                   <h2 className="text-lg font-semibold text-white">Transfer Super Admin</h2>
                 </div>
-                <p className="text-gray-400 text-sm">
-                  Select a user below to transfer your Super Admin role. This action cannot be undone — the new admin will need to transfer it back.
-                </p>
+                <div className="bg-red-900/10 border border-red-900/30 rounded-lg p-3 text-sm text-red-300">
+                  <strong>Warning:</strong> This will remove your Super Admin role and assign it to the selected user. This action cannot be undone — the new admin will need to transfer it back.
+                </div>
 
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -183,25 +382,17 @@ export default function DashboardRoles() {
                   />
                 </div>
 
-                <div className="max-h-64 overflow-y-auto space-y-2">
+                <div className="max-h-72 overflow-y-auto space-y-2">
                   {filteredUsers
                     .filter(u => u.id !== user?.id)
                     .map(u => (
-                      <div
-                        key={u.id}
-                        className="flex items-center justify-between p-3 bg-black/50 border border-gray-800 rounded-lg"
-                      >
+                      <div key={u.id} className="flex items-center justify-between p-3 bg-black/50 border border-gray-800 rounded-lg">
                         <div>
-                          <div className="text-white text-sm font-medium">
-                            {u.full_name || 'Unnamed User'}
-                          </div>
+                          <div className="text-white text-sm font-medium">{u.full_name || 'Unnamed User'}</div>
                           <div className="flex gap-1 mt-1 flex-wrap">
                             {u.roles.map(r => (
-                              <span
-                                key={r}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border ${ROLE_COLORS[r]}`}
-                              >
-                                {r.replace('_', ' ')}
+                              <span key={r} className={`text-[10px] px-1.5 py-0.5 rounded border ${ROLE_COLORS[r]}`}>
+                                {r.replace(/_/g, ' ')}
                               </span>
                             ))}
                           </div>
@@ -225,48 +416,6 @@ export default function DashboardRoles() {
                 </div>
               </div>
             )}
-
-            {/* All Users & Roles Table */}
-            <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <Users size={20} className="text-purple-500" />
-                <h2 className="text-lg font-semibold text-white">All Users & Roles</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="text-left py-2 text-gray-400 font-medium">User</th>
-                      <th className="text-left py-2 text-gray-400 font-medium">Roles</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => (
-                      <tr key={u.id} className="border-b border-gray-800/50">
-                        <td className="py-3 text-white">
-                          {u.full_name || 'Unnamed User'}
-                          {u.id === user?.id && (
-                            <span className="ml-2 text-[10px] text-purple-400">(you)</span>
-                          )}
-                        </td>
-                        <td className="py-3">
-                          <div className="flex gap-1 flex-wrap">
-                            {u.roles.map(r => (
-                              <span
-                                key={r}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border ${ROLE_COLORS[r]}`}
-                              >
-                                {r.replace('_', ' ')}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </>
         )}
       </div>
