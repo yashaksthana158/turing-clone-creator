@@ -341,6 +341,13 @@ export default function DashboardEvents() {
         onClose={() => setShowCreateModal(false)}
         onCreated={fetchData}
       />
+
+      <EditEventModal
+        open={!!editingEvent}
+        event={editingEvent}
+        onClose={() => setEditingEvent(null)}
+        onUpdated={fetchData}
+      />
     </DashboardLayout>
   );
 }
