@@ -23,19 +23,17 @@ export const RegistrationsSection = () => {
         <span className="red">Live</span>&nbsp;Registrations
       </h2>
       <div className="container">
-        <div className="row justify-content-center">
+        <div className="events-grid">
           {events.map((event, index) => (
-            <div className="col-md-6 col-lg-4 mb-4" key={index}>
+            <div key={index}>
               <div className="upcoming-event-card">
                 <div
                   className="upcoming-event-img"
                   style={{
                     backgroundImage: `url('${event.image}')`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
                   }}
                 ></div>
-                <a href={event.link} className="btn-custom d-block">
+                <a href={event.link} className="btn-custom">
                   {event.label}
                 </a>
               </div>

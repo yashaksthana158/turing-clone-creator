@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -16,43 +25,37 @@ export const Navigation = () => {
   return (
     <header>
       <div className="header-area">
-        <div id="sticky-header" className="main-header-area">
+        <div className={`main-header-area ${isSticky ? "sticky" : ""}`}>
           <div className="container">
             <div className="header_bottom_border">
-              <div className="row" style={{ alignItems: "center" }}>
-                <div style={{ flex: "0 0 33%", maxWidth: "33%" }}>
-                  <div className="logo">
-                    <a href="/">
-                      <img
-                        src="/img/Turing logo.webp"
-                        alt="Turing Logo"
-                        style={{ width: "117px" }}
-                      />
-                    </a>
-                  </div>
+              <div className="nav-row">
+                <div className="nav-logo">
+                  <a href="/">
+                    <img
+                      src="/img/Turing logo.webp"
+                      alt="Turing Logo"
+                      style={{ width: "117px" }}
+                    />
+                  </a>
                 </div>
-                <div style={{ flex: "0 0 67%", maxWidth: "67%" }}>
-                  <div className="main-menu" style={{ display: "block" }}>
-                    <nav>
-                      <ul id="navigation">
-                        {navItems.map((item) => (
-                          <li key={item.name}>
-                            <a href={item.href}>{item.name}</a>
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
-                  </div>
-                  {/* Mobile menu button */}
-                  <div className="d-lg-none" style={{ textAlign: "right" }}>
-                    <button
-                      className="mobile-menu-btn"
-                      onClick={() => setMobileOpen(true)}
-                      style={{ display: "none" }}
-                    >
-                      <Menu />
-                    </button>
-                  </div>
+                <div className="nav-links-desktop">
+                  <nav>
+                    <ul>
+                      {navItems.map((item) => (
+                        <li key={item.name}>
+                          <a href={item.href}>{item.name}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                </div>
+                <div className="nav-mobile-toggle">
+                  <button
+                    className="mobile-menu-btn"
+                    onClick={() => setMobileOpen(true)}
+                  >
+                    <Menu size={28} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -60,7 +63,6 @@ export const Navigation = () => {
         </div>
       </div>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="mobile-menu-overlay">
           <button
@@ -68,7 +70,7 @@ export const Navigation = () => {
             onClick={() => setMobileOpen(false)}
             style={{ position: "absolute", top: 20, right: 20 }}
           >
-            <X />
+            <X size={28} />
           </button>
           {navItems.map((item) => (
             <a
