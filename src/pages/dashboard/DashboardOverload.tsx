@@ -154,7 +154,7 @@ export default function DashboardOverload() {
   }
 
   async function deleteRow(table: string, id: string) {
-    const { error } = await supabase.from(table).delete().eq("id", id);
+    const { error } = await (supabase.from as any)(table).delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     if (selectedId) fetchSubData(selectedId);
   }
