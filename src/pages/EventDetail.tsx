@@ -346,7 +346,7 @@ export default function EventDetail() {
                   opacity: registering ? 0.5 : 1,
                 }}
               >
-                {registering ? "Registering..." : user ? "Register Now" : "Login to Register"}
+                {registering ? "Registering..." : user ? "Register Now" : "Sign Up to Register"}
               </button>
             </div>
           )}
