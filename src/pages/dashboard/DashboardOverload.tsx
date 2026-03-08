@@ -271,12 +271,17 @@ export default function DashboardOverload() {
                   <Plus size={14} /> Add Event
                 </button>
                 {subEvents.map((ev) => (
-                  <div key={ev.id} className="flex gap-2 items-center bg-zinc-900 rounded p-3 border border-zinc-800">
-                    <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                    <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
-                    <input value={ev.image_url || ""} onChange={(e) => updateRow("overload_events", ev.id, { image_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Image URL" />
-                    <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
-                    <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                  <div key={ev.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                      <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
+                      <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
+                      <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <ImageUpload value={ev.image_url || ""} onChange={(url) => updateRow("overload_events", ev.id, { image_url: url })} folder={`events/${selected.year}`} placeholder="Event image" className="flex-1" />
+                      {ev.image_url && <img src={ev.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
