@@ -2,74 +2,85 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { name: "Home", href: "#home" },
-    { name: "About", href: "#about" },
-    { name: "Vision", href: "#vision" },
-    { name: "Events", href: "#events" },
-    { name: "Team", href: "#team" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "/" },
+    { name: "Events", href: "/events" },
+    { name: "About", href: "/about" },
+    { name: "Teams", href: "/teams" },
+    { name: "Overload++", href: "/overloadpp" },
+    { name: "Gallery", href: "/gallery" },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-cosmic-dark/80 backdrop-blur-md border-b border-cosmic-purple/20">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <img 
-              src="/Assets/Turing logo.png" 
-              alt="Turing Logo" 
-              className="h-8 w-auto sm:h-10 lg:h-12"
-            />
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-6 lg:space-x-8">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-cosmic-light hover:text-cosmic-purple transition-colors duration-300 px-3 py-2 rounded-md text-sm lg:text-base font-medium"
-                >
-                  {item.name}
-                </a>
-              ))}
+    <header>
+      <div className="header-area">
+        <div id="sticky-header" className="main-header-area">
+          <div className="container">
+            <div className="header_bottom_border">
+              <div className="row" style={{ alignItems: "center" }}>
+                <div style={{ flex: "0 0 33%", maxWidth: "33%" }}>
+                  <div className="logo">
+                    <a href="/">
+                      <img
+                        src="/img/Turing logo.webp"
+                        alt="Turing Logo"
+                        style={{ width: "117px" }}
+                      />
+                    </a>
+                  </div>
+                </div>
+                <div style={{ flex: "0 0 67%", maxWidth: "67%" }}>
+                  <div className="main-menu" style={{ display: "block" }}>
+                    <nav>
+                      <ul id="navigation">
+                        {navItems.map((item) => (
+                          <li key={item.name}>
+                            <a href={item.href}>{item.name}</a>
+                          </li>
+                        ))}
+                      </ul>
+                    </nav>
+                  </div>
+                  {/* Mobile menu button */}
+                  <div className="d-lg-none" style={{ textAlign: "right" }}>
+                    <button
+                      className="mobile-menu-btn"
+                      onClick={() => setMobileOpen(true)}
+                      style={{ display: "none" }}
+                    >
+                      <Menu />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-cosmic-light hover:text-cosmic-purple transition-colors duration-300 p-2"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-cosmic-dark/95 backdrop-blur-md rounded-lg mt-2">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-cosmic-light hover:text-cosmic-purple transition-colors duration-300 block px-3 py-2 rounded-md text-base font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
-    </nav>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="mobile-menu-overlay">
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileOpen(false)}
+            style={{ position: "absolute", top: 20, right: 20 }}
+          >
+            <X />
+          </button>
+          {navItems.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      )}
+    </header>
   );
 };
