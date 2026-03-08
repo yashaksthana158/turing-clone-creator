@@ -277,7 +277,55 @@ export default function DashboardRoles() {
                   {!isSuperAdmin() && (
                     <span className="text-xs text-gray-500 ml-2">(read-only)</span>
                   )}
+                  <div className="ml-auto">
+                    {isSuperAdmin() && !showAddPerm && (
+                      <button
+                        onClick={() => setShowAddPerm(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 border border-purple-600/30 rounded-lg transition-colors"
+                      >
+                        <Plus size={14} /> Add Permission
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {showAddPerm && isSuperAdmin() && (
+                  <div className="flex items-end gap-3 p-3 bg-black/30 border border-gray-700 rounded-lg">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-gray-500 mb-1 block">Name</label>
+                      <input
+                        type="text"
+                        value={newPermName}
+                        onChange={e => setNewPermName(e.target.value)}
+                        placeholder="e.g. manage_events"
+                        className="w-full px-3 py-1.5 text-sm bg-black border border-gray-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-gray-500 mb-1 block">Description (optional)</label>
+                      <input
+                        type="text"
+                        value={newPermDesc}
+                        onChange={e => setNewPermDesc(e.target.value)}
+                        placeholder="What this permission controls"
+                        className="w-full px-3 py-1.5 text-sm bg-black border border-gray-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handleCreatePermission}
+                      disabled={creatingPerm || !newPermName.trim()}
+                      className="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors disabled:opacity-50"
+                    >
+                      {creatingPerm ? <Loader2 size={14} className="animate-spin" /> : 'Create'}
+                    </button>
+                    <button
+                      onClick={() => { setShowAddPerm(false); setNewPermName(''); setNewPermDesc(''); }}
+                      className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
