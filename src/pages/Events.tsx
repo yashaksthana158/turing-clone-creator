@@ -76,9 +76,9 @@ const Events = () => {
         );
         unified = counts;
 
-        setPastDbEvents(past.map((evt: any) => ({
+        setPastDbEvents(prev => [...prev, ...past.map((evt: any) => ({
           ...evt, registration_count: 0, external_url: null,
-        })));
+        }))]);
       }
 
       // Fetch overload events from published editions
