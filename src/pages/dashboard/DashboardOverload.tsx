@@ -2,8 +2,42 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
-import { Plus, Trash2, Save, X } from "lucide-react";
+import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRef } from "react";
+
+/** Bulk upload button for gallery images */
+function GalleryUploadButton({ folder, editionId, nextOrder, onUploaded }: { folder: string; editionId: string; nextOrder: number; onUploaded: () => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFiles(files: FileList) {
+    setUploading(true);
+    let order = nextOrder;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const ext = file.name.split(".").pop() || "webp";
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("overload-assets").upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) { toast.error(`Failed: ${file.name}`); continue; }
+      const { data: urlData } = supabase.storage.from("overload-assets").getPublicUrl(path);
+      await (supabase.from as any)("overload_gallery").insert({ edition_id: editionId, image_url: urlData.publicUrl, sort_order: order++ });
+    }
+    setUploading(false);
+    toast.success("Images uploaded");
+    onUploaded();
+  }
+
+  return (
+    <>
+      <button onClick={() => ref.current?.click()} disabled={uploading} className="flex items-center gap-2 px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm">
+        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+        {uploading ? "Uploading…" : "Upload Images"}
+      </button>
+      <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); e.target.value = ""; }} />
+    </>
+  );
+}
 
 interface Edition {
   id: string;
