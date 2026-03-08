@@ -124,6 +124,6 @@ export function LiveEventCard({
           View Details & Register <ArrowRight size={14} />
         </div>
       </div>
-    </Link>
+    </Wrapper>
   );
 }
