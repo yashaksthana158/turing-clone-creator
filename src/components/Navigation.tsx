@@ -139,10 +139,11 @@ export const Navigation = () => {
           ))}
           {user ? (
             <>
-              {hasMinRoleLevel(2) && (
+              {hasMinRoleLevel(2) ? (
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+              ) : (
+                <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
               )}
-              <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
             </>
           ) : (
             <Link to="/login" onClick={() => setMobileOpen(false)}>Login</Link>
