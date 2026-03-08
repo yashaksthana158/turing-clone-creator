@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Shield, ArrowRightLeft, Search, Loader2, Users, Check, X, Info } from 'lucide-react';
+import { Shield, ArrowRightLeft, Search, Loader2, Users, Check, X, Info, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
