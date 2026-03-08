@@ -65,6 +65,7 @@ const App = () => (
             <Route path="/dashboard/teams" element={<ProtectedRoute minRoleLevel={3}><ManageTeams /></ProtectedRoute>} />
             <Route path="/dashboard/users" element={<ProtectedRoute minRoleLevel={5}><ManageUsers /></ProtectedRoute>} />
             <Route path="/dashboard/roles" element={<ProtectedRoute minRoleLevel={5}><DashboardRoles /></ProtectedRoute>} />
+            <Route path="/dashboard/overload" element={<ProtectedRoute minRoleLevel={3}><DashboardOverload /></ProtectedRoute>} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
