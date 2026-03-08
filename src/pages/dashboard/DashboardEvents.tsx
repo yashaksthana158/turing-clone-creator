@@ -20,6 +20,7 @@ interface Event {
   max_participants: number | null;
   created_by: string;
   poster_url: string | null;
+  category: string | null;
 }
 
 interface Approval {
