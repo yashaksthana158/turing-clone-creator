@@ -217,8 +217,18 @@ export default function DashboardTasks() {
           </div>
         )}
 
-        {/* Status filters */}
-        <div className="flex flex-wrap gap-2">
+        {/* Search + Status filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks…"
+              className="w-full bg-[#1c1c1c] border border-gray-800 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#9113ff]"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
