@@ -64,7 +64,7 @@ export default function DashboardCertificates() {
     setLoading(true);
     let query = supabase
       .from('certificates')
-      .select('*, profiles:user_id(full_name), events:event_id(title)')
+      .select('*, events:event_id(title)')
       .order('issued_at', { ascending: false });
 
     if (!isAdmin) {
@@ -75,7 +75,20 @@ export default function DashboardCertificates() {
     if (error) {
       console.error('Error fetching certificates:', error);
     } else {
-      setCertificates((data as unknown as Certificate[]) || []);
+      const certs = (data as unknown as Certificate[]) || [];
+      // Fetch profile names for certificate user_ids
+      if (certs.length > 0 && isAdmin) {
+        const userIds = [...new Set(certs.map(c => c.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+        const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+        certs.forEach(c => {
+          c.profiles = { full_name: profileMap.get(c.user_id) || null };
+        });
+      }
+      setCertificates(certs);
     }
     setLoading(false);
   };
