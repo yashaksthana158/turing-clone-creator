@@ -496,6 +496,11 @@ export default function DashboardEvents() {
                 )}
               </div>
             )}
+
+            {/* Registrations Tab */}
+            {activeView === 'registrations' && hasMinRoleLevel(3) && (
+              <EventRegistrationsView />
+            )}
           </>
         )}
       </div>
