@@ -329,7 +329,7 @@ export default function EventDetail() {
                 Ready to join?
               </h3>
               <p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
-                {user ? "Click below to secure your spot." : "Login to register for this event."}
+                {user ? "Click below to secure your spot." : "Create an account to register for this event."}
               </p>
               <button
                 onClick={handleRegister}
