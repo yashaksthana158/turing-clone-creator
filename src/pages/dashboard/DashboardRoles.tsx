@@ -63,6 +63,11 @@ export default function DashboardRoles() {
   const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [activeTab, setActiveTab] = useState<'matrix' | 'users' | 'transfer'>('matrix');
+  const [newPermName, setNewPermName] = useState('');
+  const [newPermDesc, setNewPermDesc] = useState('');
+  const [creatingPerm, setCreatingPerm] = useState(false);
+  const [showAddPerm, setShowAddPerm] = useState(false);
+  const [deletingPerm, setDeletingPerm] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
