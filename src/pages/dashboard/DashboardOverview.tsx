@@ -4,20 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Users, Calendar, ClipboardList, Shield } from 'lucide-react';
+import { Users, Calendar, ClipboardList, Shield, Ticket, Award } from 'lucide-react';
 
 interface Stats {
   teams: number;
   events: number;
   tasks: number;
   users: number;
+  myRegistrations: number;
 }
 
 export default function DashboardOverview() {
   const { user, loading } = useAuth();
   const { getHighestRole, hasMinRoleLevel } = useRole();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0 });
+  const [stats, setStats] = useState<Stats>({ teams: 0, events: 0, tasks: 0, users: 0, myRegistrations: 0 });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -28,18 +29,27 @@ export default function DashboardOverview() {
   }, [user, loading]);
 
   const fetchStats = async () => {
-    const [teamsRes, eventsRes, tasksRes, usersRes] = await Promise.all([
-      supabase.from('teams').select('id', { count: 'exact', head: true }),
-      supabase.from('events').select('id', { count: 'exact', head: true }),
-      supabase.from('tasks').select('id', { count: 'exact', head: true }),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    ]);
+    const promises: Promise<any>[] = [
+      supabase.from('events').select('id', { count: 'exact', head: true }).eq('status', 'PUBLISHED'),
+      supabase.from('event_registrations').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
+    ];
+
+    if (hasMinRoleLevel(3)) {
+      promises.push(supabase.from('teams').select('id', { count: 'exact', head: true }));
+      promises.push(supabase.from('tasks').select('id', { count: 'exact', head: true }));
+    }
+    if (hasMinRoleLevel(4)) {
+      promises.push(supabase.from('profiles').select('id', { count: 'exact', head: true }));
+    }
+
+    const results = await Promise.all(promises);
 
     setStats({
-      teams: teamsRes.count || 0,
-      events: eventsRes.count || 0,
-      tasks: tasksRes.count || 0,
-      users: usersRes.count || 0,
+      events: results[0].count || 0,
+      myRegistrations: results[1].count || 0,
+      teams: hasMinRoleLevel(3) ? (results[2]?.count || 0) : 0,
+      tasks: hasMinRoleLevel(3) ? (results[3]?.count || 0) : 0,
+      users: hasMinRoleLevel(4) ? (results[4]?.count || 0) : 0,
     });
   };
 
@@ -53,9 +63,11 @@ export default function DashboardOverview() {
 
   const highestRole = getHighestRole();
 
+  // All roles see these
   const statCards = [
+    { title: 'My Registrations', value: stats.myRegistrations, icon: Ticket, color: 'text-cyan-400 bg-cyan-500/20', minLevel: 1 },
+    { title: 'Published Events', value: stats.events, icon: Calendar, color: 'text-green-400 bg-green-500/20', minLevel: 1 },
     { title: 'Teams', value: stats.teams, icon: Users, color: 'text-blue-400 bg-blue-500/20', minLevel: 3 },
-    { title: 'Events', value: stats.events, icon: Calendar, color: 'text-green-400 bg-green-500/20', minLevel: 2 },
     { title: 'Tasks', value: stats.tasks, icon: ClipboardList, color: 'text-amber-400 bg-amber-500/20', minLevel: 2 },
     { title: 'Users', value: stats.users, icon: Shield, color: 'text-purple-400 bg-purple-500/20', minLevel: 4 },
   ];
@@ -67,7 +79,7 @@ export default function DashboardOverview() {
           <h1 className="text-3xl font-bold text-white font-['Oxanium']">Dashboard</h1>
           <p className="text-gray-400 mt-1">
             Welcome back! You're logged in as{' '}
-            <span className="text-[#9113ff]">{highestRole?.replace('_', ' ')}</span>
+            <span className="text-[#9113ff]">{highestRole?.replace(/_/g, ' ') || 'Participant'}</span>
           </p>
         </div>
 
@@ -97,14 +109,12 @@ export default function DashboardOverview() {
         <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
-            {hasMinRoleLevel(2) && (
-              <button
-                onClick={() => navigate('/dashboard/events')}
-                className="px-4 py-2.5 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg transition-colors text-sm font-medium"
-              >
-                Manage Events
-              </button>
-            )}
+            <button
+              onClick={() => navigate('/dashboard/events')}
+              className="px-4 py-2.5 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg transition-colors text-sm font-medium"
+            >
+              {hasMinRoleLevel(2) ? 'Manage Events' : 'My Events'}
+            </button>
             {hasMinRoleLevel(3) && (
               <button
                 onClick={() => navigate('/dashboard/teams')}
