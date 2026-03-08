@@ -19,17 +19,6 @@ interface UnifiedEvent {
   external_url?: string | null;
 }
 
-const hardcodedEvents = [
-  { title: "Overload++ 2025", category: "flagship", date: "March 20, 2025", description: "The annual tech fest of ANDC featuring coding, gaming, debates, and more.", image: "/Assets/overload_events/hackazzle.jpg" },
-  { title: "Code Rush", category: "coding", date: "March 20, 2025", description: "A competitive coding challenge to test your programming skills under pressure.", image: "/Assets/overload_events/Code_Rush.jpg" },
-  { title: "Bug Hunt", category: "coding", date: "March 20, 2025", description: "Find and fix bugs in the given code snippets within the time limit.", image: "/Assets/overload_events/bug_hunt.jpg" },
-  { title: "Tech War", category: "debate", date: "March 20, 2025", description: "A debate competition on trending tech topics.", image: "/Assets/overload_events/tech_war.jpg" },
-  { title: "Tekken Showdown", category: "gaming", date: "March 20, 2025", description: "Console gaming tournament featuring Tekken battles.", image: "/Assets/overload_events/tekken.jpg" },
-  { title: "The Lost Artifact", category: "fun", date: "March 20, 2025", description: "An exciting treasure hunt across the campus with tech-based clues.", image: "/Assets/overload_events/artifact.jpg" },
-  { title: "Hackzzle", category: "puzzle", date: "March 20, 2025", description: "Solve complex puzzles using logic and programming knowledge.", image: "/Assets/overload_events/hackazzle.jpg" },
-  { title: "Sketch Bytes", category: "fun", date: "March 20, 2025", description: "A fun scribble and drawing game with a tech twist.", image: "/Assets/overload_events/sketch_bytes.jpg" },
-  { title: "BGMI Campus Clash", category: "gaming", date: "March 20, 2025", description: "Mobile gaming tournament featuring BGMI squad battles.", image: "/Assets/overload_events/bgmi.jpg" },
-];
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
