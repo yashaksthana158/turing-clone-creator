@@ -65,31 +65,16 @@ export const Navigation = () => {
                         </li>
                       ))}
                       {user ? (
-                        <>
-                          {hasMinRoleLevel(2) ? (
-                            <li>
-                              <Link
-                                to="/dashboard"
-                                className="nav-link-item flex items-center gap-1.5"
-                                style={{ color: location.pathname.startsWith("/dashboard") ? "#9113ff" : undefined }}
-                              >
-                                <LayoutDashboard size={16} />
-                                <span>Dashboard</span>
-                              </Link>
-                            </li>
-                          ) : (
-                            <li>
-                              <Link
-                                to="/profile"
-                                className="nav-link-item flex items-center gap-1.5"
-                                style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
-                              >
-                                <User size={16} />
-                                <span>Profile</span>
-                              </Link>
-                            </li>
-                          )}
-                        </>
+                        <li>
+                          <Link
+                            to="/dashboard"
+                            className="nav-link-item flex items-center gap-1.5"
+                            style={{ color: location.pathname.startsWith("/dashboard") ? "#9113ff" : undefined }}
+                          >
+                            <LayoutDashboard size={16} />
+                            <span>Dashboard</span>
+                          </Link>
+                        </li>
                       ) : (
                         <li>
                           <Link
@@ -138,13 +123,7 @@ export const Navigation = () => {
             </Link>
           ))}
           {user ? (
-            <>
-              {hasMinRoleLevel(2) ? (
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
-              ) : (
-                <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
-              )}
-            </>
+            <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
           ) : (
             <Link to="/login" onClick={() => setMobileOpen(false)}>Login</Link>
           )}
