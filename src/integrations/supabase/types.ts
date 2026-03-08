@@ -167,6 +167,7 @@ export type Database = {
           event_date: string | null
           id: string
           max_participants: number | null
+          poster_url: string | null
           status: Database["public"]["Enums"]["event_status"]
           team_id: string | null
           title: string
@@ -180,6 +181,7 @@ export type Database = {
           event_date?: string | null
           id?: string
           max_participants?: number | null
+          poster_url?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           team_id?: string | null
           title: string
@@ -193,6 +195,7 @@ export type Database = {
           event_date?: string | null
           id?: string
           max_participants?: number | null
+          poster_url?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           team_id?: string | null
           title?: string
