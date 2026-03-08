@@ -286,6 +286,14 @@ export default function DashboardTasks() {
                       </>
                     )}
 
+                    {canCreate && (
+                      <button
+                        onClick={() => setEditTask(task)}
+                        className="p-1.5 text-gray-500 hover:text-[#9113ff] transition-colors rounded-lg hover:bg-[#9113ff]/10"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         onClick={() => setDeleteId(task.id)}
