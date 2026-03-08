@@ -16,6 +16,7 @@ interface EditEventModalProps {
     event_date: string | null;
     max_participants: number | null;
     poster_url: string | null;
+    category?: string | null;
   } | null;
 }
 
