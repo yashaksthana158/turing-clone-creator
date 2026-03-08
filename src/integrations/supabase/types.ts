@@ -269,6 +269,41 @@ export type Database = {
         }
         Relationships: []
       }
+      overload_event_registrations: {
+        Row: {
+          id: string
+          id_card_url: string | null
+          overload_event_id: string
+          registered_at: string
+          status: Database["public"]["Enums"]["registration_status"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          id_card_url?: string | null
+          overload_event_id: string
+          registered_at?: string
+          status?: Database["public"]["Enums"]["registration_status"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          id_card_url?: string | null
+          overload_event_id?: string
+          registered_at?: string
+          status?: Database["public"]["Enums"]["registration_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overload_event_registrations_overload_event_id_fkey"
+            columns: ["overload_event_id"]
+            isOneToOne: false
+            referencedRelation: "overload_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       overload_events: {
         Row: {
           coordinators: string | null
