@@ -45,11 +45,8 @@ const OverloadEventDetail = () => {
   const [edition, setEdition] = useState<Edition | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Registration state
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
-  const [idCardFile, setIdCardFile] = useState<File | null>(null);
-  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
   const [regCount, setRegCount] = useState(0);
 
   useEffect(() => {
