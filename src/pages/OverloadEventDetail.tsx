@@ -7,8 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
-  CheckCircle, XCircle, Upload, X, FileImage, Loader2,
+  CheckCircle, XCircle, Loader2,
 } from "lucide-react";
+import { IdCardUpload } from "@/components/IdCardUpload";
 
 interface OverloadEventData {
   id: string;
@@ -104,21 +105,9 @@ const OverloadEventDetail = () => {
     setRegistrationStatus((data as any)?.status || null);
   };
 
-  const handleIdCardSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) return;
+  const handleIdCardChange = (file: File | null, preview: string | null) => {
     setIdCardFile(file);
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setIdCardPreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setIdCardPreview(null);
-    }
+    setIdCardPreview(preview);
   };
 
   const handleRegister = async () => {
@@ -235,46 +224,7 @@ const OverloadEventDetail = () => {
   const rulesList = event.rules?.split("\n").filter(Boolean) || [];
   const coordinatorsList = event.coordinators?.split("\n").filter(Boolean) || [];
 
-  const IdCardUpload = () => (
-    <div style={{ marginBottom: "24px" }}>
-      {!idCardFile ? (
-        <label
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
-            padding: "32px 24px", border: "2px dashed rgba(145, 19, 255, 0.4)",
-            borderRadius: "12px", cursor: "pointer", background: "rgba(145, 19, 255, 0.05)",
-            transition: "all 0.2s",
-          }}
-        >
-          <Upload size={32} style={{ color: "#9113ff" }} />
-          <span style={{ color: "#a1a1aa", fontSize: "0.9rem" }}>Upload your College ID Card</span>
-          <span style={{ color: "#52525b", fontSize: "0.75rem" }}>Image or PDF, max 5MB</span>
-          <input type="file" accept="image/*,.pdf" onChange={handleIdCardSelect} style={{ display: "none" }} />
-        </label>
-      ) : (
-        <div
-          style={{
-            display: "flex", alignItems: "center", gap: "12px", padding: "16px",
-            background: "rgba(145, 19, 255, 0.1)", borderRadius: "12px",
-            border: "1px solid rgba(145, 19, 255, 0.3)",
-          }}
-        >
-          {idCardPreview ? (
-            <img src={idCardPreview} alt="ID Card" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }} />
-          ) : (
-            <FileImage size={40} style={{ color: "#9113ff" }} />
-          )}
-          <div style={{ flex: 1, textAlign: "left" }}>
-            <p style={{ color: "white", fontSize: "0.85rem", margin: 0 }}>{idCardFile.name}</p>
-            <p style={{ color: "#71717a", fontSize: "0.75rem", margin: 0 }}>{(idCardFile.size / 1024).toFixed(0)} KB</p>
-          </div>
-          <button onClick={() => { setIdCardFile(null); setIdCardPreview(null); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
-            <X size={20} style={{ color: "#ef4444" }} />
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  // IdCardUpload is now imported from shared component
 
   return (
     <div>
@@ -470,7 +420,7 @@ const OverloadEventDetail = () => {
                   Your registration was cancelled. You can register again.
                 </p>
               )}
-              {user && <IdCardUpload />}
+              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
                 disabled={registering || !idCardFile}
@@ -490,7 +440,7 @@ const OverloadEventDetail = () => {
               <p style={{ color: "#71717a", fontSize: "0.9rem", marginBottom: "20px" }}>
                 {user ? "Upload your ID card and register." : "Create an account to register for this event."}
               </p>
-              {user && <IdCardUpload />}
+              {user && <IdCardUpload file={idCardFile} preview={idCardPreview} onFileChange={handleIdCardChange} />}
               <button
                 onClick={handleRegister}
                 disabled={registering || (user ? !idCardFile : false)}

@@ -1,24 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Calendar, MapPin, Users, Mic, Trophy, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { LiveEventCard } from "@/components/LiveEventCard";
-
-interface UnifiedEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  event_date: string | null;
-  venue: string | null;
-  max_participants: number | null;
-  poster_url: string | null;
-  category: string | null;
-  is_featured: boolean;
-  registration_count: number;
-  external_url?: string | null;
-}
-
+import { useUnifiedEvents, UnifiedEvent } from "@/hooks/useUnifiedEvents";
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
@@ -31,101 +16,9 @@ const getCategoryColor = (category: string) => {
 const CATEGORIES = ["all", "coding", "gaming", "debate", "puzzle", "fun", "workshop", "hackathon", "seminar", "flagship"];
 
 const Events = () => {
-  const [allEvents, setAllEvents] = useState<UnifiedEvent[]>([]);
-  const [pastDbEvents, setPastDbEvents] = useState<UnifiedEvent[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      let unified: UnifiedEvent[] = [];
-      let pastOverloadEvents: UnifiedEvent[] = [];
-      const now = new Date().toISOString();
-      const { data } = await supabase
-        .from("events")
-        .select("id, title, description, event_date, venue, max_participants, poster_url, category, is_featured")
-        .eq("status", "PUBLISHED");
-
-      if (data && data.length > 0) {
-        const upcoming = data.filter((evt: any) => !evt.event_date || evt.event_date >= now);
-        const past = data.filter((evt: any) => evt.event_date && evt.event_date < now);
-
-        const counts = await Promise.all(
-          upcoming.map(async (evt: any) => {
-            const { count } = await supabase
-              .from("event_registrations")
-              .select("id", { count: "exact", head: true })
-              .eq("event_id", evt.id)
-              .in("status", ["REGISTERED", "APPROVED"]);
-            return { ...evt, registration_count: count || 0, external_url: null };
-          })
-        );
-        unified = counts;
-
-        setPastDbEvents(past.map((evt: any) => ({
-          ...evt, registration_count: 0, external_url: null,
-        })));
-      }
-
-      // Fetch overload events from published editions
-      const { data: editions } = await supabase
-        .from("overload_editions")
-        .select("id, date_label, venue, register_url, title, year")
-        .eq("is_published", true);
-
-      if (editions && editions.length > 0) {
-        for (const edition of editions) {
-          const { data: oEvents } = await supabase
-            .from("overload_events")
-            .select("id, name, type, image_url, link_url")
-            .eq("edition_id", edition.id)
-            .order("sort_order", { ascending: true });
-
-          if (oEvents) {
-            // Parse date_label like "20 March, 2025" reliably
-            const editionDate = edition.date_label ? new Date(Date.parse(edition.date_label.replace(/(\d+)\s+(\w+),?\s+(\d+)/, '$2 $1, $3'))) : null;
-            const isPastEdition = editionDate && !isNaN(editionDate.getTime()) && editionDate.getTime() < Date.now();
-
-            for (const oe of oEvents) {
-              const mappedEvent: UnifiedEvent = {
-                id: `overload-${edition.year}-${oe.id}`,
-                title: oe.name,
-                description: `Part of ${edition.title}`,
-                event_date: editionDate && !isNaN(editionDate.getTime()) ? editionDate.toISOString() : null,
-                venue: edition.venue || null,
-                poster_url: oe.image_url || null,
-                category: oe.type || "flagship",
-                max_participants: null,
-                registration_count: 0,
-                is_featured: false,
-                external_url: `/overloadpp/${edition.year}/event/${oe.id}`,
-              };
-
-              if (isPastEdition) {
-                pastOverloadEvents.push(mappedEvent);
-              } else {
-                unified.push(mappedEvent);
-              }
-            }
-          }
-        }
-      }
-
-      // Sort: featured first, then by event_date ascending (upcoming first)
-      unified.sort((a, b) => {
-        if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
-        const dateA = a.event_date ? new Date(a.event_date).getTime() : Infinity;
-        const dateB = b.event_date ? new Date(b.event_date).getTime() : Infinity;
-        return dateA - dateB;
-      });
-
-      setPastDbEvents(prev => [...prev, ...pastOverloadEvents]);
-      setAllEvents(unified);
-      setLoading(false);
-    };
-    fetchEvents();
-  }, []);
+  const { events: allEvents, pastEvents: pastDbEvents, loading } = useUnifiedEvents({ upcomingOnly: false });
 
   const filteredEvents = allEvents.filter((e) => {
     const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase());
