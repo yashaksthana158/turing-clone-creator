@@ -1,10 +1,11 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Calendar, MapPin, Users, Mic, Trophy } from "lucide-react";
 
 const eventsData = [
   {
     title: "Overload++ 2025",
-    category: "overload",
+    category: "flagship",
     date: "March 20, 2025",
     description: "The annual tech fest of ANDC featuring coding, gaming, debates, and more.",
     image: "/Assets/overload_events/hackazzle.jpg",
@@ -12,7 +13,7 @@ const eventsData = [
   },
   {
     title: "Code Rush",
-    category: "overload",
+    category: "coding",
     date: "March 20, 2025",
     description: "A competitive coding challenge to test your programming skills under pressure.",
     image: "/Assets/overload_events/Code_Rush.jpg",
@@ -20,7 +21,7 @@ const eventsData = [
   },
   {
     title: "Bug Hunt",
-    category: "overload",
+    category: "coding",
     date: "March 20, 2025",
     description: "Find and fix bugs in the given code snippets within the time limit.",
     image: "/Assets/overload_events/bug_hunt.jpg",
@@ -28,7 +29,7 @@ const eventsData = [
   },
   {
     title: "Tech War",
-    category: "overload",
+    category: "debate",
     date: "March 20, 2025",
     description: "A debate competition on trending tech topics.",
     image: "/Assets/overload_events/tech_war.jpg",
@@ -36,7 +37,7 @@ const eventsData = [
   },
   {
     title: "Tekken Showdown",
-    category: "overload",
+    category: "gaming",
     date: "March 20, 2025",
     description: "Console gaming tournament featuring Tekken battles.",
     image: "/Assets/overload_events/tekken.jpg",
@@ -44,7 +45,7 @@ const eventsData = [
   },
   {
     title: "The Lost Artifact",
-    category: "overload",
+    category: "fun",
     date: "March 20, 2025",
     description: "An exciting treasure hunt across the campus with tech-based clues.",
     image: "/Assets/overload_events/artifact.jpg",
@@ -52,7 +53,7 @@ const eventsData = [
   },
   {
     title: "Hackzzle",
-    category: "overload",
+    category: "puzzle",
     date: "March 20, 2025",
     description: "Solve complex puzzles using logic and programming knowledge.",
     image: "/Assets/overload_events/hackazzle.jpg",
@@ -60,7 +61,7 @@ const eventsData = [
   },
   {
     title: "Sketch Bytes",
-    category: "overload",
+    category: "fun",
     date: "March 20, 2025",
     description: "A fun scribble and drawing game with a tech twist.",
     image: "/Assets/overload_events/sketch_bytes.jpg",
@@ -68,7 +69,7 @@ const eventsData = [
   },
   {
     title: "BGMI Campus Clash",
-    category: "overload",
+    category: "gaming",
     date: "March 20, 2025",
     description: "Mobile gaming tournament featuring BGMI squad battles.",
     image: "/Assets/overload_events/bgmi.jpg",
@@ -76,109 +77,148 @@ const eventsData = [
   },
 ];
 
+const getCategoryColor = (category: string) => {
+  const colors: Record<string, string> = {
+    flagship: "#9113ff",
+    coding: "#00d4ff",
+    gaming: "#ff6b35",
+    debate: "#ffc107",
+    puzzle: "#10b981",
+    fun: "#ec4899",
+  };
+  return colors[category] || "#9113ff";
+};
+
 const Events = () => {
   return (
-    <div>
+    <div className="events-page">
       <Navigation />
 
-      {/* Hero */}
-      <section
-        className="events-hero"
-        style={{
-          background: "url(/img/Eventsbg.webp) no-repeat center bottom",
-          backgroundSize: "cover",
-          minHeight: "60vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          paddingTop: "100px",
-        }}
-      >
-        <div className="container">
-          <h1 style={{ fontSize: "3rem", fontWeight: "bold", color: "#fff" }}>
-            <span style={{ color: "#9113ff" }}>Overload++</span> is live
+      {/* Hero Section */}
+      <section className="events-hero-section">
+        <div className="events-hero-overlay" />
+        <div className="events-hero-content">
+          <span className="events-hero-badge">🎯 Registration Open</span>
+          <h1 className="events-hero-title">
+            <span className="text-gradient">Overload++</span> is live
           </h1>
-          <p style={{ fontSize: "1.2rem", color: "#d3d3d3", marginTop: "10px" }}>
+          <p className="events-hero-subtitle">
             Join us for exciting workshops, hackathons, and coding competitions
           </p>
+          <a
+            href="https://tr.ee/B20RjB"
+            target="_blank"
+            rel="noreferrer"
+            className="events-hero-cta"
+          >
+            Register Now
+          </a>
         </div>
       </section>
 
       {/* Events Grid */}
-      <section className="upcoming-events" style={{ paddingTop: "60px" }}>
-        <h2>Browse <span style={{ color: "#9113ff" }}>Events</span></h2>
-        <div className="events-grid">
+      <section className="events-grid-section">
+        <div className="section-header-pro">
+          <h2>
+            Browse <span className="text-gradient">Events</span>
+          </h2>
+          <p>Explore our lineup of exciting tech events and competitions</p>
+        </div>
+        <div className="events-grid-pro">
           {eventsData.map((event, index) => (
-            <div className="upcoming-event-card" key={index}>
-              <div
-                className="upcoming-event-img"
-                style={{
-                  backgroundImage: `url(${event.image})`,
-                  backgroundSize: "cover",
-                  height: "250px",
-                }}
-              />
-              <div style={{ padding: "16px", textAlign: "left" }}>
-                <h3 style={{ color: "#4869df", fontSize: "1.2rem", marginBottom: "4px" }}>
-                  {event.title}
-                </h3>
-                <p style={{ color: "#ffc107", fontSize: "0.85rem", marginBottom: "8px" }}>
-                  {event.date}
-                </p>
-                <p style={{ color: "#dcdcdc", fontSize: "0.9rem", lineHeight: 1.5 }}>
-                  {event.description}
-                </p>
+            <div className="event-card-pro" key={index}>
+              <div className="event-card-image">
+                <img src={event.image} alt={event.title} />
+                <span
+                  className="event-badge"
+                  style={{ backgroundColor: getCategoryColor(event.category) }}
+                >
+                  {event.category}
+                </span>
+                <span className={`event-status ${event.status}`}>
+                  {event.status === "upcoming" ? "Upcoming" : "Past"}
+                </span>
+              </div>
+              <div className="event-card-content">
+                <h3>{event.title}</h3>
+                <div className="event-meta">
+                  <Calendar size={14} />
+                  <span>{event.date}</span>
+                </div>
+                <p>{event.description}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* About Events */}
-      <section style={{ backgroundColor: "#000", padding: "60px 40px", textAlign: "center" }}>
-        <div className="container">
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", marginBottom: "20px" }}>
-            Turing <span style={{ color: "#9113ff" }}>ANDC Events</span>
+      {/* Statistics Section */}
+      <section className="events-stats-section">
+        <div className="section-header-pro">
+          <h2>
+            Turing <span className="text-gradient">ANDC Events</span>
           </h2>
-          <p style={{ color: "#d3d3d3", maxWidth: "800px", margin: "0 auto 40px", lineHeight: 1.7 }}>
-            Welcome to the Turing Society's Events section! Here, you will find a curated list of engaging activities designed to enrich your learning experience in computer science. Our events range from insightful workshops and inspiring guest lectures to collaborative hackathons and networking sessions.
+          <p>
+            Welcome to the Turing Society's Events section! Here, you will find
+            a curated list of engaging activities designed to enrich your
+            learning experience in computer science.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "60px", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "3rem", fontWeight: "bold", color: "#9113ff" }}>55+</div>
-              <div style={{ color: "#d3d3d3", textTransform: "uppercase" }}>Events Hosted</div>
+        </div>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <Trophy size={32} />
             </div>
-            <div>
-              <div style={{ fontSize: "3rem", fontWeight: "bold", color: "#9113ff" }}>1200+</div>
-              <div style={{ color: "#d3d3d3", textTransform: "uppercase" }}>Participants</div>
+            <div className="stat-number">55+</div>
+            <div className="stat-label">Events Hosted</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">
+              <Users size={32} />
             </div>
-            <div>
-              <div style={{ fontSize: "3rem", fontWeight: "bold", color: "#9113ff" }}>85+</div>
-              <div style={{ color: "#d3d3d3", textTransform: "uppercase" }}>Speakers</div>
+            <div className="stat-number">1200+</div>
+            <div className="stat-label">Participants</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">
+              <Mic size={32} />
             </div>
+            <div className="stat-number">85+</div>
+            <div className="stat-label">Speakers</div>
           </div>
         </div>
       </section>
 
-      {/* Announcements */}
-      <section style={{ backgroundColor: "#0a0a0a", padding: "60px 40px" }}>
-        <div className="container">
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", textAlign: "center", marginBottom: "30px" }}>
-            Live <span style={{ color: "#9113ff" }}>Updates</span>
+      {/* Live Updates Section */}
+      <section className="events-updates-section">
+        <div className="section-header-pro">
+          <h2>
+            Live <span className="text-gradient">Updates</span>
           </h2>
-          <div style={{ maxWidth: "700px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-            {[
-              { time: "2 hours ago", text: "Registration for the Annual TechFest is now open! Secure your spot and be part of an exciting technological experience." },
-              { time: "1 day ago", text: "Congratulations to Team CodeNinjas for winning the Web Development Challenge!" },
-              { time: "3 days ago", text: "New workshop on Blockchain Technology added to our events calendar." },
-            ].map((a, i) => (
-              <div key={i} style={{ background: "#1c1c1c", borderRadius: "8px", padding: "20px", borderLeft: "3px solid #9113ff" }}>
-                <div style={{ color: "#9113ff", fontSize: "0.8rem", marginBottom: "6px" }}>{a.time}</div>
-                <p style={{ color: "#d3d3d3", lineHeight: 1.6, margin: 0 }}>{a.text}</p>
+        </div>
+        <div className="updates-timeline">
+          {[
+            {
+              time: "2 hours ago",
+              text: "Registration for the Annual TechFest is now open! Secure your spot and be part of an exciting technological experience.",
+            },
+            {
+              time: "1 day ago",
+              text: "Congratulations to Team CodeNinjas for winning the Web Development Challenge!",
+            },
+            {
+              time: "3 days ago",
+              text: "New workshop on Blockchain Technology added to our events calendar.",
+            },
+          ].map((update, i) => (
+            <div className="update-item" key={i}>
+              <div className="update-dot" />
+              <div className="update-content">
+                <span className="update-time">{update.time}</span>
+                <p>{update.text}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 

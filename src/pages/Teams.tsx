@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Linkedin, Instagram, Github } from "lucide-react";
 
 interface TeamMember {
   name: string;
@@ -16,7 +17,6 @@ const faculty: TeamMember[] = [
   { name: "Ms. Nishu Singh", role: "Co-convenor", image: "/Assets/NishuMaam.jpg" },
 ];
 
-// Use URL encoding for space in folder name: "Core team" -> "Core%20team"
 const council: TeamMember[] = [
   { name: "Yash Asthana", role: "President", image: "/Assets/Core%20team/Yash.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
   { name: "Kush Gautam", role: "Vice-President", image: "/Assets/Core%20team/Kush.jpg" },
@@ -71,50 +71,76 @@ const prTeam: TeamMember[] = [
 ];
 
 const TeamCard = ({ member }: { member: TeamMember }) => (
-  <div className="team-card">
-    <div className="team-card-bar" />
-    <img
-      src={member.image}
-      alt={member.name}
-      className="team-card-img"
-    />
-    <h3 className="team-card-name">{member.name}</h3>
-    <p className="team-card-role">{member.role}</p>
+  <div className="team-card-pro">
+    <div className="team-card-image-wrapper">
+      <img src={member.image} alt={member.name} className="team-card-photo" />
+    </div>
+    <h3 className="team-card-name-pro">{member.name}</h3>
+    <p className="team-card-role-pro">{member.role}</p>
     {(member.linkedin || member.instagram || member.github) && (
-      <div className="team-card-links">
-        {member.linkedin && <a href={member.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
-        {member.instagram && <a href={member.instagram} target="_blank" rel="noreferrer">Instagram</a>}
-        {member.github && <a href={member.github} target="_blank" rel="noreferrer">GitHub</a>}
+      <div className="team-card-socials">
+        {member.linkedin && (
+          <a href={member.linkedin} target="_blank" rel="noreferrer" className="social-icon">
+            <Linkedin size={18} />
+          </a>
+        )}
+        {member.instagram && (
+          <a href={member.instagram} target="_blank" rel="noreferrer" className="social-icon">
+            <Instagram size={18} />
+          </a>
+        )}
+        {member.github && (
+          <a href={member.github} target="_blank" rel="noreferrer" className="social-icon">
+            <Github size={18} />
+          </a>
+        )}
       </div>
     )}
   </div>
 );
 
-const TeamSection = ({ title, highlight, members }: { title: string; highlight: string; members: TeamMember[] }) => (
-  <section className="team-section">
-    <h2 className="team-section-title">
-      {title} <span style={{ color: "#9113ff" }}>{highlight}</span>
-    </h2>
-    <div className="team-grid">
+const TeamSection = ({ title, highlight, members, alt = false }: { title: string; highlight: string; members: TeamMember[]; alt?: boolean }) => (
+  <section className={`team-section-pro ${alt ? "team-section-alt" : ""}`}>
+    <div className="section-header-pro">
+      <h2>
+        {title} <span className="text-gradient">{highlight}</span>
+      </h2>
+    </div>
+    <div className="team-grid-pro">
       {members.map((m, i) => (
         <TeamCard key={i} member={m} />
       ))}
     </div>
+    <div className="section-divider" />
   </section>
 );
 
 const Teams = () => {
   return (
-    <div>
+    <div className="teams-page">
       <Navigation />
-      <div style={{ paddingTop: "100px", backgroundColor: "#000", minHeight: "100vh" }}>
+      
+      {/* Hero Section */}
+      <section className="teams-hero">
+        <div className="teams-hero-overlay" />
+        <div className="teams-hero-content">
+          <h1>
+            Meet Our <span className="text-gradient">Team</span>
+          </h1>
+          <p>The passionate minds driving innovation at Turing Society ANDC</p>
+        </div>
+      </section>
+
+      {/* Team Sections */}
+      <div className="teams-container">
         <TeamSection title="Faculty" highlight="Mentors" members={faculty} />
-        <TeamSection title="Student" highlight="Council" members={council} />
+        <TeamSection title="Student" highlight="Council" members={council} alt />
         <TeamSection title="Technical" highlight="Team" members={technicalTeam} />
-        <TeamSection title="Executive" highlight="Team" members={executiveTeam} />
+        <TeamSection title="Executive" highlight="Team" members={executiveTeam} alt />
         <TeamSection title="Media" highlight="Team" members={mediaTeam} />
-        <TeamSection title="PR" highlight="Team" members={prTeam} />
+        <TeamSection title="PR" highlight="Team" members={prTeam} alt />
       </div>
+
       <Footer />
     </div>
   );
