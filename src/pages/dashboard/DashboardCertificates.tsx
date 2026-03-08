@@ -259,7 +259,10 @@ export default function DashboardCertificates() {
                 <label className="block text-sm text-gray-400 mb-1.5">Event (optional)</label>
                 <select
                   value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedEvent(e.target.value);
+                    // Clear auto-populated users when event changes
+                  }}
                   className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#9113ff] focus:outline-none"
                 >
                   <option value="">No event</option>
@@ -269,6 +272,25 @@ export default function DashboardCertificates() {
                 </select>
               </div>
             </div>
+
+            {/* Bulk issue from event attendees */}
+            {selectedEvent && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleLoadEventAttendees}
+                  disabled={loadingAttendees}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-1.5"
+                >
+                  <Users size={15} />
+                  {loadingAttendees ? 'Loading...' : 'Auto-select all event attendees'}
+                </button>
+                {attendeeCount !== null && (
+                  <span className="text-xs text-gray-400">
+                    {attendeeCount} attendee{attendeeCount !== 1 ? 's' : ''} found
+                  </span>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">Description (optional)</label>
               <textarea
