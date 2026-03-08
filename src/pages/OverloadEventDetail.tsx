@@ -9,7 +9,7 @@ import {
   ArrowLeft, Calendar, Clock, MapPin, Trophy, Phone, User,
   CheckCircle, XCircle, Loader2,
 } from "lucide-react";
-import { IdCardUpload } from "@/components/IdCardUpload";
+
 
 interface OverloadEventData {
   id: string;
