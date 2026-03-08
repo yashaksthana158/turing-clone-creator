@@ -28,6 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: 'Overview', icon: LayoutDashboard, path: '/dashboard', minLevel: 1 },
   { title: 'My Events', icon: Calendar, path: '/dashboard/events', minLevel: 1 },
+  { title: 'Certificates', icon: Award, path: '/dashboard/certificates', minLevel: 1 },
   { title: 'Teams', icon: Users, path: '/dashboard/teams', minLevel: 3 },
   { title: 'Tasks', icon: ClipboardList, path: '/dashboard/tasks', minLevel: 2 },
   { title: 'Manage Users', icon: UserCog, path: '/dashboard/users', minLevel: 5 },
