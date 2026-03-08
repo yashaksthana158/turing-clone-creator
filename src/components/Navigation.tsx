@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Menu, X, User, LayoutDashboard, LogIn } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, hasMinRoleLevel } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,6 +63,43 @@ export const Navigation = () => {
                           </Link>
                         </li>
                       ))}
+                      {user ? (
+                        <>
+                          {hasMinRoleLevel(2) && (
+                            <li>
+                              <Link
+                                to="/dashboard"
+                                style={{ color: location.pathname.startsWith("/dashboard") ? "#9113ff" : undefined }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <LayoutDashboard size={16} /> Dashboard
+                                </span>
+                              </Link>
+                            </li>
+                          )}
+                          <li>
+                            <Link
+                              to="/profile"
+                              style={{ color: location.pathname === "/profile" ? "#9113ff" : undefined }}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <User size={16} /> Profile
+                              </span>
+                            </Link>
+                          </li>
+                        </>
+                      ) : (
+                        <li>
+                          <Link
+                            to="/login"
+                            style={{ color: location.pathname === "/login" ? "#9113ff" : undefined }}
+                          >
+                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <LogIn size={16} /> Login
+                            </span>
+                          </Link>
+                        </li>
+                      )}
                     </ul>
                   </nav>
                 </div>
@@ -95,6 +135,16 @@ export const Navigation = () => {
               {item.name}
             </Link>
           ))}
+          {user ? (
+            <>
+              {hasMinRoleLevel(2) && (
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+              )}
+              <Link to="/profile" onClick={() => setMobileOpen(false)}>Profile</Link>
+            </>
+          ) : (
+            <Link to="/login" onClick={() => setMobileOpen(false)}>Login</Link>
+          )}
         </div>
       )}
     </header>
