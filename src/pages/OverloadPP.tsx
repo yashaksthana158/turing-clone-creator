@@ -52,6 +52,8 @@ interface GalleryImage {
 
 const OverloadPP = () => {
   const { year } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [edition, setEdition] = useState<Edition | null>(null);
   const [events, setEvents] = useState<OverloadEvent[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
