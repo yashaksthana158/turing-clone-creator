@@ -40,6 +40,7 @@ export function LiveEventCard({
   registration_count = 0,
   showCountdown = true,
   is_featured = false,
+  external_url,
 }: LiveEventCardProps) {
   const catColor = category ? CATEGORY_COLORS[category.toLowerCase()] || "#9113ff" : "#9113ff";
   const isFull = max_participants ? registration_count >= max_participants : false;
@@ -47,9 +48,18 @@ export function LiveEventCard({
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
+  const linkProps = external_url
+    ? { as: "a" as const, href: external_url, target: "_blank", rel: "noopener noreferrer" }
+    : {};
+
+  const Wrapper = external_url ? "a" : Link;
+  const wrapperProps = external_url
+    ? { href: external_url, target: "_blank", rel: "noopener noreferrer" }
+    : { to: `/events/${id}` };
+
   return (
-    <Link
-      to={`/events/${id}`}
+    <Wrapper
+      {...(wrapperProps as any)}
       className={`event-card-live group${is_featured ? ' event-card-featured' : ''}`}
       style={{ textDecoration: "none", color: "inherit" }}
     >
