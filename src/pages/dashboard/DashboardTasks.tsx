@@ -311,6 +311,7 @@ export default function DashboardTasks() {
       </div>
 
       <CreateTaskModal open={showCreate} onClose={() => setShowCreate(false)} onCreated={fetchTasks} />
+      <EditTaskModal open={!!editTask} task={editTask} onClose={() => setEditTask(null)} onUpdated={fetchTasks} />
 
       <ConfirmDialog
         open={!!deleteId}
