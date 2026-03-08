@@ -1,11 +1,20 @@
-import { useState, useEffect } from "react";
-import { Menu, X, User, LayoutDashboard, LogIn } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Menu, X, User, LayoutDashboard, LogIn, ChevronDown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+
+interface NavItem {
+  name: string;
+  href: string;
+  children?: { name: string; href: string; comingSoon?: boolean }[];
+}
 
 export const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const dropdownTimeout = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, hasMinRoleLevel } = useAuth();
@@ -18,19 +27,45 @@ export const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: "Home", href: "/" },
     { name: "Events", href: "/events" },
     { name: "About", href: "/about" },
     { name: "Teams", href: "/teams" },
-    { name: "Overload++", href: "/overloadpp" },
-    { name: "Gallery", href: "/gallery" },
+    {
+      name: "Overload++",
+      href: "/overloadpp",
+      children: [
+        { name: "2026", href: "/overloadpp/2026" },
+        { name: "2025", href: "/overloadpp" },
+        { name: "2024", href: "/overloadpp/2024" },
+        { name: "Archive", href: "/overloadpp/archive" },
+      ],
+    },
+    {
+      name: "Gallery",
+      href: "/gallery",
+      children: [
+        { name: "2026", href: "/gallery/2026", comingSoon: true },
+        { name: "2025", href: "/gallery" },
+        { name: "2024", href: "/gallery/2024" },
+        { name: "Archive", href: "/gallery/archive" },
+      ],
+    },
   ];
+
+  const handleMouseEnter = (name: string) => {
+    if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
+    setOpenDropdown(name);
+  };
+
+  const handleMouseLeave = () => {
+    dropdownTimeout.current = setTimeout(() => setOpenDropdown(null), 150);
+  };
 
   return (
     <header>
