@@ -32,7 +32,7 @@ export const Navigation = () => {
                 <div className="nav-logo">
                   <a href="/">
                     <img
-                      src="/img/Turing logo.webp"
+                      src="/img/turing-logo.webp"
                       alt="Turing Logo"
                       style={{ width: "117px" }}
                     />
