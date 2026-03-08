@@ -52,6 +52,7 @@ export default function DashboardEvents() {
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'my' | 'manage'>('my');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const fetchData = useCallback(async () => {
