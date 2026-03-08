@@ -377,11 +377,23 @@ export default function EventDetail() {
             </div>
           )}
 
-          {isCancelled && (
+          {(isCancelled || isRejected) && (
             <div style={{ textAlign: "center" }}>
-              <p style={{ color: "#71717a", marginBottom: "16px" }}>
-                Your registration was cancelled. You can register again.
-              </p>
+              {isRejected ? (
+                <>
+                  <XCircle size={48} style={{ color: "#ef4444", margin: "0 auto 16px" }} />
+                  <h3 style={{ color: "white", fontFamily: "'Oxanium', sans-serif", margin: "0 0 8px", fontSize: "1.3rem" }}>
+                    Registration Rejected
+                  </h3>
+                  <p style={{ color: "#71717a", marginBottom: "16px" }}>
+                    Your ID card could not be verified. Please upload a valid ID card and try again.
+                  </p>
+                </>
+              ) : (
+                <p style={{ color: "#71717a", marginBottom: "16px" }}>
+                  Your registration was cancelled. You can register again.
+                </p>
+              )}
 
               {user && (
                 <div style={{ marginBottom: "24px" }}>
