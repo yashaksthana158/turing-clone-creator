@@ -23,6 +23,7 @@ import ManageUsers from "./pages/dashboard/ManageUsers";
 import DashboardEvents from "./pages/dashboard/DashboardEvents";
 import DashboardTasks from "./pages/dashboard/DashboardTasks";
 import DashboardRoles from "./pages/dashboard/DashboardRoles";
+import DashboardCertificates from "./pages/dashboard/DashboardCertificates";
 
 const queryClient = new QueryClient();
 
