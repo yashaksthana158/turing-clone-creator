@@ -102,7 +102,7 @@ export default function EventRegistrationsView({ source = 'events' }: EventRegis
     if (userIds.length > 0) {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, full_name, college, course, phone')
+        .select('id, full_name, college, course, phone, roll_no, admission_year')
         .in('id', userIds);
       (profileData || []).forEach((p: any) => { profiles[p.id] = p; });
     }
