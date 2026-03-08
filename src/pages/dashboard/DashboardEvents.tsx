@@ -351,6 +351,16 @@ export default function DashboardEvents() {
         onClose={() => setEditingEvent(null)}
         onUpdated={fetchData}
       />
+
+      {attendanceEvent && (
+        <AttendanceModal
+          open={!!attendanceEvent}
+          eventId={attendanceEvent.id}
+          eventTitle={attendanceEvent.title}
+          onClose={() => setAttendanceEvent(null)}
+          onUpdated={fetchData}
+        />
+      )}
     </DashboardLayout>
   );
 }
