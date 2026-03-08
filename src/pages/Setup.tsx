@@ -6,7 +6,7 @@ import { Shield, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Setup() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [adminExists, setAdminExists] = useState(false);
@@ -25,34 +25,14 @@ export default function Setup() {
   const checkAdminExists = async () => {
     setChecking(true);
     try {
-      // Use a public read: roles table is readable by anyone authenticated
-      const { data: roles } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'SUPER_ADMIN')
-        .single();
-
-      if (!roles) {
-        setAdminExists(false);
-        setChecking(false);
-        return;
-      }
-
-      // Check user_roles for this role - we can see our own roles or if we're level 4+
-      // Use edge function for accurate check instead
-      const res = await supabase.functions.invoke('claim-admin', {
-        method: 'POST',
-        body: {},
-      });
-
-      // If 403 => admin exists
-      if (res.error && res.data?.error?.includes('already exists')) {
-        setAdminExists(true);
-      } else if (res.data?.error?.includes('already exists')) {
-        setAdminExists(true);
-      } else {
-        setAdminExists(false);
-      }
+      // GET request to check without claiming
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/claim-admin`,
+        { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+      );
+      const data = await res.json();
+      setAdminExists(data.adminExists === true);
     } catch {
       setAdminExists(false);
     }
@@ -69,7 +49,6 @@ export default function Setup() {
 
       if (error || data?.error) {
         toast.error(data?.error || error?.message || 'Failed to claim admin');
-        // Re-check state
         if (data?.error?.includes('already exists')) {
           setAdminExists(true);
         }
