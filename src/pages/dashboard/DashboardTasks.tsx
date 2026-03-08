@@ -152,7 +152,9 @@ export default function DashboardTasks() {
     fetchTasks();
   };
 
-  const filtered = filter === 'ALL' ? tasks : tasks.filter((t) => t.status === filter);
+  const filtered = tasks
+    .filter((t) => filter === 'ALL' || t.status === filter)
+    .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
 
   const formatDate = (d: string | null) => {
     if (!d) return '—';
