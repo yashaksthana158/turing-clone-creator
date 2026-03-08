@@ -1,8 +1,9 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Edition {
   id: string;
@@ -14,6 +15,7 @@ interface Edition {
   hero_image_url: string | null;
   banner_image_url: string | null;
   register_url: string | null;
+  register_enabled: boolean;
 }
 
 interface OverloadEvent {
@@ -50,6 +52,8 @@ interface GalleryImage {
 
 const OverloadPP = () => {
   const { year } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [edition, setEdition] = useState<Edition | null>(null);
   const [events, setEvents] = useState<OverloadEvent[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
@@ -182,16 +186,20 @@ const OverloadPP = () => {
           <div className="overload-about-text">
             <h2>About {edition.title}</h2>
             {edition.description && <p>{edition.description}</p>}
-            {edition.register_url && (
-              <a
-                href={edition.register_url}
-                target="_blank"
-                rel="noreferrer"
-                className="overload-register-btn"
-              >
-                Register Now
-              </a>
-            )}
+            <button
+              onClick={() => {
+                if (!user) {
+                  navigate(`/register?redirect=/overloadpp${year ? `/${year}` : ""}`);
+                } else if (edition.register_enabled && edition.register_url) {
+                  window.open(edition.register_url, "_blank");
+                } else {
+                  document.getElementById("overload-schedule")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="overload-register-btn"
+            >
+              Register Now
+            </button>
           </div>
         </div>
       </section>
@@ -230,7 +238,7 @@ const OverloadPP = () => {
 
       {/* Schedule Timeline */}
       {schedule.length > 0 && (
-        <section className="overload-schedule-section">
+        <section id="overload-schedule" className="overload-schedule-section">
           <h2 className="overload-section-title">Event Schedule</h2>
           <div className="overload-timeline">
             <div className="overload-timeline-line" />

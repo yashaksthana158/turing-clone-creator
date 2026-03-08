@@ -49,6 +49,7 @@ interface Edition {
   hero_image_url: string | null;
   banner_image_url: string | null;
   register_url: string | null;
+  register_enabled: boolean;
   is_published: boolean;
 }
 
@@ -251,7 +252,7 @@ export default function DashboardOverload() {
             {/* Details tab */}
             {activeTab === "details" && (
               <div className="space-y-4 max-w-xl">
-                {(["title", "date_label", "venue", "register_url"] as const).map((field) => (
+                {(["title", "date_label", "venue"] as const).map((field) => (
                   <div key={field}>
                     <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
                     <input
@@ -261,6 +262,26 @@ export default function DashboardOverload() {
                     />
                   </div>
                 ))}
+                {/* Registration toggle + URL */}
+                <div>
+                  <label className="flex items-center gap-2 text-xs text-zinc-400 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={editEdition.register_enabled}
+                      onChange={(e) => setEditEdition({ ...editEdition, register_enabled: e.target.checked })}
+                      className="accent-purple-500"
+                    />
+                    Enable Registration URL
+                  </label>
+                  {editEdition.register_enabled && (
+                    <input
+                      value={editEdition.register_url || ""}
+                      onChange={(e) => setEditEdition({ ...editEdition, register_url: e.target.value })}
+                      placeholder="https://forms.google.com/..."
+                      className="w-full px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm mt-1"
+                    />
+                  )}
+                </div>
                 {(["hero_image_url", "banner_image_url"] as const).map((field) => (
                   <div key={field}>
                     <label className="block text-xs text-zinc-400 mb-1 capitalize">{field.replace(/_/g, " ")}</label>
