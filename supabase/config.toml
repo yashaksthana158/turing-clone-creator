@@ -1,1 +1,4 @@
 project_id = "dqwsrkwajfmkjhwyrnkf"
+
+[functions.claim-admin]
+verify_jwt = false
