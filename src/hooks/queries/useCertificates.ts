@@ -18,7 +18,7 @@ export interface Certificate {
 }
 
 export function useCertificates() {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const isAdmin = hasMinRoleLevel(4);
 
@@ -59,7 +59,7 @@ export function useCertificates() {
       
       return certs;
     },
-    enabled: !!user,
+    enabled: isReady && !!user,
     staleTime: 30000,
   });
 }

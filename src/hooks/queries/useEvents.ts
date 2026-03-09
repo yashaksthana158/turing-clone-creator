@@ -39,7 +39,7 @@ export interface Registration {
 }
 
 export function useMyRegistrations() {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
 
   return useQuery({
     queryKey: ['my-registrations', user?.id],
@@ -52,7 +52,7 @@ export function useMyRegistrations() {
         .order('registered_at', { ascending: false });
       return (data as unknown as Registration[]) || [];
     },
-    enabled: !!user,
+    enabled: isReady && !!user,
     staleTime: 30000,
   });
 }

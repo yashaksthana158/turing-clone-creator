@@ -21,7 +21,7 @@ export interface Task {
 }
 
 export function useTasks() {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
 
   return useQuery({
     queryKey: ['tasks', user?.id],
@@ -74,7 +74,7 @@ export function useTasks() {
         assigner_name: t.assigned_by ? profileMap[t.assigned_by] || 'Unknown' : undefined,
       }));
     },
-    enabled: !!user,
+    enabled: isReady && !!user,
     staleTime: 30000,
   });
 }
