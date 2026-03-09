@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 
 const aboutImages = [
   "/Assets/About/1.jpg",
@@ -10,116 +11,162 @@ const aboutImages = [
   "/Assets/About/6.jpg",
 ];
 
+const milestones = [
+  { label: "Founded", value: "2018" },
+  { label: "Members", value: "200+" },
+  { label: "Events Hosted", value: "50+" },
+  { label: "Editions of Overload++", value: "5+" },
+];
+
 const About = () => {
   return (
-    <div>
+    <div className="bg-black min-h-screen">
       <Navigation />
 
-      {/* Hero Title */}
-      <section style={{
-        backgroundColor: "#000",
-        paddingTop: "140px",
-        paddingBottom: "40px",
-        textAlign: "center",
-      }}>
-        <h1 style={{
-          fontSize: "4rem",
-          fontWeight: "bold",
-          color: "#fff",
-          textTransform: "uppercase",
-          letterSpacing: "8px",
-        }}>
-          About <span style={{ color: "#9113ff" }}>Us</span>
-        </h1>
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#9113ff]/10 rounded-full blur-[150px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+          <p className="text-[#9113ff] font-['Oxanium'] tracking-[6px] uppercase text-sm mb-4 font-semibold">
+            Who We Are
+          </p>
+          <h1 className="text-5xl md:text-7xl font-bold text-white font-['Anton'] uppercase tracking-wider">
+            About <span className="text-[#9113ff]">Us</span>
+          </h1>
+          <p className="mt-6 text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
+            A community of tech enthusiasts pushing the boundaries of innovation at Acharya Narendra Dev College.
+          </p>
+        </div>
       </section>
 
-      {/* Content */}
-      <section style={{ backgroundColor: "#000", padding: "0 40px 60px" }}>
-        <div className="container" style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "flex-start" }}>
-          {/* Image Grid */}
-          <div style={{
-            flex: "1 1 400px",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "8px",
-          }}>
+      {/* Image Mosaic + Story */}
+      <section className="max-w-7xl mx-auto px-6 pb-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Mosaic Grid */}
+          <div className="grid grid-cols-3 grid-rows-2 gap-3">
             {aboutImages.map((img, i) => (
-              <img
+              <div
                 key={i}
-                src={img}
-                alt={`About ${i + 1}`}
-                style={{
-                  width: "100%",
-                  height: "180px",
-                  objectFit: "cover",
-                  borderRadius: "6px",
-                }}
-              />
+                className={`overflow-hidden rounded-xl border border-white/5 group ${
+                  i === 0 ? "col-span-2 row-span-1" : ""
+                } ${i === 3 ? "col-span-2 row-span-1" : ""}`}
+              >
+                <img
+                  src={img}
+                  alt={`Turing Society moment ${i + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  style={{ minHeight: i === 0 || i === 3 ? "220px" : "180px" }}
+                  loading="lazy"
+                />
+              </div>
             ))}
           </div>
 
-          {/* Text */}
-          <div style={{ flex: "1 1 400px", color: "#d3d3d3", lineHeight: 1.8, fontSize: "1rem" }}>
-            <p>
-              The <b style={{ color: "#9113ff" }}>Turing Society</b> is a dynamic and thriving departmental society
-              that focuses on fostering a deep interest in the field of computer science and technology. With its roots
-              in Acharya Narendra Dev College under the University of Delhi, the society is named after the legendary
-              computer scientist Alan Turing. Its mission is to promote learning, innovation, and collaboration among
-              students who are passionate about technology and its applications.
+          {/* Story */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white font-['Oxanium'] mb-2">
+                The Turing Society
+              </h2>
+              <div className="w-16 h-1 bg-[#9113ff] rounded-full" />
+            </div>
+
+            <p className="text-gray-300 leading-relaxed text-base">
+              The <span className="text-[#9113ff] font-semibold">Turing Society</span> is a dynamic departmental society
+              fostering deep interest in computer science and technology. Rooted in Acharya Narendra Dev College under
+              the University of Delhi, the society is named after the legendary computer scientist Alan Turing. Our
+              mission is to promote learning, innovation, and collaboration among students passionate about technology.
             </p>
-            <br />
-            <p>
-              Turing Society serves as a platform for students to engage with the rapidly evolving world of technology.
-              It regularly organizes events such as seminars, workshops and technical talks that explore cutting-edge
-              topics in computer science, including artificial intelligence, machine learning, cybersecurity, and data science.
+
+            <p className="text-gray-400 leading-relaxed text-base">
+              We regularly organize seminars, workshops, and technical talks exploring cutting-edge topics — from
+              artificial intelligence and machine learning to cybersecurity and data science. Our inclusive environment
+              ensures every member has the opportunity to learn, grow, and contribute.
             </p>
-            <br />
-            <p>
-              The society also organizes its flagship event "OVERLOAD++" — the annual fest of the Computer Science
-              Department. It brings together enthusiasts for technical talks, intense coding challenges, thrilling gaming
-              battles, and an adventurous treasure hunt, offering a unique platform for skill-building, networking, and
-              showcasing talent across multiple tech domains.
-            </p>
-            <br />
-            <p>
-              By participating in various competitions, hackathons, and collaborative projects, students in the Turing
-              Society develop problem-solving skills, creativity, and teamwork. The society's inclusive and encouraging
-              environment ensures that every member has the opportunity to learn, grow, and contribute, making it a
-              vibrant community for future tech leaders.
+
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5">
+              <p className="text-gray-300 leading-relaxed text-base">
+                Our flagship event <span className="text-[#9113ff] font-semibold">OVERLOAD++</span> — the annual fest of
+                the Computer Science Department — brings together enthusiasts for technical talks, intense coding
+                challenges, thrilling gaming battles, and adventurous treasure hunts, offering a unique platform for
+                skill-building and networking.
+              </p>
+            </div>
+
+            <p className="text-gray-400 leading-relaxed text-base">
+              Through competitions, hackathons, and collaborative projects, students develop problem-solving skills,
+              creativity, and teamwork — making Turing Society a vibrant community for future tech leaders.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Contact Info */}
-      <section style={{ backgroundColor: "#0a0a0a", padding: "60px 40px" }}>
-        <div className="container" style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", marginBottom: "10px" }}>
+      {/* Milestones */}
+      <section className="border-y border-white/10 bg-white/[0.02]">
+        <div className="max-w-5xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {milestones.map((m) => (
+            <div key={m.label}>
+              <p className="text-4xl md:text-5xl font-bold text-[#9113ff] font-['Oxanium']">{m.value}</p>
+              <p className="text-gray-400 text-sm mt-2 uppercase tracking-wider">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="max-w-5xl mx-auto px-6 py-24">
+        <div className="text-center mb-14">
+          <p className="text-[#9113ff] font-['Oxanium'] tracking-[4px] uppercase text-sm mb-3 font-semibold">
+            Reach Out
+          </p>
+          <h2 className="text-3xl md:text-5xl font-bold text-white font-['Oxanium']">
             Get in Touch with the Future
           </h2>
-          <p style={{ color: "#d3d3d3", marginBottom: "40px" }}>
+          <p className="text-gray-400 mt-4 max-w-lg mx-auto">
             Have an idea, question, or just want to geek out? Drop us a message!
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "60px", flexWrap: "wrap" }}>
-            <div>
-              <h3 style={{ color: "#9113ff", marginBottom: "8px" }}>Address</h3>
-              <p style={{ color: "#d3d3d3" }}>
-                Acharya Narendra Dev College,<br />Govindpuri, Kalkaji,<br />New Delhi 110019
-              </p>
-            </div>
-            <div>
-              <h3 style={{ color: "#9113ff", marginBottom: "8px" }}>Phone</h3>
-              <p style={{ color: "#d3d3d3" }}>
-                <a href="tel:+917428385311" style={{ color: "#d3d3d3" }}>+91 74283 85311</a>
-              </p>
-            </div>
-            <div>
-              <h3 style={{ color: "#9113ff", marginBottom: "8px" }}>Email</h3>
-              <p style={{ color: "#d3d3d3" }}>
-                <a href="mailto:turingandcs@gmail.com" style={{ color: "#d3d3d3" }}>turingandcs@gmail.com</a>
-              </p>
-            </div>
-          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-6">
+          {[
+            {
+              icon: MapPin,
+              title: "Address",
+              lines: ["Acharya Narendra Dev College", "Govindpuri, Kalkaji", "New Delhi 110019"],
+              href: "https://maps.google.com/?q=Acharya+Narendra+Dev+College",
+            },
+            {
+              icon: Phone,
+              title: "Phone",
+              lines: ["+91 74283 85311"],
+              href: "tel:+917428385311",
+            },
+            {
+              icon: Mail,
+              title: "Email",
+              lines: ["turingandcs@gmail.com"],
+              href: "mailto:turingandcs@gmail.com",
+            },
+          ].map((card) => (
+            <a
+              key={card.title}
+              href={card.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-[#9113ff]/40 rounded-2xl p-8 text-center transition-all duration-300"
+            >
+              <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-[#9113ff]/10 flex items-center justify-center group-hover:bg-[#9113ff]/20 transition-colors">
+                <card.icon className="text-[#9113ff]" size={24} />
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2 font-['Oxanium']">{card.title}</h3>
+              {card.lines.map((line, i) => (
+                <p key={i} className="text-gray-400 text-sm">{line}</p>
+              ))}
+              <ExternalLink className="mx-auto mt-4 text-gray-600 group-hover:text-[#9113ff] transition-colors" size={16} />
+            </a>
+          ))}
         </div>
       </section>
 
