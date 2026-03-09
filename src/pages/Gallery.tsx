@@ -1,146 +1,161 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-
-type Category = "all" | "orientation" | "bootcamp" | "rtd" | "farewell" | "freshers";
+import { Loader2 } from "lucide-react";
 
 interface GalleryImage {
-  src: string;
-  category: Category;
+  id: string;
+  category: string;
+  image_url: string;
+  sort_order: number;
 }
 
-const categories: { key: Category; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "orientation", label: "Orientation" },
-  { key: "bootcamp", label: "Bootcamp" },
-  { key: "rtd", label: "Real-Time 3D" },
-  { key: "farewell", label: "Farewell 2023-24" },
-  { key: "freshers", label: "Freshers 2024-25" },
-];
-
-// Gallery images with correct paths and extensions based on actual files
-const allImages: GalleryImage[] = [
-  // Orientation (9 images, all .jpg)
-  { src: "/Assets/orientation/1.jpg", category: "orientation" },
-  { src: "/Assets/orientation/2.jpg", category: "orientation" },
-  { src: "/Assets/orientation/3.jpg", category: "orientation" },
-  { src: "/Assets/orientation/4.jpg", category: "orientation" },
-  { src: "/Assets/orientation/5.jpg", category: "orientation" },
-  { src: "/Assets/orientation/6.jpg", category: "orientation" },
-  { src: "/Assets/orientation/7.jpg", category: "orientation" },
-  { src: "/Assets/orientation/8.jpg", category: "orientation" },
-  { src: "/Assets/orientation/9.jpg", category: "orientation" },
-  
-  // Bootcamp (11 images, all .jpg)
-  { src: "/Assets/Bootcamp/1.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/2.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/3.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/4.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/5.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/6.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/7.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/8.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/9.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/10.jpg", category: "bootcamp" },
-  { src: "/Assets/Bootcamp/11.jpg", category: "bootcamp" },
-  
-  // Real Time 3D (8 images, all .webp) - URL encode space
-  { src: "/Assets/Real%20Time%203D/1.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/2.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/3.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/4.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/5.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/6.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/7.webp", category: "rtd" },
-  { src: "/Assets/Real%20Time%203D/8.webp", category: "rtd" },
-  
-  // Farewell (8 images, all .webp)
-  { src: "/Assets/farewell/1.webp", category: "farewell" },
-  { src: "/Assets/farewell/2.webp", category: "farewell" },
-  { src: "/Assets/farewell/3.webp", category: "farewell" },
-  { src: "/Assets/farewell/4.webp", category: "farewell" },
-  { src: "/Assets/farewell/5.webp", category: "farewell" },
-  { src: "/Assets/farewell/6.webp", category: "farewell" },
-  { src: "/Assets/farewell/7.webp", category: "farewell" },
-  { src: "/Assets/farewell/8.webp", category: "farewell" },
-  
-  // Freshers (11 images, mixed extensions)
-  { src: "/Assets/freshers/1.jpeg", category: "freshers" },
-  { src: "/Assets/freshers/2.jpg", category: "freshers" },
-  { src: "/Assets/freshers/3.jpeg", category: "freshers" },
-  { src: "/Assets/freshers/4.jpg", category: "freshers" },
-  { src: "/Assets/freshers/5.jpg", category: "freshers" },
-  { src: "/Assets/freshers/6.jpg", category: "freshers" },
-  { src: "/Assets/freshers/7.jpg", category: "freshers" },
-  { src: "/Assets/freshers/8.jpg", category: "freshers" },
-  { src: "/Assets/freshers/9.jpg", category: "freshers" },
-  { src: "/Assets/freshers/10.jpg", category: "freshers" },
-  { src: "/Assets/freshers/11.jpg", category: "freshers" },
+// Hardcoded fallback images for when DB is empty
+const fallbackImages: GalleryImage[] = [
+  { id: "o1", category: "Orientation", image_url: "/Assets/orientation/1.jpg", sort_order: 0 },
+  { id: "o2", category: "Orientation", image_url: "/Assets/orientation/2.jpg", sort_order: 1 },
+  { id: "o3", category: "Orientation", image_url: "/Assets/orientation/3.jpg", sort_order: 2 },
+  { id: "o4", category: "Orientation", image_url: "/Assets/orientation/4.jpg", sort_order: 3 },
+  { id: "o5", category: "Orientation", image_url: "/Assets/orientation/5.jpg", sort_order: 4 },
+  { id: "o6", category: "Orientation", image_url: "/Assets/orientation/6.jpg", sort_order: 5 },
+  { id: "o7", category: "Orientation", image_url: "/Assets/orientation/7.jpg", sort_order: 6 },
+  { id: "o8", category: "Orientation", image_url: "/Assets/orientation/8.jpg", sort_order: 7 },
+  { id: "o9", category: "Orientation", image_url: "/Assets/orientation/9.jpg", sort_order: 8 },
+  { id: "b1", category: "Bootcamp", image_url: "/Assets/Bootcamp/1.jpg", sort_order: 0 },
+  { id: "b2", category: "Bootcamp", image_url: "/Assets/Bootcamp/2.jpg", sort_order: 1 },
+  { id: "b3", category: "Bootcamp", image_url: "/Assets/Bootcamp/3.jpg", sort_order: 2 },
+  { id: "b4", category: "Bootcamp", image_url: "/Assets/Bootcamp/4.jpg", sort_order: 3 },
+  { id: "b5", category: "Bootcamp", image_url: "/Assets/Bootcamp/5.jpg", sort_order: 4 },
+  { id: "b6", category: "Bootcamp", image_url: "/Assets/Bootcamp/6.jpg", sort_order: 5 },
+  { id: "b7", category: "Bootcamp", image_url: "/Assets/Bootcamp/7.jpg", sort_order: 6 },
+  { id: "b8", category: "Bootcamp", image_url: "/Assets/Bootcamp/8.jpg", sort_order: 7 },
+  { id: "b9", category: "Bootcamp", image_url: "/Assets/Bootcamp/9.jpg", sort_order: 8 },
+  { id: "b10", category: "Bootcamp", image_url: "/Assets/Bootcamp/10.jpg", sort_order: 9 },
+  { id: "b11", category: "Bootcamp", image_url: "/Assets/Bootcamp/11.jpg", sort_order: 10 },
+  { id: "r1", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/1.webp", sort_order: 0 },
+  { id: "r2", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/2.webp", sort_order: 1 },
+  { id: "r3", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/3.webp", sort_order: 2 },
+  { id: "r4", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/4.webp", sort_order: 3 },
+  { id: "r5", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/5.webp", sort_order: 4 },
+  { id: "r6", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/6.webp", sort_order: 5 },
+  { id: "r7", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/7.webp", sort_order: 6 },
+  { id: "r8", category: "Real-Time 3D", image_url: "/Assets/Real%20Time%203D/8.webp", sort_order: 7 },
+  { id: "f1", category: "Farewell", image_url: "/Assets/farewell/1.webp", sort_order: 0 },
+  { id: "f2", category: "Farewell", image_url: "/Assets/farewell/2.webp", sort_order: 1 },
+  { id: "f3", category: "Farewell", image_url: "/Assets/farewell/3.webp", sort_order: 2 },
+  { id: "f4", category: "Farewell", image_url: "/Assets/farewell/4.webp", sort_order: 3 },
+  { id: "f5", category: "Farewell", image_url: "/Assets/farewell/5.webp", sort_order: 4 },
+  { id: "f6", category: "Farewell", image_url: "/Assets/farewell/6.webp", sort_order: 5 },
+  { id: "f7", category: "Farewell", image_url: "/Assets/farewell/7.webp", sort_order: 6 },
+  { id: "f8", category: "Farewell", image_url: "/Assets/farewell/8.webp", sort_order: 7 },
+  { id: "fr1", category: "Freshers", image_url: "/Assets/freshers/1.jpeg", sort_order: 0 },
+  { id: "fr2", category: "Freshers", image_url: "/Assets/freshers/2.jpg", sort_order: 1 },
+  { id: "fr3", category: "Freshers", image_url: "/Assets/freshers/3.jpeg", sort_order: 2 },
+  { id: "fr4", category: "Freshers", image_url: "/Assets/freshers/4.jpg", sort_order: 3 },
+  { id: "fr5", category: "Freshers", image_url: "/Assets/freshers/5.jpg", sort_order: 4 },
+  { id: "fr6", category: "Freshers", image_url: "/Assets/freshers/6.jpg", sort_order: 5 },
+  { id: "fr7", category: "Freshers", image_url: "/Assets/freshers/7.jpg", sort_order: 6 },
+  { id: "fr8", category: "Freshers", image_url: "/Assets/freshers/8.jpg", sort_order: 7 },
+  { id: "fr9", category: "Freshers", image_url: "/Assets/freshers/9.jpg", sort_order: 8 },
+  { id: "fr10", category: "Freshers", image_url: "/Assets/freshers/10.jpg", sort_order: 9 },
+  { id: "fr11", category: "Freshers", image_url: "/Assets/freshers/11.jpg", sort_order: 10 },
 ];
 
 const Gallery = () => {
-  const [filter, setFilter] = useState<Category>("all");
+  const [filter, setFilter] = useState<string>("all");
   const [lightbox, setLightbox] = useState<string | null>(null);
 
-  const filtered = filter === "all" ? allImages : allImages.filter((img) => img.category === filter);
+  const { data: dbImages, isLoading } = useQuery({
+    queryKey: ["public-gallery"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gallery_images")
+        .select("id, category, image_url, sort_order")
+        .eq("is_visible", true)
+        .order("category")
+        .order("sort_order");
+      if (error) throw error;
+      return data as GalleryImage[];
+    },
+    staleTime: 60000,
+  });
+
+  // Use DB images if available, otherwise fallback
+  const images = dbImages && dbImages.length > 0 ? dbImages : fallbackImages;
+  const categories = Array.from(new Set(images.map((i) => i.category)));
+  const filtered = filter === "all" ? images : images.filter((i) => i.category === filter);
 
   return (
-    <div>
+    <div className="bg-black min-h-screen">
       <Navigation />
 
-      <section style={{ backgroundColor: "#000", paddingTop: "140px", paddingBottom: "60px", minHeight: "100vh" }}>
-        <div className="container" style={{ textAlign: "center" }}>
-          <h1 style={{ fontSize: "3rem", color: "#fff", marginBottom: "6px" }}>Gallery</h1>
-          <p style={{ color: "#d3d3d3", marginBottom: "30px" }}>Images from our events</p>
+      <section className="pt-32 pb-20">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto px-6 text-center mb-12">
+          <p className="text-[#9113ff] font-['Oxanium'] tracking-[6px] uppercase text-sm mb-4 font-semibold">
+            Our Moments
+          </p>
+          <h1 className="text-5xl md:text-7xl font-bold text-white font-['Anton'] uppercase tracking-wider">
+            Gallery
+          </h1>
+          <p className="mt-4 text-gray-400 max-w-xl mx-auto">
+            Relive the memories from our events, workshops, and celebrations.
+          </p>
+        </div>
 
-          {/* Filter Buttons */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center", marginBottom: "30px" }}>
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => setFilter(cat.key)}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "6px",
-                  border: "1px solid #555",
-                  backgroundColor: filter === cat.key ? "#9113ff" : "transparent",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontFamily: "'Oxanium', sans-serif",
-                  fontSize: "0.9rem",
-                  transition: "all 0.3s",
-                }}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+        {/* Filter Buttons */}
+        <div className="max-w-7xl mx-auto px-6 flex flex-wrap justify-center gap-2 mb-10">
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-5 py-2 rounded-full text-sm font-medium font-['Oxanium'] transition-all ${
+              filter === "all"
+                ? "bg-[#9113ff] text-white shadow-lg shadow-[#9113ff]/25"
+                : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-5 py-2 rounded-full text-sm font-medium font-['Oxanium'] transition-all ${
+                filter === cat
+                  ? "bg-[#9113ff] text-white shadow-lg shadow-[#9113ff]/25"
+                  : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
-          {/* Image Grid */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: "10px",
-          }}>
-            {filtered.map((img, i) => (
-              <img
-                key={`${img.src}-${i}`}
-                src={img.src}
-                alt={`Gallery ${img.category}`}
-                onClick={() => setLightbox(img.src)}
-                style={{
-                  width: "100%",
-                  height: "200px",
-                  objectFit: "cover",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "transform 0.3s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              />
-            ))}
-          </div>
+        {/* Grid */}
+        <div className="max-w-7xl mx-auto px-6">
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-gray-500" size={32} />
+            </div>
+          ) : (
+            <div className="columns-2 sm:columns-3 md:columns-4 gap-3 space-y-3">
+              {filtered.map((img) => (
+                <div
+                  key={img.id}
+                  className="break-inside-avoid overflow-hidden rounded-xl border border-white/5 group cursor-pointer"
+                  onClick={() => setLightbox(img.image_url)}
+                >
+                  <img
+                    src={img.image_url}
+                    alt={img.category}
+                    className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -148,24 +163,12 @@ const Gallery = () => {
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.9)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 300,
-            cursor: "pointer",
-          }}
+          className="fixed inset-0 bg-black/95 z-[300] flex items-center justify-center cursor-pointer backdrop-blur-sm"
         >
           <img
             src={lightbox}
-            alt="Lightbox"
-            style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: "8px" }}
+            alt="Gallery preview"
+            className="max-w-[90vw] max-h-[90vh] rounded-lg object-contain"
           />
         </div>
       )}
