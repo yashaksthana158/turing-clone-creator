@@ -19,11 +19,11 @@ const faculty: TeamMember[] = [
 
 const council: TeamMember[] = [
   { name: "Yash Asthana", role: "President", image: "/Assets/Coreteam/Yash.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
-  { name: "Kush Gautam", role: "Vice-President", image: "/Assets/Coreteam/Kush.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
-  { name: "Sapna Yadav", role: "Secretary", image: "/Assets/Coreteam/Sapna.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
-  { name: "Ishitva Joshi", role: "Treasurer", image: "/Assets/Coreteam/Ishitva.jpg" , linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158"},
-  { name: "Anshuman Thakur", role: "Technical Head", image: "/Assets/Coreteam/Anshuman.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
-  { name: "Subham Kumar", role: "Executive Head", image: "/Assets/Coreteam/Shubham.jpg", linkedin: "https://www.linkedin.com/in/yashaksthana158", instagram: "https://www.instagram.com/yashaksthana158", github: "https://github.com/yashaksthana158" },
+  { name: "Kush Gautam", role: "Vice-President", image: "/Assets/Coreteam/Kush.jpg" },
+  { name: "Sapna Yadav", role: "Secretary", image: "/Assets/Coreteam/Sapna.jpg" },
+  { name: "Ishitva Joshi", role: "Treasurer", image: "/Assets/Coreteam/Ishitva.jpg" },
+  { name: "Anshuman Thakur", role: "Technical Head", image: "/Assets/Coreteam/Anshuman.jpg" },
+  { name: "Subham Kumar", role: "Executive Head", image: "/Assets/Coreteam/Shubham.jpg" },
   { name: "Rishik Chaudhary", role: "Executive Head", image: "/Assets/Coreteam/Rishik.jpg" },
   { name: "Aditya Maurya", role: "Media Chief", image: "/Assets/Coreteam/Aditya%20maurya.jpeg" },
 ];
