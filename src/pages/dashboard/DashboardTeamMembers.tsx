@@ -359,7 +359,6 @@ export default function DashboardTeamMembers() {
           title="Delete Team Member"
           description="Are you sure you want to delete this team member? This cannot be undone."
           onConfirm={handleDelete}
-          confirmText="Delete"
           variant="danger"
         />
       </div>
