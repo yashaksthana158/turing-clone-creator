@@ -39,7 +39,7 @@ export interface Registration {
 }
 
 export function useMyRegistrations() {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
 
   return useQuery({
     queryKey: ['my-registrations', user?.id],
@@ -52,12 +52,13 @@ export function useMyRegistrations() {
         .order('registered_at', { ascending: false });
       return (data as unknown as Registration[]) || [];
     },
-    enabled: !!user,
+    enabled: isReady && !!user,
     staleTime: 30000,
   });
 }
 
 export function useEvents() {
+  const { isReady } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const canManage = hasMinRoleLevel(2);
 
@@ -71,7 +72,7 @@ export function useEvents() {
         .order('created_at', { ascending: false });
       return (data as Event[]) || [];
     },
-    enabled: canManage,
+    enabled: isReady && canManage,
     staleTime: 30000,
   });
 }

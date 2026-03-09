@@ -13,7 +13,7 @@ interface Stats {
 }
 
 export function useStats() {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
   const { hasMinRoleLevel } = useRole();
 
   return useQuery({
@@ -51,7 +51,7 @@ export function useStats() {
         users,
       };
     },
-    enabled: !!user,
+    enabled: isReady && !!user,
     staleTime: 30000,
   });
 }
