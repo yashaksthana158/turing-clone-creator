@@ -316,7 +316,13 @@ export default function DashboardEvents() {
       <CreateEventModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={refetchAll} />
       <EditEventModal open={!!editingEvent} event={editingEvent} onClose={() => setEditingEvent(null)} onUpdated={refetchAll} />
       {attendanceEvent && (
-        <AttendanceModal event={attendanceEvent} onClose={() => setAttendanceEvent(null)} onUpdated={refetchAll} />
+        <AttendanceModal
+          open={!!attendanceEvent}
+          eventId={attendanceEvent.id}
+          eventTitle={attendanceEvent.title}
+          onClose={() => setAttendanceEvent(null)}
+          onUpdated={refetchAll}
+        />
       )}
     </DashboardLayout>
   );
