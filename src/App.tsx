@@ -34,6 +34,7 @@ const ManageUsers          = lazy(() => import("./pages/dashboard/ManageUsers"))
 const DashboardRoles       = lazy(() => import("./pages/dashboard/DashboardRoles"));
 const DashboardOverload    = lazy(() => import("./pages/dashboard/DashboardOverload"));
 const DashboardTeamMembers = lazy(() => import("./pages/dashboard/DashboardTeamMembers"));
+const DashboardGallery     = lazy(() => import("./pages/dashboard/DashboardGallery"));
 
 // Shared loading fallback
 function DashboardFallback() {
@@ -142,6 +143,13 @@ const App = () => (
               <ProtectedRoute minRoleLevel={3}>
                 <Suspense fallback={<DashboardFallback />}>
                   <DashboardTeamMembers />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/gallery" element={
+              <ProtectedRoute minRoleLevel={3}>
+                <Suspense fallback={<DashboardFallback />}>
+                  <DashboardGallery />
                 </Suspense>
               </ProtectedRoute>
             } />

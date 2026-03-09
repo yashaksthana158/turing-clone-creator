@@ -16,6 +16,7 @@ import {
   Shield,
   Award,
   Zap,
+  ImageIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { title: 'Manage Users', icon: Shield, path: '/dashboard/users', minLevel: 5 },
   { title: 'Roles & Permissions', icon: Shield, path: '/dashboard/roles', minLevel: 5 },
   { title: 'Overload++', icon: Zap, path: '/dashboard/overload', minLevel: 3 },
+  { title: 'Gallery', icon: ImageIcon, path: '/dashboard/gallery', minLevel: 3 },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
