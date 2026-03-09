@@ -72,15 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsReady(true);
     });
 
-    // Listen for auth changes after initial load
+    // Listen for auth changes after initial load — do NOT await inside callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          const userRoles = await fetchUserRoles(session.user.id);
-          setRoles(userRoles);
+          // Fire and forget to avoid deadlocking the auth client
+          fetchUserRoles(session.user.id).then(setRoles);
         } else {
           setRoles([]);
         }
