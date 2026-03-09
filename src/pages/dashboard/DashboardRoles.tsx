@@ -169,22 +169,12 @@ export default function DashboardRoles() {
     setConfirmOpen(false);
 
     try {
-      const adminRole = roleDefs.find(r => r.name === 'SUPER_ADMIN');
-      if (!adminRole) throw new Error('SUPER_ADMIN role not found');
+      const { data, error } = await supabase.functions.invoke('transfer-admin', {
+        body: { targetUserId },
+      });
 
-      const { error: assignError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: targetUserId, role_id: adminRole.id, assigned_by: user!.id });
-
-      if (assignError && assignError.code !== '23505') throw assignError;
-
-      const { error: removeError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user!.id)
-        .eq('role_id', adminRole.id);
-
-      if (removeError) throw removeError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success('Super Admin transferred! Redirecting...');
       setTimeout(() => { window.location.href = '/'; }, 1500);
