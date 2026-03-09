@@ -71,7 +71,7 @@ const App = () => (
             <Route path="/overloadpp/:year" element={<OverloadPP />} />
             <Route path="/overloadpp/:year/event/:eventId" element={<OverloadEventDetail />} />
             <Route path="/gallery" element={<Gallery />} />
-            <Route path="/gallery/:year" element={<ComingSoon section="Gallery" />} />
+            <Route path="/gallery/:year" element={<Gallery />} />
 
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
