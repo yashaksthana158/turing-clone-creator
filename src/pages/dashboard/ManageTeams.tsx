@@ -1,105 +1,66 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Plus, Trash2, Users as UsersIcon, UserPlus, X } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-
-interface Team {
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-  member_count?: number;
-}
-
-interface TeamMember {
-  id: string;
-  user_id: string;
-  position: string;
-  joined_at: string;
-  profiles: { full_name: string | null } | null;
-}
+import { Plus, Trash2, Users as UsersIcon, UserPlus, X, Loader2 } from 'lucide-react';
+import {
+  useTeams, useTeamMembers, useCreateTeam, useDeleteTeam,
+  useAddTeamMember, useRemoveTeamMember,
+} from '@/hooks/queries';
+import { useQuery } from '@tanstack/react-query';
 
 export default function ManageTeams() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const navigate = useNavigate();
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: teams = [], isLoading } = useTeams();
+  const createTeam = useCreateTeam();
+  const deleteTeam = useDeleteTeam();
+  const addMember = useAddTeamMember();
+  const removeMember = useRemoveTeamMember();
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTeam, setNewTeam] = useState({ name: '', description: '' });
-  const [creating, setCreating] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-
   const [showAddMember, setShowAddMember] = useState(false);
-  const [allUsers, setAllUsers] = useState<{ id: string; full_name: string | null }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedPosition, setSelectedPosition] = useState<'MEMBER' | 'LEAD'>('MEMBER');
 
-  // Confirm dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState<{
-    title: string;
-    description: string;
-    confirmLabel: string;
-    onConfirm: () => void;
+    title: string; description: string; confirmLabel: string; onConfirm: () => void;
   }>({ title: '', description: '', confirmLabel: 'Confirm', onConfirm: () => {} });
+
+  const { data: members = [], isLoading: loadingMembers } = useTeamMembers(selectedTeam);
+
+  // Fetch all users only when add member panel is open
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-profiles'],
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('id, full_name');
+      return data || [];
+    },
+    enabled: showAddMember,
+    staleTime: 60000,
+  });
 
   const openConfirm = (config: typeof confirmConfig) => {
     setConfirmConfig(config);
     setConfirmOpen(true);
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) { navigate('/login'); return; }
-    if (!authLoading && !hasMinRoleLevel(3)) { navigate('/unauthorized'); return; }
-    if (user) fetchTeams();
-  }, [user, authLoading]);
-
-  const fetchTeams = async () => {
-    const { data, error } = await supabase.from('teams').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      const teamsWithCounts = await Promise.all(
-        data.map(async (t) => {
-          const { count } = await supabase
-            .from('team_members')
-            .select('id', { count: 'exact', head: true })
-            .eq('team_id', t.id);
-          return { ...t, member_count: count || 0 };
-        })
-      );
-      setTeams(teamsWithCounts);
-    }
-    setLoading(false);
-  };
-
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = newTeam.name.trim();
     if (!name || name.length > 100) { toast.error('Name required (max 100 chars)'); return; }
-
-    setCreating(true);
-    const { error } = await supabase.from('teams').insert({
-      name,
-      description: newTeam.description.trim() || null,
-      created_by: user!.id,
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Team created!');
-      setNewTeam({ name: '', description: '' });
-      setShowCreateForm(false);
-      fetchTeams();
-    }
-    setCreating(false);
+    await createTeam.mutateAsync({ name, description: newTeam.description.trim() || null });
+    setNewTeam({ name: '', description: '' });
+    setShowCreateForm(false);
   };
 
   const handleDeleteTeam = (id: string) => {
@@ -109,49 +70,18 @@ export default function ManageTeams() {
       confirmLabel: 'Delete',
       onConfirm: async () => {
         setConfirmOpen(false);
-        const { error } = await supabase.from('teams').delete().eq('id', id);
-        if (error) toast.error(error.message);
-        else { toast.success('Team deleted'); fetchTeams(); if (selectedTeam === id) setSelectedTeam(null); }
+        await deleteTeam.mutateAsync(id);
+        if (selectedTeam === id) setSelectedTeam(null);
       },
     });
-  };
-
-  const loadMembers = async (teamId: string) => {
-    setSelectedTeam(teamId);
-    setLoadingMembers(true);
-    const { data, error } = await supabase
-      .from('team_members')
-      .select('id, user_id, position, joined_at, profiles(full_name)')
-      .eq('team_id', teamId)
-      .order('position', { ascending: true });
-    if (!error) setMembers((data as unknown as TeamMember[]) || []);
-    setLoadingMembers(false);
-  };
-
-  const fetchAllUsers = async () => {
-    const { data } = await supabase.from('profiles').select('id, full_name');
-    if (data) setAllUsers(data);
   };
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId || !selectedTeam) return;
-
-    const { error } = await supabase.from('team_members').insert({
-      team_id: selectedTeam,
-      user_id: selectedUserId,
-      position: selectedPosition,
-    });
-    if (error) {
-      if (error.code === '23505') toast.error('User is already a team member');
-      else toast.error(error.message);
-    } else {
-      toast.success('Member added!');
-      setShowAddMember(false);
-      setSelectedUserId('');
-      loadMembers(selectedTeam);
-      fetchTeams();
-    }
+    await addMember.mutateAsync({ teamId: selectedTeam, userId: selectedUserId, position: selectedPosition });
+    setShowAddMember(false);
+    setSelectedUserId('');
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -161,18 +91,16 @@ export default function ManageTeams() {
       confirmLabel: 'Remove',
       onConfirm: async () => {
         setConfirmOpen(false);
-        const { error } = await supabase.from('team_members').delete().eq('id', memberId);
-        if (error) toast.error(error.message);
-        else { toast.success('Member removed'); if (selectedTeam) { loadMembers(selectedTeam); fetchTeams(); } }
+        if (selectedTeam) await removeMember.mutateAsync({ memberId, teamId: selectedTeam });
       },
     });
   };
 
-  if (authLoading || loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#9113ff]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#9113ff]" />
         </div>
       </DashboardLayout>
     );
@@ -228,16 +156,12 @@ export default function ManageTeams() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={creating}
+                  disabled={createTeam.isPending}
                   className="px-6 py-2.5 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-medium disabled:opacity-50"
                 >
-                  {creating ? 'Creating...' : 'Create Team'}
+                  {createTeam.isPending ? 'Creating...' : 'Create Team'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-6 py-2.5 border border-gray-600 text-gray-300 hover:bg-white/5 rounded-lg text-sm"
-                >
+                <button type="button" onClick={() => setShowCreateForm(false)} className="px-6 py-2.5 border border-gray-600 text-gray-300 hover:bg-white/5 rounded-lg text-sm">
                   Cancel
                 </button>
               </div>
@@ -256,19 +180,15 @@ export default function ManageTeams() {
               teams.map((team) => (
                 <div
                   key={team.id}
-                  onClick={() => loadMembers(team.id)}
+                  onClick={() => setSelectedTeam(team.id)}
                   className={`bg-[#1c1c1c] border rounded-lg p-4 cursor-pointer transition-colors ${
-                    selectedTeam === team.id
-                      ? 'border-[#9113ff] bg-[#9113ff]/5'
-                      : 'border-gray-800 hover:border-gray-600'
+                    selectedTeam === team.id ? 'border-[#9113ff] bg-[#9113ff]/5' : 'border-gray-800 hover:border-gray-600'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-white font-semibold">{team.name}</h3>
-                      <p className="text-gray-500 text-sm mt-0.5">
-                        {team.member_count} member{team.member_count !== 1 ? 's' : ''}
-                      </p>
+                      <p className="text-gray-500 text-sm mt-0.5">{team.member_count} member{team.member_count !== 1 ? 's' : ''}</p>
                     </div>
                     {hasMinRoleLevel(5) && (
                       <button
@@ -279,9 +199,7 @@ export default function ManageTeams() {
                       </button>
                     )}
                   </div>
-                  {team.description && (
-                    <p className="text-gray-400 text-sm mt-2 line-clamp-2">{team.description}</p>
-                  )}
+                  {team.description && <p className="text-gray-400 text-sm mt-2 line-clamp-2">{team.description}</p>}
                 </div>
               ))
             )}
@@ -301,7 +219,7 @@ export default function ManageTeams() {
                     <p className="text-gray-400 text-sm">{selectedTeamData?.description || 'No description'}</p>
                   </div>
                   <button
-                    onClick={() => { setShowAddMember(true); fetchAllUsers(); }}
+                    onClick={() => setShowAddMember(true)}
                     className="flex items-center gap-2 px-3 py-2 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     <UserPlus size={16} /> Add Member
@@ -312,9 +230,7 @@ export default function ManageTeams() {
                   <div className="bg-black/50 border border-gray-700 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-white text-sm font-medium">Add Member</h3>
-                      <button onClick={() => setShowAddMember(false)} className="text-gray-400 hover:text-white">
-                        <X size={16} />
-                      </button>
+                      <button onClick={() => setShowAddMember(false)} className="text-gray-400 hover:text-white"><X size={16} /></button>
                     </div>
                     <form onSubmit={handleAddMember} className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -327,9 +243,7 @@ export default function ManageTeams() {
                         >
                           <option value="">Select user...</option>
                           {allUsers.map((u) => (
-                            <option key={u.id} value={u.id}>
-                              {u.full_name || u.id.slice(0, 8)}
-                            </option>
+                            <option key={u.id} value={u.id}>{u.full_name || u.id.slice(0, 8)}</option>
                           ))}
                         </select>
                       </div>
@@ -346,9 +260,10 @@ export default function ManageTeams() {
                       </div>
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-medium"
+                        disabled={addMember.isPending}
+                        className="px-4 py-2 bg-[#9113ff] hover:bg-[#7c0fd9] text-white rounded-lg text-sm font-medium disabled:opacity-50"
                       >
-                        Add
+                        {addMember.isPending ? 'Adding...' : 'Add'}
                       </button>
                     </form>
                   </div>
@@ -356,42 +271,30 @@ export default function ManageTeams() {
 
                 {loadingMembers ? (
                   <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#9113ff]"></div>
+                    <Loader2 className="animate-spin text-[#9113ff]" size={32} />
                   </div>
                 ) : members.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No members in this team</p>
                 ) : (
                   <div className="space-y-2">
                     {members.map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center justify-between px-4 py-3 bg-black/30 rounded-lg border border-gray-800"
-                      >
+                      <div key={m.id} className="flex items-center justify-between px-4 py-3 bg-black/30 rounded-lg border border-gray-800">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-[#9113ff]/20 flex items-center justify-center text-sm text-[#9113ff] font-bold uppercase">
                             {(m.profiles?.full_name || '?')[0]}
                           </div>
                           <div>
-                            <p className="text-white text-sm font-medium">
-                              {m.profiles?.full_name || 'Unnamed User'}
-                            </p>
+                            <p className="text-white text-sm font-medium">{m.profiles?.full_name || 'Unnamed User'}</p>
                             <p className="text-gray-500 text-xs">{m.user_id.slice(0, 8)}...</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span
-                            className={`text-xs px-2.5 py-1 rounded-full border ${
-                              m.position === 'LEAD'
-                                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-                            }`}
-                          >
+                          <span className={`text-xs px-2.5 py-1 rounded-full border ${
+                            m.position === 'LEAD' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                          }`}>
                             {m.position}
                           </span>
-                          <button
-                            onClick={() => handleRemoveMember(m.id)}
-                            className="text-gray-500 hover:text-red-400 transition-colors"
-                          >
+                          <button onClick={() => handleRemoveMember(m.id)} className="text-gray-500 hover:text-red-400 transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </div>
