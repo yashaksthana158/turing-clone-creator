@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,117 +7,55 @@ import { Award, Download, Search, Plus, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { generateCertificatePdf } from '@/utils/generateCertificatePdf';
+import { useCertificates, useDeleteCertificate, useIssueCertificates } from '@/hooks/queries';
+import { useQuery } from '@tanstack/react-query';
 
-interface Certificate {
-  id: string;
-  title: string;
-  description: string | null;
-  certificate_number: string;
-  issued_at: string;
-  user_id: string;
-  event_id: string | null;
-  issued_by: string;
-  profiles?: { full_name: string | null };
-  events?: { title: string } | null;
-}
-
-interface UserProfile {
-  id: string;
-  full_name: string | null;
-}
-
-interface EventOption {
-  id: string;
-  title: string;
-}
+interface UserProfile { id: string; full_name: string | null; }
+interface EventOption { id: string; title: string; }
 
 export default function DashboardCertificates() {
   const { user } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const isAdmin = hasMinRoleLevel(4);
 
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'my' | 'issue'>('my');
+  const { data: certificates = [], isLoading } = useCertificates();
+  const deleteCert = useDeleteCertificate();
+  const issueCerts = useIssueCertificates();
 
-  // Issue form state
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [events, setEvents] = useState<EventOption[]>([]);
+  const [tab, setTab] = useState<'my' | 'issue'>('my');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [certTitle, setCertTitle] = useState('');
   const [certDescription, setCertDescription] = useState('');
-  const [issuing, setIssuing] = useState(false);
   const [userSearch, setUserSearch] = useState('');
-
-  // Delete
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  // Bulk attendees
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchCertificates();
-    if (isAdmin) {
-      fetchUsersAndEvents();
-    }
-  }, [user, isAdmin]);
+  // Fetch users & events only for admins on the issue tab
+  const { data: users = [] } = useQuery<UserProfile[]>({
+    queryKey: ['profiles-for-certs'],
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('id, full_name').order('full_name');
+      return data || [];
+    },
+    enabled: isAdmin,
+    staleTime: 60000,
+  });
 
-  const fetchCertificates = async () => {
-    setLoading(true);
-    let query = supabase
-      .from('certificates')
-      .select('*, events:event_id(title)')
-      .order('issued_at', { ascending: false });
-
-    if (!isAdmin) {
-      query = query.eq('user_id', user!.id);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching certificates:', error);
-    } else {
-      const certs = (data as unknown as Certificate[]) || [];
-      // Fetch profile names for certificate user_ids
-      if (certs.length > 0 && isAdmin) {
-        const userIds = [...new Set(certs.map(c => c.user_id))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', userIds);
-        const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
-        certs.forEach(c => {
-          c.profiles = { full_name: profileMap.get(c.user_id) || null };
-        });
-      }
-      setCertificates(certs);
-    }
-    setLoading(false);
-  };
-
-  const fetchUsersAndEvents = async () => {
-    const [usersRes, eventsRes] = await Promise.all([
-      supabase.from('profiles').select('id, full_name').order('full_name'),
-      supabase.from('events').select('id, title').order('title'),
-    ]);
-    if (usersRes.data) setUsers(usersRes.data);
-    if (eventsRes.data) setEvents(eventsRes.data);
-  };
+  const { data: events = [] } = useQuery<EventOption[]>({
+    queryKey: ['events-for-certs'],
+    queryFn: async () => {
+      const { data } = await supabase.from('events').select('id, title').order('title');
+      return data || [];
+    },
+    enabled: isAdmin,
+    staleTime: 60000,
+  });
 
   const handleIssueCertificates = async () => {
-    if (!certTitle.trim()) {
-      toast.error('Certificate title is required');
-      return;
-    }
-    if (selectedUsers.length === 0) {
-      toast.error('Select at least one user');
-      return;
-    }
-
-    setIssuing(true);
+    if (!certTitle.trim()) { toast.error('Certificate title is required'); return; }
+    if (selectedUsers.length === 0) { toast.error('Select at least one user'); return; }
     const rows = selectedUsers.map((uid) => ({
       user_id: uid,
       title: certTitle.trim(),
@@ -125,19 +63,8 @@ export default function DashboardCertificates() {
       event_id: selectedEvent || null,
       issued_by: user!.id,
     }));
-
-    const { error } = await supabase.from('certificates').insert(rows);
-    if (error) {
-      toast.error('Failed to issue certificates: ' + error.message);
-    } else {
-      toast.success(`Issued ${selectedUsers.length} certificate(s)`);
-      setCertTitle('');
-      setCertDescription('');
-      setSelectedUsers([]);
-      setSelectedEvent('');
-      fetchCertificates();
-    }
-    setIssuing(false);
+    await issueCerts.mutateAsync(rows);
+    setCertTitle(''); setCertDescription(''); setSelectedUsers([]); setSelectedEvent('');
   };
 
   const handleLoadEventAttendees = async () => {
@@ -145,52 +72,29 @@ export default function DashboardCertificates() {
     setLoadingAttendees(true);
     setAttendeeCount(null);
     const { data, error } = await supabase
-      .from('event_registrations')
-      .select('user_id')
-      .eq('event_id', selectedEvent)
-      .eq('status', 'ATTENDED');
+      .from('event_registrations').select('user_id').eq('event_id', selectedEvent).eq('status', 'ATTENDED');
     if (error) {
       toast.error('Failed to load attendees');
     } else if (data && data.length > 0) {
-      const attendeeIds = data.map((r) => r.user_id);
-      setSelectedUsers(attendeeIds);
-      setAttendeeCount(attendeeIds.length);
-      toast.success(`Selected ${attendeeIds.length} attendee(s)`);
+      setSelectedUsers(data.map(r => r.user_id));
+      setAttendeeCount(data.length);
+      toast.success(`Selected ${data.length} attendee(s)`);
     } else {
-      // Fallback: try REGISTERED status if no ATTENDED
       const { data: regData } = await supabase
-        .from('event_registrations')
-        .select('user_id')
-        .eq('event_id', selectedEvent)
-        .eq('status', 'REGISTERED');
+        .from('event_registrations').select('user_id').eq('event_id', selectedEvent).eq('status', 'REGISTERED');
       if (regData && regData.length > 0) {
-        const regIds = regData.map((r) => r.user_id);
-        setSelectedUsers(regIds);
-        setAttendeeCount(regIds.length);
-        toast.success(`Selected ${regIds.length} registered user(s) (no attended records found)`);
+        setSelectedUsers(regData.map(r => r.user_id));
+        setAttendeeCount(regData.length);
+        toast.success(`Selected ${regData.length} registered user(s)`);
       } else {
         setAttendeeCount(0);
-        toast.info('No attendees or registrations found for this event');
+        toast.info('No attendees found for this event');
       }
     }
     setLoadingAttendees(false);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    const { error } = await supabase.from('certificates').delete().eq('id', deleteId);
-    if (error) {
-      toast.error('Failed to delete certificate');
-    } else {
-      toast.success('Certificate deleted');
-      setCertificates((prev) => prev.filter((c) => c.id !== deleteId));
-    }
-    setDeleteId(null);
-    setDeleting(false);
-  };
-
-  const handleDownload = async (cert: Certificate) => {
+  const handleDownload = async (cert: typeof certificates[0]) => {
     try {
       await generateCertificatePdf({
         title: cert.title,
@@ -201,27 +105,19 @@ export default function DashboardCertificates() {
         issuedAt: cert.issued_at,
       });
       toast.success('Certificate PDF downloaded');
-    } catch (err) {
-      console.error('PDF generation error:', err);
+    } catch {
       toast.error('Failed to generate PDF');
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) => !userSearch || u.full_name?.toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => !userSearch || u.full_name?.toLowerCase().includes(userSearch.toLowerCase()));
+  const toggleUser = (uid: string) => setSelectedUsers(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
 
-  const toggleUser = (uid: string) => {
-    setSelectedUsers((prev) =>
-      prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
-    );
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#9113ff]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#9113ff]" />
         </div>
       </DashboardLayout>
     );
@@ -233,39 +129,26 @@ export default function DashboardCertificates() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white font-['Oxanium']">Certificates</h1>
-            <p className="text-gray-400 mt-1">
-              {isAdmin ? 'Issue and manage certificates' : 'View your certificates'}
-            </p>
+            <p className="text-gray-400 mt-1">{isAdmin ? 'Issue and manage certificates' : 'View your certificates'}</p>
           </div>
         </div>
 
-        {/* Tabs for admin */}
         {isAdmin && (
-          <div className="flex gap-2 border-b border-gray-800 pb-0">
-            <button
-              onClick={() => setTab('my')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                tab === 'my'
-                  ? 'border-[#9113ff] text-[#9113ff]'
-                  : 'border-transparent text-gray-400 hover:text-white'
-              }`}
-            >
-              All Certificates
-            </button>
-            <button
-              onClick={() => setTab('issue')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                tab === 'issue'
-                  ? 'border-[#9113ff] text-[#9113ff]'
-                  : 'border-transparent text-gray-400 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5"><Plus size={16} /> Issue Certificates</span>
-            </button>
+          <div className="flex gap-2 border-b border-gray-800">
+            {(['my', 'issue'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  tab === t ? 'border-[#9113ff] text-[#9113ff]' : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                {t === 'my' ? 'All Certificates' : <span className="flex items-center gap-1.5"><Plus size={16} />Issue Certificates</span>}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Issue Tab */}
         {isAdmin && tab === 'issue' && (
           <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,7 +156,7 @@ export default function DashboardCertificates() {
                 <label className="block text-sm text-gray-400 mb-1.5">Certificate Title *</label>
                 <input
                   value={certTitle}
-                  onChange={(e) => setCertTitle(e.target.value)}
+                  onChange={e => setCertTitle(e.target.value)}
                   placeholder="e.g., Certificate of Participation"
                   className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-gray-600 focus:border-[#9113ff] focus:outline-none"
                 />
@@ -282,21 +165,15 @@ export default function DashboardCertificates() {
                 <label className="block text-sm text-gray-400 mb-1.5">Event (optional)</label>
                 <select
                   value={selectedEvent}
-                  onChange={(e) => {
-                    setSelectedEvent(e.target.value);
-                    // Clear auto-populated users when event changes
-                  }}
+                  onChange={e => setSelectedEvent(e.target.value)}
                   className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#9113ff] focus:outline-none"
                 >
                   <option value="">No event</option>
-                  {events.map((e) => (
-                    <option key={e.id} value={e.id}>{e.title}</option>
-                  ))}
+                  {events.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* Bulk issue from event attendees */}
             {selectedEvent && (
               <div className="flex items-center gap-3">
                 <button
@@ -305,27 +182,25 @@ export default function DashboardCertificates() {
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-1.5"
                 >
                   <Users size={15} />
-                  {loadingAttendees ? 'Loading...' : 'Auto-select all event attendees'}
+                  {loadingAttendees ? 'Loading...' : 'Auto-select event attendees'}
                 </button>
                 {attendeeCount !== null && (
-                  <span className="text-xs text-gray-400">
-                    {attendeeCount} attendee{attendeeCount !== 1 ? 's' : ''} found
-                  </span>
+                  <span className="text-xs text-gray-400">{attendeeCount} attendee{attendeeCount !== 1 ? 's' : ''} found</span>
                 )}
               </div>
             )}
+
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">Description (optional)</label>
               <textarea
                 value={certDescription}
-                onChange={(e) => setCertDescription(e.target.value)}
+                onChange={e => setCertDescription(e.target.value)}
                 rows={2}
-                placeholder="Additional details about the certificate..."
+                placeholder="Additional details..."
                 className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-gray-600 focus:border-[#9113ff] focus:outline-none resize-none"
               />
             </div>
 
-            {/* User selection */}
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">
                 <Users size={14} className="inline mr-1" />
@@ -335,43 +210,32 @@ export default function DashboardCertificates() {
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                   value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
+                  onChange={e => setUserSearch(e.target.value)}
                   placeholder="Search users..."
                   className="w-full bg-black border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-white text-sm placeholder:text-gray-600 focus:border-[#9113ff] focus:outline-none"
                 />
               </div>
               <div className="max-h-48 overflow-y-auto border border-gray-800 rounded-lg bg-black">
-                {filteredUsers.map((u) => (
-                  <label
-                    key={u.id}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 cursor-pointer text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(u.id)}
-                      onChange={() => toggleUser(u.id)}
-                      className="accent-[#9113ff]"
-                    />
+                {filteredUsers.map(u => (
+                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 cursor-pointer text-sm">
+                    <input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => toggleUser(u.id)} className="accent-[#9113ff]" />
                     <span className="text-white">{u.full_name || 'Unnamed User'}</span>
                   </label>
                 ))}
-                {filteredUsers.length === 0 && (
-                  <p className="text-gray-500 text-sm p-3">No users found</p>
-                )}
+                {filteredUsers.length === 0 && <p className="text-gray-500 text-sm p-3">No users found</p>}
               </div>
             </div>
 
             <button
               onClick={handleIssueCertificates}
-              disabled={issuing}
+              disabled={issueCerts.isPending}
               className="px-5 py-2.5 bg-[#9113ff] hover:bg-[#7c0fd9] disabled:opacity-50 text-white rounded-lg transition-colors text-sm font-medium"
             >
-              {issuing ? 'Issuing...' : `Issue Certificate${selectedUsers.length > 1 ? 's' : ''}`}
+              {issueCerts.isPending ? 'Issuing...' : `Issue Certificate${selectedUsers.length > 1 ? 's' : ''}`}
             </button>
           </div>
         )}
 
-        {/* Certificates List */}
         {(tab === 'my' || !isAdmin) && (
           <div className="space-y-3">
             {certificates.length === 0 ? (
@@ -380,11 +244,8 @@ export default function DashboardCertificates() {
                 <p className="text-gray-400">No certificates yet</p>
               </div>
             ) : (
-              certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-5 flex items-center justify-between gap-4"
-                >
+              certificates.map(cert => (
+                <div key={cert.id} className="bg-[#1c1c1c] border border-gray-800 rounded-lg p-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
                       <Award size={20} className="text-emerald-400" />
@@ -392,9 +253,7 @@ export default function DashboardCertificates() {
                     <div className="min-w-0">
                       <p className="text-white font-medium truncate">{cert.title}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-                        {isAdmin && cert.profiles?.full_name && (
-                          <span>To: {cert.profiles.full_name}</span>
-                        )}
+                        {isAdmin && cert.profiles?.full_name && <span>To: {cert.profiles.full_name}</span>}
                         {cert.events?.title && <span>Event: {cert.events.title}</span>}
                         <span>#{cert.certificate_number}</span>
                         <span>{new Date(cert.issued_at).toLocaleDateString()}</span>
@@ -402,19 +261,11 @@ export default function DashboardCertificates() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => handleDownload(cert)}
-                      className="p-2 text-gray-400 hover:text-[#9113ff] transition-colors"
-                      title="Download"
-                    >
+                    <button onClick={() => handleDownload(cert)} className="p-2 text-gray-400 hover:text-[#9113ff] transition-colors" title="Download">
                       <Download size={18} />
                     </button>
                     {isAdmin && (
-                      <button
-                        onClick={() => setDeleteId(cert.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                        title="Delete"
-                      >
+                      <button onClick={() => setDeleteId(cert.id)} className="p-2 text-gray-400 hover:text-red-400 transition-colors" title="Delete">
                         <Trash2 size={18} />
                       </button>
                     )}
@@ -428,15 +279,14 @@ export default function DashboardCertificates() {
 
       <ConfirmDialog
         open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
+        onOpenChange={open => !open && setDeleteId(null)}
         title="Delete Certificate"
         description="This will permanently remove this certificate. Are you sure?"
         confirmLabel="Delete"
         variant="danger"
-        onConfirm={handleDelete}
-        loading={deleting}
+        onConfirm={() => { if (deleteId) { deleteCert.mutate(deleteId); setDeleteId(null); } }}
+        loading={deleteCert.isPending}
       />
     </DashboardLayout>
   );
 }
-
