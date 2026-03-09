@@ -13,10 +13,12 @@ interface GalleryImage {
   image_url: string;
   sort_order: number;
   is_visible: boolean;
+  year: number;
   created_at: string;
 }
 
-const DEFAULT_CATEGORIES = ['Orientation', 'Bootcamp', 'Real-Time 3D', 'Farewell', 'Freshers'];
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 export default function DashboardGallery() {
   const { user } = useAuth();
@@ -24,6 +26,7 @@ export default function DashboardGallery() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [activeYear, setActiveYear] = useState<number>(currentYear);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [newCategory, setNewCategory] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -32,13 +35,14 @@ export default function DashboardGallery() {
 
   const canDelete = hasMinRoleLevel(4);
 
-  // Fetch images
-  const { data: images = [], isLoading } = useQuery({
+  // Fetch all images
+  const { data: allImages = [], isLoading } = useQuery({
     queryKey: ['gallery-images'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gallery_images')
         .select('*')
+        .order('year', { ascending: false })
         .order('category')
         .order('sort_order');
       if (error) throw error;
@@ -46,10 +50,13 @@ export default function DashboardGallery() {
     },
   });
 
-  // Get unique categories
-  const categories = Array.from(new Set([...DEFAULT_CATEGORIES, ...images.map((i) => i.category)]));
+  // Filter by year first
+  const yearImages = allImages.filter((i) => i.year === activeYear);
 
-  const filtered = activeCategory === 'all' ? images : images.filter((i) => i.category === activeCategory);
+  // Get unique categories for active year
+  const categories = Array.from(new Set(yearImages.map((i) => i.category)));
+
+  const filtered = activeCategory === 'all' ? yearImages : yearImages.filter((i) => i.category === activeCategory);
 
   // Toggle visibility
   const toggleVisibility = useMutation({
@@ -80,30 +87,30 @@ export default function DashboardGallery() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const category = activeCategory === 'all' ? 'Uncategorized' : activeCategory;
+    const category = activeCategory === 'all' ? (categories[0] || 'Uncategorized') : activeCategory;
     setUploading(true);
 
     try {
-      const maxOrder = images.filter((i) => i.category === category).reduce((max, i) => Math.max(max, i.sort_order), -1);
-      const rows: { category: string; image_url: string; sort_order: number }[] = [];
+      const maxOrder = yearImages.filter((i) => i.category === category).reduce((max, i) => Math.max(max, i.sort_order), -1);
+      const rows: { category: string; image_url: string; sort_order: number; year: number }[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.name.split('.').pop();
-        const path = `${category}/${Date.now()}-${i}.${ext}`;
+        const path = `${activeYear}/${category}/${Date.now()}-${i}.${ext}`;
         const { error: uploadError } = await supabase.storage.from('gallery-images').upload(path, file);
         if (uploadError) {
           toast.error(`Failed to upload ${file.name}`);
           continue;
         }
         const { data: urlData } = supabase.storage.from('gallery-images').getPublicUrl(path);
-        rows.push({ category, image_url: urlData.publicUrl, sort_order: maxOrder + 1 + i });
+        rows.push({ category, image_url: urlData.publicUrl, sort_order: maxOrder + 1 + i, year: activeYear });
       }
 
       if (rows.length > 0) {
         const { error } = await supabase.from('gallery_images').insert(rows);
         if (error) throw error;
-        toast.success(`${rows.length} image(s) uploaded`);
+        toast.success(`${rows.length} image(s) uploaded to ${activeYear} / ${category}`);
         queryClient.invalidateQueries({ queryKey: ['gallery-images'] });
       }
     } catch {
@@ -118,7 +125,7 @@ export default function DashboardGallery() {
     const trimmed = newCategory.trim();
     if (!trimmed) return;
     if (categories.includes(trimmed)) {
-      toast.error('Category already exists');
+      toast.error('Category already exists for this year');
       return;
     }
     setActiveCategory(trimmed);
@@ -143,6 +150,10 @@ export default function DashboardGallery() {
     }
   };
 
+  // Get years that have images
+  const yearsWithImages = Array.from(new Set(allImages.map((i) => i.year))).sort((a, b) => b - a);
+  const displayYears = Array.from(new Set([...YEARS, ...yearsWithImages])).sort((a, b) => b - a);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -150,7 +161,7 @@ export default function DashboardGallery() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white font-['Oxanium']">Gallery Management</h1>
-            <p className="text-gray-400 mt-1">{images.length} images across {categories.length} categories</p>
+            <p className="text-gray-400 mt-1">{allImages.length} total images · {yearImages.length} in {activeYear}</p>
           </div>
           <div className="flex gap-2">
             <input
@@ -172,61 +183,84 @@ export default function DashboardGallery() {
           </div>
         </div>
 
+        {/* Year Tabs */}
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Year</p>
+          <div className="flex flex-wrap gap-2">
+            {displayYears.map((year) => {
+              const count = allImages.filter((i) => i.year === year).length;
+              return (
+                <button
+                  key={year}
+                  onClick={() => { setActiveYear(year); setActiveCategory('all'); setSelectedImages(new Set()); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeYear === year
+                      ? 'bg-[#9113ff] text-white'
+                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {year} {count > 0 && <span className="text-xs opacity-70">({count})</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Category Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setActiveCategory('all')}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              activeCategory === 'all' ? 'bg-[#9113ff] text-white' : 'bg-white/5 text-gray-400 hover:text-white'
-            }`}
-          >
-            All ({images.length})
-          </button>
-          {categories.map((cat) => {
-            const count = images.filter((i) => i.category === cat).length;
-            return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeCategory === cat ? 'bg-[#9113ff] text-white' : 'bg-white/5 text-gray-400 hover:text-white'
-                }`}
-              >
-                {cat} ({count})
-              </button>
-            );
-          })}
-          {showAddCategory ? (
-            <div className="flex items-center gap-1">
-              <input
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                placeholder="Category name"
-                className="px-3 py-1.5 bg-white/5 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#9113ff] w-36"
-                autoFocus
-              />
-              <button onClick={handleAddCategory} className="text-[#9113ff] text-sm font-medium">Add</button>
-              <button onClick={() => setShowAddCategory(false)} className="text-gray-500"><X size={14} /></button>
-            </div>
-          ) : (
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Category</p>
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setShowAddCategory(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+              onClick={() => { setActiveCategory('all'); setSelectedImages(new Set()); }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeCategory === 'all' ? 'bg-[#9113ff]/20 text-[#9113ff] border border-[#9113ff]/40' : 'bg-white/5 text-gray-400 hover:text-white'
+              }`}
             >
-              <Plus size={14} /> Category
+              All ({yearImages.length})
             </button>
-          )}
+            {categories.map((cat) => {
+              const count = yearImages.filter((i) => i.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => { setActiveCategory(cat); setSelectedImages(new Set()); }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeCategory === cat ? 'bg-[#9113ff]/20 text-[#9113ff] border border-[#9113ff]/40' : 'bg-white/5 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+            {showAddCategory ? (
+              <div className="flex items-center gap-1">
+                <input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  placeholder="Category name"
+                  className="px-3 py-1.5 bg-white/5 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#9113ff] w-36"
+                  autoFocus
+                />
+                <button onClick={handleAddCategory} className="text-[#9113ff] text-sm font-medium">Add</button>
+                <button onClick={() => setShowAddCategory(false)} className="text-gray-500"><X size={14} /></button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddCategory(true)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <Plus size={14} /> Add Category
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Bulk Actions */}
         {selectedImages.size > 0 && (
           <div className="flex items-center gap-3 bg-white/5 border border-gray-800 rounded-lg px-4 py-3">
             <span className="text-sm text-gray-300">{selectedImages.size} selected</span>
-            <button
-              onClick={selectAll}
-              className="text-sm text-[#9113ff] hover:underline"
-            >
+            <button onClick={selectAll} className="text-sm text-[#9113ff] hover:underline">
               {selectedImages.size === filtered.length ? 'Deselect All' : 'Select All'}
             </button>
             {canDelete && (
@@ -248,8 +282,8 @@ export default function DashboardGallery() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <ImageIcon className="mx-auto text-gray-600 mb-3" size={48} />
-            <p className="text-gray-400">No images in this category</p>
-            <p className="text-gray-600 text-sm mt-1">Upload images to get started</p>
+            <p className="text-gray-400">No images in {activeYear}{activeCategory !== 'all' ? ` / ${activeCategory}` : ''}</p>
+            <p className="text-gray-600 text-sm mt-1">Upload images or add a new category to get started</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -267,7 +301,6 @@ export default function DashboardGallery() {
                   onClick={() => toggleSelect(img.id)}
                   loading="lazy"
                 />
-                {/* Overlay actions */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 gap-1">
                   <button
                     onClick={() => toggleVisibility.mutate({ id: img.id, is_visible: !img.is_visible })}
@@ -287,8 +320,6 @@ export default function DashboardGallery() {
                   )}
                   <span className="ml-auto text-[10px] text-gray-300 bg-black/40 px-1.5 py-0.5 rounded">{img.category}</span>
                 </div>
-
-                {/* Selection checkbox */}
                 <div
                   className={`absolute top-2 left-2 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
                     selectedImages.has(img.id) ? 'bg-[#9113ff] border-[#9113ff]' : 'border-white/40 bg-black/30 opacity-0 group-hover:opacity-100'
