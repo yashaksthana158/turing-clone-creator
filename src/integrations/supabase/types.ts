@@ -542,6 +542,7 @@ export type Database = {
       }
       public_team_members: {
         Row: {
+          academic_year: string
           created_at: string
           github: string | null
           id: string
@@ -556,6 +557,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_year?: string
           created_at?: string
           github?: string | null
           id?: string
@@ -570,6 +572,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_year?: string
           created_at?: string
           github?: string | null
           id?: string
@@ -636,6 +639,27 @@ export type Database = {
           description?: string | null
           id?: string
           name?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string | null
         }
         Relationships: []
       }
