@@ -1,0 +1,2 @@
+
+ALTER TABLE public.gallery_images ADD COLUMN year INTEGER NOT NULL DEFAULT 2025;
