@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setLoading(false);
+      setIsReady(true);
     });
 
     // Listen for auth changes after initial load
