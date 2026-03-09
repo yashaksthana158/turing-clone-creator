@@ -540,6 +540,51 @@ export type Database = {
         }
         Relationships: []
       }
+      public_team_members: {
+        Row: {
+          created_at: string
+          github: string | null
+          id: string
+          image_url: string | null
+          instagram: string | null
+          is_visible: boolean
+          linkedin: string | null
+          name: string
+          role: string
+          section: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          github?: string | null
+          id?: string
+          image_url?: string | null
+          instagram?: string | null
+          is_visible?: boolean
+          linkedin?: string | null
+          name: string
+          role: string
+          section: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          github?: string | null
+          id?: string
+          image_url?: string | null
+          instagram?: string | null
+          is_visible?: boolean
+          linkedin?: string | null
+          name?: string
+          role?: string
+          section?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           id: string

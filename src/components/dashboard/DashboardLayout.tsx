@@ -31,8 +31,9 @@ const navItems: NavItem[] = [
   { title: 'My Events', icon: Calendar, path: '/dashboard/events', minLevel: 1 },
   { title: 'Certificates', icon: Award, path: '/dashboard/certificates', minLevel: 1 },
   { title: 'Teams', icon: Users, path: '/dashboard/teams', minLevel: 3 },
+  { title: 'Team Members', icon: UserCog, path: '/dashboard/team-members', minLevel: 3 },
   { title: 'Tasks', icon: ClipboardList, path: '/dashboard/tasks', minLevel: 2 },
-  { title: 'Manage Users', icon: UserCog, path: '/dashboard/users', minLevel: 5 },
+  { title: 'Manage Users', icon: Shield, path: '/dashboard/users', minLevel: 5 },
   { title: 'Roles & Permissions', icon: Shield, path: '/dashboard/roles', minLevel: 5 },
   { title: 'Overload++', icon: Zap, path: '/dashboard/overload', minLevel: 3 },
 ];
