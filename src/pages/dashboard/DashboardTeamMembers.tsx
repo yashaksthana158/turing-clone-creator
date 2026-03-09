@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Plus, Trash2, Pencil, X, Upload, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { ImageUpload } from '@/components/dashboard/ImageUpload';
+import { Plus, Trash2, Pencil, X, Upload, Eye, EyeOff, Image } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface PublicTeamMember {
@@ -19,6 +20,7 @@ interface PublicTeamMember {
   github: string | null;
   sort_order: number;
   is_visible: boolean;
+  academic_year: string;
 }
 
 const SECTIONS = [
@@ -30,6 +32,8 @@ const SECTIONS = [
   { value: 'pr', label: 'PR Team' },
 ];
 
+const YEAR_OPTIONS = ['2023-24', '2024-25', '2025-26', '2026-27'];
+
 const emptyForm = {
   name: '',
   role: '',
@@ -39,6 +43,7 @@ const emptyForm = {
   github: '',
   sort_order: 0,
   is_visible: true,
+  academic_year: '2024-25',
 };
 
 export default function DashboardTeamMembers() {
@@ -49,17 +54,28 @@ export default function DashboardTeamMembers() {
   const [members, setMembers] = useState<PublicTeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('council');
+  const [activeYear, setActiveYear] = useState('2024-25');
+  const [availableYears, setAvailableYears] = useState<string[]>(YEAR_OPTIONS);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Hero image settings
+  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [heroSaving, setHeroSaving] = useState(false);
 
   const canDelete = hasMinRoleLevel(4);
+
+  // Track object URLs for cleanup
+  const objectUrlRef = useRef<string | null>(null);
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
@@ -72,22 +88,43 @@ export default function DashboardTeamMembers() {
       toast.error('Failed to load team members');
     } else {
       setMembers(data || []);
+      // Compute available years from data
+      const years = [...new Set((data || []).map(m => m.academic_year))].sort().reverse();
+      const allYears = [...new Set([...YEAR_OPTIONS, ...years])].sort().reverse();
+      setAvailableYears(allYears);
     }
     setLoading(false);
+  }, []);
+
+  const fetchHeroImage = useCallback(async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'teams_hero_image')
+      .maybeSingle();
+    if (data?.value) setHeroImageUrl(data.value);
   }, []);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate('/auth/login'); return; }
     if (!authLoading && !hasMinRoleLevel(3)) { navigate('/unauthorized'); return; }
     fetchMembers();
-  }, [authLoading, user, navigate, hasMinRoleLevel, fetchMembers]);
+    fetchHeroImage();
+  }, [authLoading, user, navigate, hasMinRoleLevel, fetchMembers, fetchHeroImage]);
 
-  const filteredMembers = members.filter(m => m.section === activeSection);
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  const filteredMembers = members.filter(m => m.section === activeSection && m.academic_year === activeYear);
 
   const openCreateForm = () => {
     setEditingId(null);
     const maxOrder = filteredMembers.reduce((max, m) => Math.max(max, m.sort_order), 0);
-    setForm({ ...emptyForm, section: activeSection, sort_order: maxOrder + 1 });
+    setForm({ ...emptyForm, section: activeSection, academic_year: activeYear, sort_order: maxOrder + 1 });
     setImageFile(null);
     setImagePreview(null);
     setShowForm(true);
@@ -104,6 +141,7 @@ export default function DashboardTeamMembers() {
       github: member.github || '',
       sort_order: member.sort_order,
       is_visible: member.is_visible,
+      academic_year: member.academic_year,
     });
     setImageFile(null);
     setImagePreview(member.image_url);
@@ -113,8 +151,12 @@ export default function DashboardTeamMembers() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Cleanup previous object URL
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      objectUrlRef.current = url;
+      setImagePreview(url);
     }
   };
 
@@ -131,6 +173,7 @@ export default function DashboardTeamMembers() {
   };
 
   const handleSave = async () => {
+    if (saving) return; // Guard against double-submit
     if (!form.name.trim() || !form.role.trim()) {
       toast.error('Name and role are required');
       return;
@@ -153,6 +196,7 @@ export default function DashboardTeamMembers() {
       github: form.github.trim() || null,
       sort_order: form.sort_order,
       is_visible: form.is_visible,
+      academic_year: form.academic_year,
       updated_at: new Date().toISOString(),
     };
 
@@ -172,22 +216,48 @@ export default function DashboardTeamMembers() {
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (!deleteId || deleting) return;
+    setDeleting(true);
     const { error } = await supabase.from('public_team_members').delete().eq('id', deleteId);
     if (error) toast.error('Failed to delete member');
     else toast.success('Member deleted');
     setDeleteId(null);
     setConfirmOpen(false);
+    setDeleting(false);
     fetchMembers();
   };
 
   const toggleVisibility = async (member: PublicTeamMember) => {
+    if (actionInProgress) return; // Guard against concurrent toggles
+    setActionInProgress(member.id);
     const { error } = await supabase
       .from('public_team_members')
       .update({ is_visible: !member.is_visible, updated_at: new Date().toISOString() })
       .eq('id', member.id);
     if (error) toast.error('Failed to update visibility');
-    else fetchMembers();
+    else await fetchMembers();
+    setActionInProgress(null);
+  };
+
+  const saveHeroImage = async (url: string) => {
+    setHeroSaving(true);
+    setHeroImageUrl(url);
+    // Upsert into site_settings
+    const { data: existing } = await supabase
+      .from('site_settings')
+      .select('id')
+      .eq('key', 'teams_hero_image')
+      .maybeSingle();
+
+    let error;
+    if (existing) {
+      ({ error } = await supabase.from('site_settings').update({ value: url, updated_at: new Date().toISOString() }).eq('key', 'teams_hero_image'));
+    } else {
+      ({ error } = await supabase.from('site_settings').insert({ key: 'teams_hero_image', value: url }));
+    }
+    if (error) toast.error('Failed to save hero image');
+    else toast.success('Hero image updated');
+    setHeroSaving(false);
   };
 
   return (
@@ -195,33 +265,70 @@ export default function DashboardTeamMembers() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white font-['Oxanium']">Manage Team Members</h1>
-          <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2 bg-[#9113ff] text-white rounded-lg hover:bg-[#7a0ed6] transition-colors text-sm font-medium">
+          <button onClick={openCreateForm} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-[#9113ff] text-white rounded-lg hover:bg-[#7a0ed6] transition-colors text-sm font-medium disabled:opacity-50">
             <Plus size={16} /> Add Member
           </button>
         </div>
 
-        {/* Section Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {SECTIONS.map(s => (
+        {/* Page Settings: Hero Image */}
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <Image size={16} className="text-[#9113ff]" />
+            Teams Page Hero Image
+          </div>
+          <ImageUpload
+            value={heroImageUrl}
+            onChange={saveHeroImage}
+            folder="team-hero"
+            placeholder="Hero image URL"
+            size="md"
+          />
+          {heroSaving && <p className="text-xs text-gray-500">Saving...</p>}
+        </div>
+
+        {/* Year Filter */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-gray-500 text-xs mr-1">Session:</span>
+          {availableYears.map(year => (
             <button
-              key={s.value}
-              onClick={() => setActiveSection(s.value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeSection === s.value
-                  ? 'bg-[#9113ff] text-white'
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+              key={year}
+              onClick={() => setActiveYear(year)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeYear === year
+                  ? 'bg-[#9113ff]/20 text-[#9113ff] border border-[#9113ff]/40'
+                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
               }`}
             >
-              {s.label} ({members.filter(m => m.section === s.value).length})
+              {year}
             </button>
           ))}
+        </div>
+
+        {/* Section Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {SECTIONS.map(s => {
+            const count = members.filter(m => m.section === s.value && m.academic_year === activeYear).length;
+            return (
+              <button
+                key={s.value}
+                onClick={() => setActiveSection(s.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeSection === s.value
+                    ? 'bg-[#9113ff] text-white'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {s.label} ({count})
+              </button>
+            );
+          })}
         </div>
 
         {/* Members Grid */}
         {loading ? (
           <div className="text-gray-400 text-center py-12">Loading...</div>
         ) : filteredMembers.length === 0 ? (
-          <div className="text-gray-500 text-center py-12">No members in this section yet</div>
+          <div className="text-gray-500 text-center py-12">No members in this section for {activeYear}</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredMembers.sort((a, b) => a.sort_order - b.sort_order).map(member => (
@@ -237,7 +344,12 @@ export default function DashboardTeamMembers() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => toggleVisibility(member)} className="p-1.5 text-gray-500 hover:text-white transition-colors" title={member.is_visible ? 'Hide' : 'Show'}>
+                    <button
+                      onClick={() => toggleVisibility(member)}
+                      disabled={actionInProgress === member.id}
+                      className="p-1.5 text-gray-500 hover:text-white transition-colors disabled:opacity-50"
+                      title={member.is_visible ? 'Hide' : 'Show'}
+                    >
                       {member.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
                     </button>
                     <button onClick={() => openEditForm(member)} className="p-1.5 text-gray-500 hover:text-[#9113ff] transition-colors">
@@ -302,12 +414,21 @@ export default function DashboardTeamMembers() {
                   <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
                     className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#9113ff] outline-none" />
                 </div>
-                <div>
-                  <label className="text-gray-400 text-xs block mb-1">Section</label>
-                  <select value={form.section} onChange={e => setForm(f => ({ ...f, section: e.target.value }))}
-                    className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#9113ff] outline-none">
-                    {SECTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="text-gray-400 text-xs block mb-1">Section</label>
+                    <select value={form.section} onChange={e => setForm(f => ({ ...f, section: e.target.value }))}
+                      className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#9113ff] outline-none">
+                      {SECTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-gray-400 text-xs block mb-1">Session Year</label>
+                    <select value={form.academic_year} onChange={e => setForm(f => ({ ...f, academic_year: e.target.value }))}
+                      className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#9113ff] outline-none">
+                      {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs block mb-1">LinkedIn URL</label>
@@ -359,6 +480,7 @@ export default function DashboardTeamMembers() {
           title="Delete Team Member"
           description="Are you sure you want to delete this team member? This cannot be undone."
           onConfirm={handleDelete}
+          loading={deleting}
           variant="danger"
         />
       </div>
