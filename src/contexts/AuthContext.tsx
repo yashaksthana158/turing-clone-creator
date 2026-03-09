@@ -151,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
+        isReady,
         roles,
         signUp,
         signIn,
