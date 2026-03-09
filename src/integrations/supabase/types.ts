@@ -229,6 +229,7 @@ export type Database = {
           image_url: string
           is_visible: boolean
           sort_order: number
+          year: number
         }
         Insert: {
           category: string
@@ -237,6 +238,7 @@ export type Database = {
           image_url: string
           is_visible?: boolean
           sort_order?: number
+          year?: number
         }
         Update: {
           category?: string
@@ -245,6 +247,7 @@ export type Database = {
           image_url?: string
           is_visible?: boolean
           sort_order?: number
+          year?: number
         }
         Relationships: []
       }
