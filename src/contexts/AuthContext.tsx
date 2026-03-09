@@ -71,13 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes after initial load
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch roles without blocking the callback
-          fetchUserRoles(session.user.id).then(setRoles);
+          const userRoles = await fetchUserRoles(session.user.id);
+          setRoles(userRoles);
         } else {
           setRoles([]);
         }
