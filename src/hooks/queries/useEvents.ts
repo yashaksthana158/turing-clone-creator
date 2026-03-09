@@ -58,6 +58,7 @@ export function useMyRegistrations() {
 }
 
 export function useEvents() {
+  const { isReady } = useAuth();
   const { hasMinRoleLevel } = useRole();
   const canManage = hasMinRoleLevel(2);
 
@@ -71,7 +72,7 @@ export function useEvents() {
         .order('created_at', { ascending: false });
       return (data as Event[]) || [];
     },
-    enabled: canManage,
+    enabled: isReady && canManage,
     staleTime: 30000,
   });
 }

@@ -20,6 +20,8 @@ export interface TeamMember {
 }
 
 export function useTeams() {
+  const { isReady } = useAuth();
+
   return useQuery({
     queryKey: ['teams'],
     queryFn: async (): Promise<Team[]> => {
@@ -45,6 +47,7 @@ export function useTeams() {
         member_count: countMap.get(t.id) || 0,
       }));
     },
+    enabled: isReady,
     staleTime: 30000,
   });
 }
