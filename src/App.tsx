@@ -146,6 +146,13 @@ const App = () => (
                 </Suspense>
               </ProtectedRoute>
             } />
+            <Route path="/dashboard/gallery" element={
+              <ProtectedRoute minRoleLevel={3}>
+                <Suspense fallback={<DashboardFallback />}>
+                  <DashboardGallery />
+                </Suspense>
+              </ProtectedRoute>
+            } />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
