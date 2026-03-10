@@ -203,14 +203,8 @@ export default function DashboardGallery() {
   /** Swap sort_order of two adjacent images */
   const swapOrder = useMutation({
     mutationFn: async ({ idA, orderA, idB, orderB }: { idA: string; orderA: number; idB: string; orderB: number }) => {
-      const { error } = await supabase.rpc('swap_gallery_sort_order', {
-        id_a: idA, order_a: orderA, id_b: idB, order_b: orderB,
-      });
-      // Fallback if RPC doesn't exist: two sequential updates
-      if (error) {
-        await supabase.from('gallery_images').update({ sort_order: orderB }).eq('id', idA);
-        await supabase.from('gallery_images').update({ sort_order: orderA }).eq('id', idB);
-      }
+      await supabase.from('gallery_images').update({ sort_order: orderB }).eq('id', idA);
+      await supabase.from('gallery_images').update({ sort_order: orderA }).eq('id', idB);
     },
     onSuccess: invalidate,
     onError:   () => toast.error('Failed to reorder'),
