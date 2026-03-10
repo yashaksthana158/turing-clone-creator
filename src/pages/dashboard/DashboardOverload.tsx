@@ -368,19 +368,19 @@ export default function DashboardOverload() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Date</label>
-                          <input value={ev.event_date || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_date: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 20 March 2025" />
+                          <input value={ev.event_date || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_date: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 20 March 2025" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Time</label>
-                          <input value={ev.event_time || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_time: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 1:30 PM - 2:30 PM" />
+                          <input value={ev.event_time || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_time: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 1:30 PM - 2:30 PM" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Venue</label>
-                          <input value={ev.venue || ""} onChange={(e) => updateRow("overload_events", ev.id, { venue: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Seminar Hall" />
+                          <input value={ev.venue || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { venue: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Seminar Hall" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Prizes</label>
-                          <input value={ev.prizes || ""} onChange={(e) => updateRow("overload_events", ev.id, { prizes: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Cash prizes worth ₹5000" />
+                          <input value={ev.prizes || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { prizes: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Cash prizes worth ₹5000" />
                         </div>
                       </div>
                       <div>
