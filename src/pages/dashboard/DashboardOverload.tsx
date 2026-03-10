@@ -215,6 +215,9 @@ export default function DashboardOverload() {
     if (selectedId) fetchSubData(selectedId);
   }
 
+  // Debounced version of updateRow for text inputs (prevents DB write per keystroke)
+  const debouncedUpdateRow = useDebouncedCallback(updateRow, 600);
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "details", label: "Details" },
     { key: "events", label: "Events" },
