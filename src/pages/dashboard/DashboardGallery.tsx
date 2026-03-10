@@ -101,9 +101,10 @@ export default function DashboardGallery() {
 
   const yearImages  = allImages.filter((i) => i.year === activeYear);
   const categories  = Array.from(new Set(yearImages.map((i) => i.category)));
-  const filtered    = activeCategory === 'all'
+  const filtered    = (activeCategory === 'all'
     ? yearImages
-    : yearImages.filter((i) => i.category === activeCategory);
+    : yearImages.filter((i) => i.category === activeCategory))
+    .filter((i) => i.image_url !== '__placeholder__');
 
   const years = Array.from(new Set(allImages.map((i) => i.year))).sort((a, b) => b - a);
 
@@ -569,7 +570,9 @@ export default function DashboardGallery() {
             <button
               onClick={() => {
                 const ids = Array.from(selectedImages);
-                const targetVisibility = !allImages.find(i => ids.includes(i.id))?.is_visible;
+                const selectedItems = allImages.filter(i => ids.includes(i.id));
+                const visibleCount = selectedItems.filter(i => i.is_visible).length;
+                const targetVisibility = visibleCount <= selectedItems.length / 2;
                 Promise.all(
                   ids.map(id => supabase.from('gallery_images').update({ is_visible: targetVisibility }).eq('id', id))
                 ).then(() => { invalidate(); setSelectedImages(new Set()); toast.success('Visibility updated'); });

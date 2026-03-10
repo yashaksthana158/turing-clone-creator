@@ -73,7 +73,7 @@ const Gallery = () => {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   const { data: dbImages, isLoading } = useQuery({
-    queryKey: ["public-gallery", displayYear],
+    queryKey: ["gallery-images", displayYear],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gallery_images")

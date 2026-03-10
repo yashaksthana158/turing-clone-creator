@@ -14,7 +14,7 @@ export const Navigation = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const dropdownTimeout = useRef<NodeJS.Timeout | null>(null);
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, hasMinRoleLevel } = useAuth();

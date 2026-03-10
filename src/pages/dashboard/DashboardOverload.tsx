@@ -1,11 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import EventRegistrationsView from "@/components/dashboard/EventRegistrationsView";
-import { useRef } from "react";
+
+// Debounce helper
+function useDebouncedCallback<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback((...args: Parameters<T>) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => fn(...args), delay);
+  }, [fn, delay]) as T;
+}
 
 /** Bulk upload button for gallery images */
 function GalleryUploadButton({ folder, editionId, nextOrder, onUploaded }: { folder: string; editionId: string; nextOrder: number; onUploaded: () => void }) {
@@ -207,6 +215,9 @@ export default function DashboardOverload() {
     if (selectedId) fetchSubData(selectedId);
   }
 
+  // Debounced version of updateRow for text inputs (prevents DB write per keystroke)
+  const debouncedUpdateRow = useDebouncedCallback(updateRow, 600);
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "details", label: "Details" },
     { key: "events", label: "Events" },
@@ -345,8 +356,8 @@ export default function DashboardOverload() {
                     </summary>
                     <div className="p-3 pt-0 space-y-2 border-t border-zinc-800">
                       <div className="flex gap-2 items-center">
-                        <input value={ev.name} onChange={(e) => updateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                        <input value={ev.type || ""} onChange={(e) => updateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
+                        <input value={ev.name} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                        <input value={ev.type || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { type: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Type" />
                         <input type="number" value={ev.sort_order} onChange={(e) => updateRow("overload_events", ev.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
                         <button onClick={() => deleteRow("overload_events", ev.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
                       </div>
@@ -357,42 +368,42 @@ export default function DashboardOverload() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Date</label>
-                          <input value={ev.event_date || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_date: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 20 March 2025" />
+                          <input value={ev.event_date || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_date: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 20 March 2025" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Time</label>
-                          <input value={ev.event_time || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_time: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 1:30 PM - 2:30 PM" />
+                          <input value={ev.event_time || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_time: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. 1:30 PM - 2:30 PM" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Venue</label>
-                          <input value={ev.venue || ""} onChange={(e) => updateRow("overload_events", ev.id, { venue: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Seminar Hall" />
+                          <input value={ev.venue || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { venue: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Seminar Hall" />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Prizes</label>
-                          <input value={ev.prizes || ""} onChange={(e) => updateRow("overload_events", ev.id, { prizes: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Cash prizes worth ₹5000" />
+                          <input value={ev.prizes || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { prizes: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="e.g. Cash prizes worth ₹5000" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Description</label>
-                        <textarea value={ev.description || ""} onChange={(e) => updateRow("overload_events", ev.id, { description: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="About the event..." />
+                        <textarea value={ev.description || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { description: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="About the event..." />
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Rules (one per line)</label>
-                        <textarea value={ev.rules || ""} onChange={(e) => updateRow("overload_events", ev.id, { rules: e.target.value })} rows={4} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Rule 1&#10;Rule 2&#10;Rule 3" />
+                        <textarea value={ev.rules || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { rules: e.target.value })} rows={4} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Rule 1&#10;Rule 2&#10;Rule 3" />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Format</label>
-                          <textarea value={ev.event_format || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_format: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Format description..." />
+                          <textarea value={ev.event_format || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_format: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Format description..." />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Winning Criteria</label>
-                          <textarea value={ev.winning_criteria || ""} onChange={(e) => updateRow("overload_events", ev.id, { winning_criteria: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Winning criteria..." />
+                          <textarea value={ev.winning_criteria || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { winning_criteria: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Winning criteria..." />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Coordinators (one per line: Name | Phone)</label>
-                        <textarea value={ev.coordinators || ""} onChange={(e) => updateRow("overload_events", ev.id, { coordinators: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="John Doe | 9876543210&#10;Jane Doe | 9876543211" />
+                        <textarea value={ev.coordinators || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { coordinators: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="John Doe | 9876543210&#10;Jane Doe | 9876543211" />
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Hero Image</label>
@@ -400,7 +411,7 @@ export default function DashboardOverload() {
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Register URL</label>
-                        <input value={ev.register_url || ""} onChange={(e) => updateRow("overload_events", ev.id, { register_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="https://forms.google.com/..." />
+                        <input value={ev.register_url || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { register_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="https://forms.google.com/..." />
                       </div>
                     </div>
                   </details>
@@ -417,9 +428,9 @@ export default function DashboardOverload() {
                 {scheduleItems.map((item) => (
                   <div key={item.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
                     <div className="flex gap-2 items-center flex-wrap">
-                      <input value={item.time_label} onChange={(e) => updateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
-                      <input value={item.venue || ""} onChange={(e) => updateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
-                      <input value={item.event_name} onChange={(e) => updateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
+                      <input value={item.time_label} onChange={(e) => debouncedUpdateRow("overload_schedule", item.id, { time_label: e.target.value })} className="w-40 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Time" />
+                      <input value={item.venue || ""} onChange={(e) => debouncedUpdateRow("overload_schedule", item.id, { venue: e.target.value })} className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Venue" />
+                      <input value={item.event_name} onChange={(e) => debouncedUpdateRow("overload_schedule", item.id, { event_name: e.target.value })} className="flex-1 min-w-[120px] px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Event" />
                       <input type="number" value={item.sort_order} onChange={(e) => updateRow("overload_schedule", item.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
                       <button onClick={() => deleteRow("overload_schedule", item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
                     </div>
@@ -441,8 +452,8 @@ export default function DashboardOverload() {
                 {sponsorsList.map((sp) => (
                   <div key={sp.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
                     <div className="flex gap-2 items-center">
-                      <input value={sp.name} onChange={(e) => updateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                      <input value={sp.website_url || ""} onChange={(e) => updateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
+                      <input value={sp.name} onChange={(e) => debouncedUpdateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                      <input value={sp.website_url || ""} onChange={(e) => debouncedUpdateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
                       <input type="number" value={sp.sort_order} onChange={(e) => updateRow("overload_sponsors", sp.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
                       <button onClick={() => deleteRow("overload_sponsors", sp.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
                     </div>
