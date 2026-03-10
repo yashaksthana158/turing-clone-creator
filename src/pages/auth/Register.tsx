@@ -69,7 +69,7 @@ export default function Register() {
     const tempPath = `pending/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from('id-cards')
-      .upload(tempPath, idCardFile, { cacheControl: '3600', upsert: true });
+      .upload(tempPath, idCardFile, { cacheControl: '3600', upsert: false });
 
     if (uploadError) {
       toast.error('Failed to upload ID card: ' + uploadError.message);
