@@ -1,11 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { Plus, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import EventRegistrationsView from "@/components/dashboard/EventRegistrationsView";
-import { useRef } from "react";
+
+// Debounce helper
+function useDebouncedCallback<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback((...args: Parameters<T>) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => fn(...args), delay);
+  }, [fn, delay]) as T;
+}
 
 /** Bulk upload button for gallery images */
 function GalleryUploadButton({ folder, editionId, nextOrder, onUploaded }: { folder: string; editionId: string; nextOrder: number; onUploaded: () => void }) {
