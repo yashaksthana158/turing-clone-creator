@@ -385,11 +385,11 @@ export default function DashboardOverload() {
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Description</label>
-                        <textarea value={ev.description || ""} onChange={(e) => updateRow("overload_events", ev.id, { description: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="About the event..." />
+                        <textarea value={ev.description || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { description: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="About the event..." />
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Rules (one per line)</label>
-                        <textarea value={ev.rules || ""} onChange={(e) => updateRow("overload_events", ev.id, { rules: e.target.value })} rows={4} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Rule 1&#10;Rule 2&#10;Rule 3" />
+                        <textarea value={ev.rules || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { rules: e.target.value })} rows={4} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Rule 1&#10;Rule 2&#10;Rule 3" />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
