@@ -452,8 +452,8 @@ export default function DashboardOverload() {
                 {sponsorsList.map((sp) => (
                   <div key={sp.id} className="bg-zinc-900 rounded p-3 border border-zinc-800 space-y-2">
                     <div className="flex gap-2 items-center">
-                      <input value={sp.name} onChange={(e) => updateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
-                      <input value={sp.website_url || ""} onChange={(e) => updateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
+                      <input value={sp.name} onChange={(e) => debouncedUpdateRow("overload_sponsors", sp.id, { name: e.target.value })} className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Name" />
+                      <input value={sp.website_url || ""} onChange={(e) => debouncedUpdateRow("overload_sponsors", sp.id, { website_url: e.target.value })} className="w-48 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Website" />
                       <input type="number" value={sp.sort_order} onChange={(e) => updateRow("overload_sponsors", sp.id, { sort_order: parseInt(e.target.value) || 0 })} className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" />
                       <button onClick={() => deleteRow("overload_sponsors", sp.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
                     </div>
