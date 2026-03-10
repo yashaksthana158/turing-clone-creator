@@ -229,6 +229,7 @@ export type Database = {
           image_url: string
           is_visible: boolean
           sort_order: number
+          storage_path: string | null
           year: number
         }
         Insert: {
@@ -238,6 +239,7 @@ export type Database = {
           image_url: string
           is_visible?: boolean
           sort_order?: number
+          storage_path?: string | null
           year?: number
         }
         Update: {
@@ -247,6 +249,7 @@ export type Database = {
           image_url?: string
           is_visible?: boolean
           sort_order?: number
+          storage_path?: string | null
           year?: number
         }
         Relationships: []
