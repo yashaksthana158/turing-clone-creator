@@ -403,7 +403,7 @@ export default function DashboardOverload() {
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Coordinators (one per line: Name | Phone)</label>
-                        <textarea value={ev.coordinators || ""} onChange={(e) => updateRow("overload_events", ev.id, { coordinators: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="John Doe | 9876543210&#10;Jane Doe | 9876543211" />
+                        <textarea value={ev.coordinators || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { coordinators: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="John Doe | 9876543210&#10;Jane Doe | 9876543211" />
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Hero Image</label>
@@ -411,7 +411,7 @@ export default function DashboardOverload() {
                       </div>
                       <div>
                         <label className="block text-xs text-zinc-400 mb-1">Register URL</label>
-                        <input value={ev.register_url || ""} onChange={(e) => updateRow("overload_events", ev.id, { register_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="https://forms.google.com/..." />
+                        <input value={ev.register_url || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { register_url: e.target.value })} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="https://forms.google.com/..." />
                       </div>
                     </div>
                   </details>
