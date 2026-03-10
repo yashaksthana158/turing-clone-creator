@@ -66,7 +66,7 @@ export default function Register() {
     // Upload ID card first
     // Use email as temp identifier since we don't have user id yet
     const fileExt = idCardFile.name.split('.').pop();
-    const tempPath = `signup/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const tempPath = `pending/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from('id-cards')
       .upload(tempPath, idCardFile, { cacheControl: '3600', upsert: true });

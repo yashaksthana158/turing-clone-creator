@@ -570,7 +570,9 @@ export default function DashboardGallery() {
             <button
               onClick={() => {
                 const ids = Array.from(selectedImages);
-                const targetVisibility = !allImages.find(i => ids.includes(i.id))?.is_visible;
+                const selectedItems = allImages.filter(i => ids.includes(i.id));
+                const visibleCount = selectedItems.filter(i => i.is_visible).length;
+                const targetVisibility = visibleCount <= selectedItems.length / 2;
                 Promise.all(
                   ids.map(id => supabase.from('gallery_images').update({ is_visible: targetVisibility }).eq('id', id))
                 ).then(() => { invalidate(); setSelectedImages(new Set()); toast.success('Visibility updated'); });
