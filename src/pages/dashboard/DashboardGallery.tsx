@@ -101,9 +101,10 @@ export default function DashboardGallery() {
 
   const yearImages  = allImages.filter((i) => i.year === activeYear);
   const categories  = Array.from(new Set(yearImages.map((i) => i.category)));
-  const filtered    = activeCategory === 'all'
+  const filtered    = (activeCategory === 'all'
     ? yearImages
-    : yearImages.filter((i) => i.category === activeCategory);
+    : yearImages.filter((i) => i.category === activeCategory))
+    .filter((i) => i.image_url !== '__placeholder__');
 
   const years = Array.from(new Set(allImages.map((i) => i.year))).sort((a, b) => b - a);
 
