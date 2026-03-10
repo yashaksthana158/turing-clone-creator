@@ -394,11 +394,11 @@ export default function DashboardOverload() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Event Format</label>
-                          <textarea value={ev.event_format || ""} onChange={(e) => updateRow("overload_events", ev.id, { event_format: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Format description..." />
+                          <textarea value={ev.event_format || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { event_format: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Format description..." />
                         </div>
                         <div>
                           <label className="block text-xs text-zinc-400 mb-1">Winning Criteria</label>
-                          <textarea value={ev.winning_criteria || ""} onChange={(e) => updateRow("overload_events", ev.id, { winning_criteria: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Winning criteria..." />
+                          <textarea value={ev.winning_criteria || ""} onChange={(e) => debouncedUpdateRow("overload_events", ev.id, { winning_criteria: e.target.value })} rows={3} className="w-full px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm" placeholder="Winning criteria..." />
                         </div>
                       </div>
                       <div>
