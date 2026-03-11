@@ -184,7 +184,7 @@ export default function ManageUsers() {
                           <div className="flex items-center gap-2">
                             <p className="text-white text-sm font-medium">{u.full_name || 'Unnamed'}</p>
                             {u.id_card_verified && (
-                              <CheckCircle size={14} className="text-emerald-400" title="ID Verified" />
+                              <CheckCircle size={14} className="text-emerald-400" />
                             )}
                           </div>
                           <div className="flex items-center gap-2">
