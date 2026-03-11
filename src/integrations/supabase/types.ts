@@ -541,6 +541,8 @@ export type Database = {
           full_name: string | null
           id: string
           id_card_url: string | null
+          id_card_verified: boolean
+          id_card_verified_at: string | null
           phone: string | null
           roll_no: string | null
           updated_at: string
@@ -554,6 +556,8 @@ export type Database = {
           full_name?: string | null
           id: string
           id_card_url?: string | null
+          id_card_verified?: boolean
+          id_card_verified_at?: string | null
           phone?: string | null
           roll_no?: string | null
           updated_at?: string
@@ -567,6 +571,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           id_card_url?: string | null
+          id_card_verified?: boolean
+          id_card_verified_at?: string | null
           phone?: string | null
           roll_no?: string | null
           updated_at?: string

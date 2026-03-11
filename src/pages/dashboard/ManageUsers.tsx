@@ -5,8 +5,9 @@ import { useRole } from '@/hooks/useRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Shield, Search } from 'lucide-react';
+import { Shield, Search, CheckCircle, Eye } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import IdCardVerifyModal from '@/components/dashboard/IdCardVerifyModal';
 
 type AppRole = 'SUPER_ADMIN' | 'PRESIDENT' | 'TEAM_LEAD' | 'TEAM_MEMBER' | 'PARTICIPANT';
 
@@ -15,6 +16,8 @@ interface UserWithRoles {
   full_name: string | null;
   email: string;
   roles: AppRole[];
+  id_card_url: string | null;
+  id_card_verified: boolean;
 }
 
 interface RoleDef {
@@ -34,9 +37,14 @@ export default function ManageUsers() {
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
 
-  // Confirm dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ userId: string; roleName: AppRole } | null>(null);
+
+  // ID card modal state
+  const [idModalOpen, setIdModalOpen] = useState(false);
+  const [idModalUser, setIdModalUser] = useState<{ id: string; name: string; url: string } | null>(null);
+
+  const canVerifyId = hasMinRoleLevel(3);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate('/login'); return; }
@@ -45,34 +53,30 @@ export default function ManageUsers() {
   }, [user, authLoading]);
 
   const fetchData = async () => {
-    // Fetch role definitions
     const { data: rolesData } = await supabase.from('roles').select('*').order('name');
     if (rolesData) setRoleDefs(rolesData as RoleDef[]);
 
-    // Fetch profiles
-    const { data: profilesData } = await supabase.from('profiles').select('id, full_name');
+    const { data: profilesData } = await supabase.from('profiles').select('id, full_name, id_card_url, id_card_verified');
 
-    // Fetch all user_roles with role names
     const { data: userRolesData } = await supabase
       .from('user_roles')
       .select('user_id, roles(name)');
 
-    // Build user list
     const userMap = new Map<string, UserWithRoles>();
-    profilesData?.forEach((p) => {
+    profilesData?.forEach((p: any) => {
       userMap.set(p.id, {
         id: p.id,
         full_name: p.full_name,
-        email: '', // We don't have email from profiles, show ID
+        email: '',
         roles: [],
+        id_card_url: p.id_card_url,
+        id_card_verified: p.id_card_verified ?? false,
       });
     });
 
     (userRolesData as unknown as { user_id: string; roles: { name: AppRole } }[])?.forEach((ur) => {
       const existing = userMap.get(ur.user_id);
-      if (existing) {
-        existing.roles.push(ur.roles.name);
-      }
+      if (existing) existing.roles.push(ur.roles.name);
     });
 
     setUsers(Array.from(userMap.values()));
@@ -82,14 +86,10 @@ export default function ManageUsers() {
   const handleAssignRole = async (userId: string, roleName: AppRole) => {
     const roleDef = roleDefs.find((r) => r.name === roleName);
     if (!roleDef) return;
-
     setUpdating(userId);
     const { error } = await supabase.from('user_roles').insert({
-      user_id: userId,
-      role_id: roleDef.id,
-      assigned_by: user!.id,
+      user_id: userId, role_id: roleDef.id, assigned_by: user!.id,
     });
-
     if (error) {
       if (error.code === '23505') toast.error('Role already assigned');
       else toast.error(error.message);
@@ -110,17 +110,10 @@ export default function ManageUsers() {
     const { userId, roleName } = confirmAction;
     setConfirmOpen(false);
     setConfirmAction(null);
-
     const roleDef = roleDefs.find((r) => r.name === roleName);
     if (!roleDef) return;
-
     setUpdating(userId);
-    const { error } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId)
-      .eq('role_id', roleDef.id);
-
+    const { error } = await supabase.from('user_roles').delete().eq('user_id', userId).eq('role_id', roleDef.id);
     if (error) toast.error(error.message);
     else { toast.success('Role removed'); fetchData(); }
     setUpdating(null);
@@ -158,7 +151,6 @@ export default function ManageUsers() {
           <p className="text-gray-400 mt-1">Assign and manage user roles</p>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
@@ -170,7 +162,6 @@ export default function ManageUsers() {
           />
         </div>
 
-        {/* User table */}
         <div className="bg-[#1c1c1c] border border-gray-800 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -190,8 +181,26 @@ export default function ManageUsers() {
                           {(u.full_name || '?')[0]}
                         </div>
                         <div>
-                          <p className="text-white text-sm font-medium">{u.full_name || 'Unnamed'}</p>
-                          <p className="text-gray-500 text-xs">{u.id.slice(0, 12)}...</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-white text-sm font-medium">{u.full_name || 'Unnamed'}</p>
+                            {u.id_card_verified && (
+                              <CheckCircle size={14} className="text-emerald-400" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-gray-500 text-xs">{u.id.slice(0, 12)}...</p>
+                            {canVerifyId && u.id_card_url && !u.id_card_verified && (
+                              <button
+                                onClick={() => {
+                                  setIdModalUser({ id: u.id, name: u.full_name || 'Unnamed', url: u.id_card_url! });
+                                  setIdModalOpen(true);
+                                }}
+                                className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                              >
+                                <Eye size={12} /> View ID
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -258,6 +267,20 @@ export default function ManageUsers() {
         variant="danger"
         onConfirm={executeRemoveRole}
       />
+
+      {idModalUser && (
+        <IdCardVerifyModal
+          open={idModalOpen}
+          onOpenChange={setIdModalOpen}
+          userId={idModalUser.id}
+          userName={idModalUser.name}
+          idCardUrl={idModalUser.url}
+          onApproved={() => {
+            toast.success('ID card approved!');
+            fetchData();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
